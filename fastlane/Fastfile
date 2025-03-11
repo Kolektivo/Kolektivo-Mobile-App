@@ -122,7 +122,7 @@ platform :ios do
     authentication_key_path = fetch_env_var_or_dotenv('APPLE_CONNECT_CERTIFICATE_PATH', env)
     authentication_key_id = fetch_env_var_or_dotenv('APPLE_CONNECT_KEY_ID', env)
     authentication_key_issuer_id = fetch_env_var_or_dotenv('APPLE_CONNECT_ISSUER_ID', env)
-    
+
     gym(
       workspace: 'ios/celo.xcworkspace',
       # Needs double quotes because Ruby differentiates
@@ -147,6 +147,9 @@ platform :ios do
   
   desc 'Upload to TestFlight'
   lane :upload do |options|
+    increment_build_number(
+      xcodeproj: 'ios/celo.xcodeproj/project.pbxproj'
+    )
     env = options[:environment]
 
     # Fetch credentials from ENV or .env.<environment>
