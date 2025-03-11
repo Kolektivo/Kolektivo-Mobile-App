@@ -3,7 +3,7 @@ git_url("https://github.com/zed-io/kolektivo-app-certificates")
 storage_mode("git")
 
 # app_identifier(["tools.fastlane.app", "tools.fastlane.app2"])
-username("mabrahamtt@icloud.com") # Your Apple Developer Portal username
+username("hello@obsidianlab.io") # Your Apple Developer Portal username
 app_identifier(["tt.kolektivo.alfajores", "tt.kolektivo.mainnet"]) # Bundle identifier of your app
 team_id("2QB23S3GZ3")
 # For all available options run `fastlane match --help`
