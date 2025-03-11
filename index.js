@@ -14,7 +14,7 @@ import 'react-native-gesture-handler'
 import { Text, TextInput } from 'react-native'
 import 'intl-pluralrules'
 
-const SENTRY_ENABLED = stringToBoolean(Config.SENTRY_ENABLED || 'false')
+const SENTRY_ENABLED = stringToBoolean('false')
 
 Logger.overrideConsoleLogs()
 Logger.cleanupOldLogs()

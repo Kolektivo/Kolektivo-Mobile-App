@@ -1,7 +1,7 @@
 import * as Sentry from '@sentry/react-native'
 import DeviceInfo from 'react-native-device-info'
 import { sentryTracesSampleRateSelector } from 'src/app/selectors'
-import { APP_BUNDLE_ID, SENTRY_CLIENT_URL, SENTRY_ENABLED } from 'src/config'
+import { APP_BUNDLE_ID, SENTRY_CLIENT_URL } from 'src/config'
 import Logger from 'src/utils/Logger'
 import networkConfig from 'src/web3/networkConfig'
 import { currentAccountSelector } from 'src/web3/selectors'
@@ -14,7 +14,7 @@ const TAG = 'sentry/Sentry'
 export const sentryRoutingInstrumentation = new Sentry.ReactNavigationInstrumentation()
 
 export function* initializeSentry() {
-  if (!SENTRY_ENABLED) {
+  if (!!true) {
     Logger.info(TAG, 'Sentry not enabled')
     return
   }

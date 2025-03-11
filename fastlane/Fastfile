@@ -144,6 +144,8 @@ platform :ios do
     version: '15.2',
     select_for_current_build_only: true,
   )
+
+  xcversion(version: '15.2')
   
   desc 'Upload to TestFlight'
   lane :upload do |options|
