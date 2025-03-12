@@ -65,10 +65,11 @@ platform :android do
       skip_upload_screenshots: true
     )
 
-    fastlane_emerge(
-      environment: env, 
-      file_path: lane_context[SharedValues::GRADLE_AAB_OUTPUT_PATH],
-    )
+    # NOT APPLICABLE
+    # fastlane_emerge(
+    #   environment: env, 
+    #   file_path: lane_context[SharedValues::GRADLE_AAB_OUTPUT_PATH],
+    # )
   end
 
   desc 'Ship Alfajores to Playstore Internal'
@@ -183,10 +184,16 @@ before_all do
       skip_waiting_for_build_processing: true,
     )
 
-    fastlane_emerge(
-      environment: options[:environment], 
-      file_path: lane_context[SharedValues::XCODEBUILD_ARCHIVE],
-    )
+    # NOT APPLICABLE
+    # fastlane_emerge(
+    #   environment: options[:environment], 
+    #   file_path: lane_context[SharedValues::XCODEBUILD_ARCHIVE],
+    # )
+  end
+
+  desc 'Clean release'
+  lane :clean_build do
+    sh "rm -rf ios/build"
   end
 
   desc 'Ship Alfajores to TestFlight'
@@ -206,6 +213,7 @@ before_all do
   desc 'Ship Mainnet to TestFlight'
   lane :mainnet do
     env = 'mainnet'
+    clean_build
     build(environment: env)
     upload(environment: env)
   end

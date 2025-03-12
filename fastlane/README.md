@@ -108,6 +108,14 @@ Build the iOS application - requires environment param
 
 Upload to TestFlight
 
+### ios clean_build
+
+```sh
+[bundle exec] fastlane ios clean_build
+```
+
+Clean release
+
 ### ios alfajores
 
 ```sh
