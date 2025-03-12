@@ -114,19 +114,24 @@ end
 
 platform :ios do
 
+before_all do
+  xcodes(
+    version: '15.2',
+    select_for_current_build_only: true,
+    )
+  end
+
+    increment_version_number(
+      xcodeproj: 'ios/celo.xcodeproj'
+    )
+    
+    increment_build_number(
+      xcodeproj: 'ios/celo.xcodeproj'
+    )
+
   desc 'Build the iOS application - requires environment param'
   lane :build do |options|
     env = options[:environment]
-
-    xcodes(
-    version: '15.2',
-    select_for_current_build_only: true,
-    ) 
-
-    increment_build_number(
-      xcodeproj: 'ios/celo.xcodeproj',
-      build_number: `git rev-list HEAD --count`.strip
-    )
 
     # Fetch credentials from ENV or .env.<environment>
     authentication_key_path = fetch_env_var_or_dotenv('APPLE_CONNECT_CERTIFICATE_PATH', env)
