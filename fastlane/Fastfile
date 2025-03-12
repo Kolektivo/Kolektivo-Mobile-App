@@ -171,6 +171,11 @@ before_all do
       key_filepath: authentication_key_path,
       duration: 1200,
     )
+
+    xcodes(
+      version: '15.2',
+      select_for_current_build_only: true,
+      )
     
     upload_to_testflight(
       api_key: api_key,
