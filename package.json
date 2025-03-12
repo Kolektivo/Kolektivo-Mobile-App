@@ -55,7 +55,7 @@
     "postinstall": "patch-package && yarn keys:decrypt && ./scripts/sync_branding.sh && ./scripts/copy_license_to_android_assets.sh",
     "keys:decrypt": "bash scripts/key_placer.sh decrypt",
     "keys:encrypt": "bash scripts/key_placer.sh encrypt",
-    "fastlane:ios:mainnet": "bundle exec fastlane ios mainnet"
+    "fastlane:ios:mainnet": "SENTRY_PROPERTIES=false bundle exec fastlane ios mainnet"
   },
   "husky": {
     "hooks": {
