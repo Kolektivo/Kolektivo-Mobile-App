@@ -118,6 +118,15 @@ platform :ios do
   lane :build do |options|
     env = options[:environment]
 
+    xcodes(
+      version: '15.2',
+      select_for_current_build_only: true,
+    )
+  
+    increment_build_number(
+      xcodeproj: 'ios/celo.xcodeproj/project.pbxproj',
+    )
+
     # Fetch credentials from ENV or .env.<environment>
     authentication_key_path = fetch_env_var_or_dotenv('APPLE_CONNECT_CERTIFICATE_PATH', env)
     authentication_key_id = fetch_env_var_or_dotenv('APPLE_CONNECT_KEY_ID', env)
@@ -139,19 +148,10 @@ platform :ios do
       # verbose: true
      ) 
   end
-
-  xcodes(
-    version: '15.2',
-    select_for_current_build_only: true,
-  )
-
-  xcversion(version: '15.2')
   
   desc 'Upload to TestFlight'
   lane :upload do |options|
-    increment_build_number(
-      xcodeproj: 'ios/celo.xcodeproj/project.pbxproj'
-    )
+
     env = options[:environment]
 
     # Fetch credentials from ENV or .env.<environment>
