@@ -37,8 +37,6 @@ jobs:
         with:
           path: node_modules
           key: yarn-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
-          restore-keys: |
-            yarn-${{ runner.os }}-
 
       # 5) Install Project Dependencies (now can use the restored node_modules)
       - if: steps.cache-yarn.outputs.cache-hit != 'true'
@@ -52,8 +50,6 @@ jobs:
         with:
           path: ios/Pods
           key: cocoapods-${{ runner.os }}-${{ hashFiles('ios/Podfile.lock') }}
-          restore-keys: |
-            cocoapods-${{ runner.os }}-
 
       # 7) Install Ruby, Bundler & CocoaPods
       - if: steps.cache-cocoapods.outputs.cache-hit != 'true'
@@ -71,8 +67,6 @@ jobs:
         with:
           path: vendor/bundle
           key: bundler-${{ runner.os }}-${{ hashFiles('**/Gemfile.lock') }}
-          restore-keys: |
-            bundler-${{ runner.os }}-
 
       # 9) Install CocoaPods Dependencies
       - if: steps.cache-bundler.outputs.cache-hit != 'true'
@@ -122,8 +116,6 @@ jobs:
         with:
           path: node_modules
           key: yarn-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
-          restore-keys: |
-            yarn-${{ runner.os }}-
 
       # 8) Cache CocoaPods
       - name: Cache CocoaPods
@@ -132,8 +124,6 @@ jobs:
         with:
           path: ios/Pods
           key: cocoapods-${{ runner.os }}-${{ hashFiles('ios/Podfile.lock') }}
-          restore-keys: |
-            cocoapods-${{ runner.os }}-
 
       # 6) Cache Bundler (Ruby Gems)
       - name: Cache Bundler
@@ -142,5 +132,3 @@ jobs:
         with:
           path: vendor/bundle
           key: bundler-${{ runner.os }}-${{ hashFiles('**/Gemfile.lock') }}
-          restore-keys: |
-            bundler-${{ runner.os }}-
