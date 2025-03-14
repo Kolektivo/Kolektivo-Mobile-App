@@ -14,20 +14,20 @@ jobs:
     runs-on: macos-13 # Use macOS runner with Xcode 15.2
 
     steps:
-      # # 1) Checkout
-      # - name: Checkout Repository
-      #   uses: actions/checkout@v4
+      # 1) Checkout
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
-      # # 2) Select Xcode 15.2
-      # - name: Select Xcode 15.2
-      #   run: sudo xcode-select -s /Applications/Xcode_15.2.app/Contents/Developer
+      # 2) Select Xcode 15.2
+      - name: Select Xcode 15.2
+        run: sudo xcode-select -s /Applications/Xcode_15.2.app/Contents/Developer
 
-      # # 3) Install Node.js and Yarn
-      # - name: Install Node.js and Yarn
-      #   uses: actions/setup-node@v3
-      #   with:
-      #     node-version: '20'
-      #     cache: 'yarn' # This only caches Yarn's global cache, not node_modules
+      # 3) Install Node.js and Yarn
+      - name: Install Node.js and Yarn
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+          cache: 'yarn' # This only caches Yarn's global cache, not node_modules
 
       # # 4) Cache node_modules (Yarn Dependencies)
       # - name: Cache Yarn Dependencies
@@ -94,16 +94,6 @@ jobs:
           echo "MATCH_PASSWORD=${{ secrets.MATCH_PASSWORD }}" >> $GITHUB_ENV
           echo "FASTLANE_XCODEBUILD_SETTINGS_TIMEOUT=60" >> $GITHUB_ENV
           echo "FASTLANE_XCODEBUILD_SETTINGS_RETRIES=6" >> $GITHUB_ENV
-
-      # 12) Cache Match Profiles (Provisioning Profiles)
-      - name: Cache Match Profiles
-        uses: actions/cache/save@v4
-        if: always()
-        with:
-          path: ~/Library/MobileDevice/Provisioning\ Profiles
-          key: match-${{ runner.os }}-${{ hashFiles('fastlane/Matchfile') }}
-          restore-keys: |
-            match-${{ runner.os }}-
 
       # 13) Fetch Signing Certificates & Profiles
       - name: Fetch Signing Certificates & Profiles
