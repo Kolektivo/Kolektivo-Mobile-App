@@ -87,6 +87,16 @@ jobs:
       - name: Clear Xcode Derived Data
         run: rm -rf ~/Library/Developer/Xcode/DerivedData
 
+      - name: Setup SSH for Private Repo Access
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.DEPLOY_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan github.com >> ~/.ssh/known_hosts
+
+      - name: Debug SSH Access
+        run: ssh -T git@github.com || echo "SSH authentication failed"
+
       # 15) Run Fastlane for TestFlight Upload
       - name: Run Fastlane for TestFlight Upload 🚀
         run: fastlane ios mainnet
