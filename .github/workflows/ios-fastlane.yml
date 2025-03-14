@@ -6,7 +6,6 @@ on:
       - 'v*' # Run only on version tags like v1.0.0, v2.3.4
     branches:
       - '@noah/fastlane-ios-integration'
-
   workflow_dispatch: # Allows manual triggering
 
 jobs:
@@ -15,22 +14,22 @@ jobs:
     runs-on: macos-13 # Use macOS runner with Xcode 15.2
 
     steps:
+      # 1) Checkout
       - name: Checkout Repository
         uses: actions/checkout@v4
 
+      # 2) Select Xcode 15.2
       - name: Select Xcode 15.2
         run: sudo xcode-select -s /Applications/Xcode_15.2.app/Contents/Developer
 
+      # 3) Install Node.js and Yarn
       - name: Install Node.js and Yarn
         uses: actions/setup-node@v3
         with:
           node-version: '20'
-          cache: 'yarn'
+          cache: 'yarn' # This only caches Yarn's global cache, not node_modules
 
-      - name: Install Project Dependencies
-        run: yarn install --frozen-lockfile
-
-      ### ✅ Cache Node Modules ###
+      # 4) Cache node_modules (Yarn Dependencies)
       - name: Cache Yarn Dependencies
         uses: actions/cache@v3
         with:
@@ -39,14 +38,11 @@ jobs:
           restore-keys: |
             yarn-${{ runner.os }}-
 
-      - name: Install iOS Dependencies (Run `pod install`)
-        run: |
-          cd ios
-          bundle install
-          bundle exec pod install
-          cd ..
+      # 5) Install Project Dependencies (now can use the restored node_modules)
+      - name: Install Project Dependencies
+        run: yarn install --frozen-lockfile
 
-      ### ✅ Cache Bundler (Ruby Gems) ###
+      # 6) Cache Bundler (Ruby Gems)
       - name: Cache Bundler
         uses: actions/cache@v3
         with:
@@ -55,13 +51,14 @@ jobs:
           restore-keys: |
             bundler-${{ runner.os }}-
 
+      # 7) Install Ruby, Bundler & CocoaPods
       - name: Install Ruby, Bundler & CocoaPods
         run: |
           gem install bundler cocoapods
           bundle config set --local path 'vendor/bundle'
           bundle install --jobs 4 --retry 3
 
-      ### ✅ Cache CocoaPods ###
+      # 8) Cache CocoaPods
       - name: Cache CocoaPods
         uses: actions/cache@v3
         with:
@@ -70,41 +67,51 @@ jobs:
           restore-keys: |
             cocoapods-${{ runner.os }}-
 
+      # 9) Install CocoaPods Dependencies
       - name: Install CocoaPods Dependencies
         run: |
           cd ios
           bundle exec pod install
           cd ..
 
+      # 10) Start Development Server
       - name: Start Development Server
-        run: yarn dev:ios & # Runs in background
+        run: yarn dev:ios & # runs in background
 
+      # 11) Set up Fastlane Environment Variables
       - name: Set up Fastlane Environment Variables
         run: |
+          echo "APPLE_CONNECT_CERTIFICATE_PATH=${{ secrets.APPLE_CONNECT_CERTIFICATE_PATH }}" >> $GITHUB_ENV
+          echo "APPLE_CONNECT_KEY_ID=${{ secrets.APPLE_CONNECT_KEY_ID }}" >> $GITHUB_ENV
+          echo "APPLE_CONNECT_ISSUER_ID=${{ secrets.APPLE_CONNECT_ISSUER_ID }}" >> $GITHUB_ENV
           echo "FASTLANE_USER=${{ secrets.FASTLANE_USER }}" >> $GITHUB_ENV
           echo "FASTLANE_PASSWORD=${{ secrets.FASTLANE_PASSWORD }}" >> $GITHUB_ENV
           echo "MATCH_PASSWORD=${{ secrets.MATCH_PASSWORD }}" >> $GITHUB_ENV
           echo "FASTLANE_XCODEBUILD_SETTINGS_TIMEOUT=60" >> $GITHUB_ENV
           echo "FASTLANE_XCODEBUILD_SETTINGS_RETRIES=6" >> $GITHUB_ENV
 
-      - name: Fetch Signing Certificates & Profiles
-        run: fastlane match appstore
-
-      ### ✅ Cache Provisioning Profiles (Match) ###
+      # 12) Cache Match Profiles (Provisioning Profiles)
       - name: Cache Match Profiles
         uses: actions/cache@v3
         with:
-          path: ~/Library/MobileDevice/Provisioning Profiles
+          path: ~/Library/MobileDevice/Provisioning\ Profiles
           key: match-${{ runner.os }}-${{ hashFiles('fastlane/Matchfile') }}
           restore-keys: |
             match-${{ runner.os }}-
 
+      # 13) Fetch Signing Certificates & Profiles
+      - name: Fetch Signing Certificates & Profiles
+        run: fastlane match appstore
+
+      # 14) Clear Xcode Derived Data
       - name: Clear Xcode Derived Data
         run: rm -rf ~/Library/Developer/Xcode/DerivedData
 
+      # 15) Run Fastlane for TestFlight Upload
       - name: Run Fastlane for TestFlight Upload 🚀
         run: fastlane ios mainnet
 
+      # 16) Upload Build Artifacts
       - name: Upload Build Artifacts
         uses: actions/upload-artifact@v4
         with:
