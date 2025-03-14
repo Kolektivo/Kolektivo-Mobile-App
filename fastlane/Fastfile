@@ -140,7 +140,6 @@ before_all do
     if ENV['CI']
       match(
         type: 'appstore',
-        git_basic_authorization: fetch_env_var_or_dotenv('GIT_BASIC_AUTHORIZATION', env)
       )
     else
       match(type: 'appstore') # Run match without git_basic_authorization when not in CI
