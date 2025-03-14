@@ -81,7 +81,8 @@ jobs:
       # 11) Set up Fastlane Environment Variables
       - name: Set up Fastlane Environment Variables
         run: |
-          echo "APPLE_CONNECT_CERTIFICATE_PATH=${{ secrets.APPLE_CONNECT_CERTIFICATE_PATH }}" >> $GITHUB_ENV
+          echo "${{ secrets.APPLE_CONNECT_CERTIFICATE_BASE64 }}" | base64 --decode > ios/AuthKey.p8
+          echo "APPLE_CONNECT_CERTIFICATE_PATH=$(pwd)/ios/AuthKey.p8" >> $GITHUB_ENV
           echo "APPLE_CONNECT_KEY_ID=${{ secrets.APPLE_CONNECT_KEY_ID }}" >> $GITHUB_ENV
           echo "APPLE_CONNECT_ISSUER_ID=${{ secrets.APPLE_CONNECT_ISSUER_ID }}" >> $GITHUB_ENV
           echo "FASTLANE_USER=${{ secrets.FASTLANE_USER }}" >> $GITHUB_ENV
