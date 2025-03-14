@@ -133,7 +133,10 @@ before_all do
   desc 'Build the iOS application - requires environment param'
   lane :build do |options|
     setup_ci if ENV['CI']
-    match(type: 'appstore')
+    match(
+      type: 'appstore'
+      git_basic_authorization: fetch_env_var_or_dotenv('GIT_BASIC_AUTHORIZATION', env)
+      )
     env = options[:environment]
 
     # Fetch credentials from ENV or .env.<environment>

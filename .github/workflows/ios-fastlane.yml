@@ -29,19 +29,54 @@ jobs:
           node-version: '20'
           cache: 'yarn' # This only caches Yarn's global cache, not node_modules
 
+      # 4) Cache node_modules (Yarn Dependencies)
+      - name: Cache Yarn Dependencies
+        uses: actions/cache/save@v4
+        id: cache-yarn
+        if: always()
+        with:
+          path: node_modules
+          key: yarn-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+          restore-keys: |
+            yarn-${{ runner.os }}-
+
       # 5) Install Project Dependencies (now can use the restored node_modules)
-      - name: Install Project Dependencies
+      - if: steps.cache-yarn.outputs.cache-hit != 'true'
+        name: Install Project Dependencies
         run: yarn install --frozen-lockfile
 
+      - name: Cache CocoaPods
+        uses: actions/cache/save@v4
+        id: cache-cocoapods
+        if: always()
+        with:
+          path: ios/Pods
+          key: cocoapods-${{ runner.os }}-${{ hashFiles('ios/Podfile.lock') }}
+          restore-keys: |
+            cocoapods-${{ runner.os }}-
+
       # 7) Install Ruby, Bundler & CocoaPods
-      - name: Install Ruby, Bundler & CocoaPods
+      - if: steps.cache-cocoapods.outputs.cache-hit != 'true'
+        name: Install Ruby, Bundler & CocoaPods
         run: |
           gem install bundler cocoapods
           bundle config set --local path 'vendor/bundle'
           bundle install --jobs 4 --retry 3
 
+      # 6) Cache Bundler (Ruby Gems)
+      - name: Cache Bundler
+        id: cache-bundler
+        uses: actions/cache/save@v4
+        if: always()
+        with:
+          path: vendor/bundle
+          key: bundler-${{ runner.os }}-${{ hashFiles('**/Gemfile.lock') }}
+          restore-keys: |
+            bundler-${{ runner.os }}-
+
       # 9) Install CocoaPods Dependencies
-      - name: Install CocoaPods Dependencies
+      - if: steps.cache-bundler.outputs.cache-hit != 'true'
+        name: Install CocoaPods Dependencies
         run: |
           cd ios
           bundle exec pod install
