@@ -37,29 +37,27 @@ jobs:
           path: node_modules
           key: yarn-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
 
-      # 5) Install Project Dependencies (now can use the restored node_modules)
-      - if: steps.cache-yarn.outputs.cache-hit != 'true'
-        name: Install Project Dependencies
-        run: yarn install --frozen-lockfile
-
       # 7) Install Ruby, Bundler & CocoaPods
-      - if: steps.cache-cocoapods.outputs.cache-hit != 'true'
-        name: Install Ruby, Bundler & CocoaPods
+      - name: Install Ruby, Bundler & CocoaPods
         run: |
           gem install bundler cocoapods
           bundle config set --local path 'vendor/bundle'
           bundle install --jobs 4 --retry 3
 
-      # 6) Cache Bundler (Ruby Gems)
-      - name: Restore Bundler Cache
-        id: cache-bundler
+      # 5) Install Project Dependencies (now can use the restored node_modules)
+      - if: steps.cache-yarn.outputs.cache-hit != 'true'
+        name: Install Project Dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Restore CocoaPods Cache
         uses: actions/cache/restore@v4
+        id: cache-cocoapods
         with:
-          path: vendor/bundle
-          key: bundler-${{ runner.os }}-${{ hashFiles('**/Gemfile.lock') }}
+          path: ios/Pods
+          key: cocoapods-${{ runner.os }}-${{ hashFiles('ios/Podfile.lock') }}
 
       # 9) Install CocoaPods Dependencies
-      - if: steps.cache-bundler.outputs.cache-hit != 'true'
+      - if: steps.cache-cocoapods.outputs.cache-hit != 'true'
         name: Install CocoaPods Dependencies
         run: |
           cd ios
@@ -99,7 +97,7 @@ jobs:
           name: iOS-Build
           path: build/*.ipa
 
-      # 4) Cache node_modules (Yarn Dependencies)
+      # Cache node_modules (Yarn Dependencies)
       - name: Cache Yarn Dependencies
         uses: actions/cache/save@v4
         if: always()
@@ -107,7 +105,7 @@ jobs:
           path: node_modules
           key: yarn-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
 
-      # 8) Cache CocoaPods
+      # Cache CocoaPods
       - name: Cache CocoaPods
         uses: actions/cache/save@v4
         if: always()
