@@ -42,13 +42,6 @@ jobs:
         name: Install Project Dependencies
         run: yarn install --frozen-lockfile
 
-      - name: Restore CocoaPods Cache
-        uses: actions/cache/restore@v4
-        id: cache-cocoapods
-        with:
-          path: ios/Pods
-          key: cocoapods-${{ runner.os }}-${{ hashFiles('ios/Podfile.lock') }}
-
       # 7) Install Ruby, Bundler & CocoaPods
       - if: steps.cache-cocoapods.outputs.cache-hit != 'true'
         name: Install Ruby, Bundler & CocoaPods
@@ -121,11 +114,3 @@ jobs:
         with:
           path: ios/Pods
           key: cocoapods-${{ runner.os }}-${{ hashFiles('ios/Podfile.lock') }}
-
-      # 6) Cache Bundler (Ruby Gems)
-      - name: Cache Bundler
-        uses: actions/cache/save@v4
-        if: always()
-        with:
-          path: vendor/bundle
-          key: bundler-${{ runner.os }}-${{ hashFiles('**/Gemfile.lock') }}
