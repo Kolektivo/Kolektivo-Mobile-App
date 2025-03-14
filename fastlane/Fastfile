@@ -132,6 +132,8 @@ before_all do
 
   desc 'Build the iOS application - requires environment param'
   lane :build do |options|
+    setup_ci if ENV['CI']
+    match(type: 'appstore')
     env = options[:environment]
 
     # Fetch credentials from ENV or .env.<environment>
