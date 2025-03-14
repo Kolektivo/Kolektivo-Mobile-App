@@ -134,7 +134,7 @@ before_all do
   lane :build do |options|
     setup_ci if ENV['CI']
     match(
-      type: 'appstore'
+      type: 'appstore',
       git_basic_authorization: fetch_env_var_or_dotenv('GIT_BASIC_AUTHORIZATION', env)
       )
     env = options[:environment]
