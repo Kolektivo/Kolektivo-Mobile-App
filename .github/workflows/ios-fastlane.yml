@@ -79,6 +79,17 @@ jobs:
       - name: Start Development Server
         run: yarn dev:ios & # Runs in background
 
+      - name: Set up Fastlane Environment Variables
+        run: |
+          echo "FASTLANE_USER=${{ secrets.FASTLANE_USER }}" >> $GITHUB_ENV
+          echo "FASTLANE_PASSWORD=${{ secrets.FASTLANE_PASSWORD }}" >> $GITHUB_ENV
+          echo "MATCH_PASSWORD=${{ secrets.MATCH_PASSWORD }}" >> $GITHUB_ENV
+          echo "FASTLANE_XCODEBUILD_SETTINGS_TIMEOUT=60" >> $GITHUB_ENV
+          echo "FASTLANE_XCODEBUILD_SETTINGS_RETRIES=6" >> $GITHUB_ENV
+
+      - name: Fetch Signing Certificates & Profiles
+        run: fastlane match appstore
+
       ### ✅ Cache Provisioning Profiles (Match) ###
       - name: Cache Match Profiles
         uses: actions/cache@v3
@@ -87,17 +98,6 @@ jobs:
           key: match-${{ runner.os }}-${{ hashFiles('fastlane/Matchfile') }}
           restore-keys: |
             match-${{ runner.os }}-
-
-      - name: Fetch Signing Certificates & Profiles
-        run: fastlane match appstore
-
-      - name: Set up Fastlane Environment Variables
-        run: |
-          echo "FASTLANE_USER=${{ secrets.FASTLANE_USER }}" >> $GITHUB_ENV
-          echo "FASTLANE_PASSWORD=${{ secrets.FASTLANE_PASSWORD }}" >> $GITHUB_ENV
-          echo "MATCH_PASSWORD=${{ secrets.MATCH_PASSWORD }}" >> $GITHUB_ENV
-          echo "FASTLANE_XCODEBUILD_SETTINGS_TIMEOUT=60" >> $GITHUB_ENV
-          echo "FASTLANE_XCODEBUILD_SETTINGS_RETRIES=6" >> $GITHUB_ENV
 
       - name: Clear Xcode Derived Data
         run: rm -rf ~/Library/Developer/Xcode/DerivedData
