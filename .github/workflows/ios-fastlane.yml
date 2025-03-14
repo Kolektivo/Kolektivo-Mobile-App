@@ -1,0 +1,71 @@
+name: iOS Fastlane Release 🚀
+
+on:
+  push:
+    tags:
+      - 'v*' # Runs only on version tags like v1.0.0, v2.3.4
+    branches:
+      - '@noah/fastlane-ios-integration'
+
+  workflow_dispatch: # Allows manual triggering
+
+jobs:
+  release:
+    name: Build & Deploy iOS App
+    runs-on: macos-13 # Use macOS runner with Xcode 15.2
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Select Xcode 15.2
+        run: sudo xcode-select -s /Applications/Xcode_15.2.app/Contents/Developer
+
+      - name: Install Ruby, Bundler & CocoaPods
+        run: |
+          gem install bundler cocoapods
+
+      - name: Install Node.js and Yarn
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18' # Match your Node.js version
+          cache: 'yarn'
+
+      - name: Install Project Dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Install iOS Dependencies
+        run: |
+          cd ios
+          bundle install
+          bundle exec pod install
+          cd ..
+
+      - name: Start Development Server
+        run: yarn dev:ios & # Runs in background
+
+      - name: Decode Apple Certificate
+        run: |
+          echo "${{ secrets.APPLE_CONNECT_CERTIFICATE_BASE64 }}" | base64 --decode > ios/AuthKey.p8
+          echo "APPLE_CONNECT_CERTIFICATE_PATH=$(pwd)/ios/AuthKey.p8" >> $GITHUB_ENV
+
+      - name: Set up Fastlane Environment Variables
+        run: |
+          echo "APPLE_CONNECT_KEY_ID=${{ secrets.APPLE_CONNECT_KEY_ID }}" >> $GITHUB_ENV
+          echo "APPLE_CONNECT_ISSUER_ID=${{ secrets.APPLE_CONNECT_ISSUER_ID }}" >> $GITHUB_ENV
+          echo "FASTLANE_USER=${{ secrets.FASTLANE_USER }}" >> $GITHUB_ENV
+          echo "FASTLANE_PASSWORD=${{ secrets.FASTLANE_PASSWORD }}" >> $GITHUB_ENV
+          echo "MATCH_PASSWORD=${{ secrets.MATCH_PASSWORD }}" >> $GITHUB_ENV
+
+      - name: Run Fastlane for TestFlight Upload 🚀
+        run: fastlane ios mainnet
+
+      - name: Upload Build Artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: iOS-Build
+          path: build/*.ipa
+
+      - name: Cleanup Apple Certificate
+        if: always()
+        run: rm -f ios/AuthKey.p8
