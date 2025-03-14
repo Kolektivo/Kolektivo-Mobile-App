@@ -30,7 +30,7 @@ jobs:
           cache: 'yarn' # This only caches Yarn's global cache, not node_modules
 
       # 4) Cache node_modules (Yarn Dependencies)
-      - name: Cache Yarn Dependencies
+      - name: Restore Yarn Dependencies Cache
         uses: actions/cache/restore@v4
         id: cache-yarn
         with:
@@ -42,7 +42,7 @@ jobs:
         name: Install Project Dependencies
         run: yarn install --frozen-lockfile
 
-      - name: Cache CocoaPods
+      - name: Restore CocoaPods Cache
         uses: actions/cache/restore@v4
         id: cache-cocoapods
         with:
@@ -58,7 +58,7 @@ jobs:
           bundle install --jobs 4 --retry 3
 
       # 6) Cache Bundler (Ruby Gems)
-      - name: Cache Bundler
+      - name: Restore Bundler Cache
         id: cache-bundler
         uses: actions/cache/restore@v4
         with:
