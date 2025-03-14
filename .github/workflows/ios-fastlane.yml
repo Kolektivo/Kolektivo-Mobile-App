@@ -24,8 +24,11 @@ jobs:
       - name: Install Node.js and Yarn
         uses: actions/setup-node@v3
         with:
-          node-version: '18'
+          node-version: '20'
           cache: 'yarn'
+
+      - name: Install Project Dependencies
+        run: yarn install --frozen-lockfile
 
       ### ✅ Cache Node Modules ###
       - name: Cache Yarn Dependencies
@@ -35,9 +38,6 @@ jobs:
           key: yarn-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
           restore-keys: |
             yarn-${{ runner.os }}-
-
-      - name: Install Project Dependencies
-        run: yarn install --frozen-lockfile
 
       - name: Install iOS Dependencies (Run `pod install`)
         run: |
