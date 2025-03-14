@@ -31,7 +31,8 @@ jobs:
 
       # 4) Cache node_modules (Yarn Dependencies)
       - name: Cache Yarn Dependencies
-        uses: actions/cache@v3
+        uses: actions/cache/save@v4
+        if: always()
         with:
           path: node_modules
           key: yarn-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
@@ -44,7 +45,8 @@ jobs:
 
       # 6) Cache Bundler (Ruby Gems)
       - name: Cache Bundler
-        uses: actions/cache@v3
+        uses: actions/cache/save@v4
+        if: always()
         with:
           path: vendor/bundle
           key: bundler-${{ runner.os }}-${{ hashFiles('**/Gemfile.lock') }}
@@ -60,7 +62,8 @@ jobs:
 
       # 8) Cache CocoaPods
       - name: Cache CocoaPods
-        uses: actions/cache@v3
+        uses: actions/cache/save@v4
+        if: always()
         with:
           path: ios/Pods
           key: cocoapods-${{ runner.os }}-${{ hashFiles('ios/Podfile.lock') }}
@@ -93,7 +96,8 @@ jobs:
 
       # 12) Cache Match Profiles (Provisioning Profiles)
       - name: Cache Match Profiles
-        uses: actions/cache@v3
+        uses: actions/cache/save@v4
+        if: always()
         with:
           path: ~/Library/MobileDevice/Provisioning\ Profiles
           key: match-${{ runner.os }}-${{ hashFiles('fastlane/Matchfile') }}
