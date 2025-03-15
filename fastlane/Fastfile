@@ -138,14 +138,14 @@ before_all do
 
     unlock_keychain(
       path: ENV["CERT_KEYCHAIN_PATH"],
-      password: ENV["CERT_KEYCHAIN_PASSWORD"]
+      password: ENV["MATCH_PASSWORD"]
   )
 
       match(
         type: 'appstore',
         readonly: false,
         keychain_name: File.basename(ENV["CERT_KEYCHAIN_PATH"]),
-        keychain_password: ENV["CERT_KEYCHAIN_PASSWORD"],
+        keychain_password: ENV["MATCH_PASSWORD"],
       )
 
     # Fetch credentials from ENV or .env.<environment>
