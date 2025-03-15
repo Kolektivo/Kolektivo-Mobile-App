@@ -134,18 +134,12 @@ before_all do
   lane :build do |options|
     env = options[:environment]
 
-    setup_ci if ENV['CI']
-
-    unlock_keychain(
-      path: ENV["CERT_KEYCHAIN_PATH"],
-      password: ENV["MATCH_PASSWORD"]
-  )
+    # setup_ci if ENV['CI']
 
       match(
         type: 'appstore',
         readonly: false,
-        keychain_name: File.basename(ENV["CERT_KEYCHAIN_PATH"]),
-        keychain_password: ENV["MATCH_PASSWORD"],
+        keychain_name: 'local.keychain',
       )
 
     # Fetch credentials from ENV or .env.<environment>
