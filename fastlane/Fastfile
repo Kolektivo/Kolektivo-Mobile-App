@@ -139,8 +139,6 @@ before_all do
     sync_code_signing(
       type: 'appstore',
       app_identifier: ['tt.kolektivo.mainnet'],
-      force_for_new_devices: true,
-      readonly: true
     )
 
     match(
