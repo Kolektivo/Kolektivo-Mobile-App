@@ -68,18 +68,18 @@ jobs:
       # - name: Start Development Server
       #   run: yarn dev:ios & # runs in background
 
-      # # 11) Set up Fastlane Environment Variables
-      # - name: Set up Fastlane Environment Variables
-      #   run: |
-      #     mkdir -p ios  # Ensure directory exists
-      #     echo "APPLE_CONNECT_KEY_ID=${{ secrets.APPLE_CONNECT_KEY_ID }}" >> $GITHUB_ENV
-      #     echo "APPLE_CONNECT_ISSUER_ID=${{ secrets.APPLE_CONNECT_ISSUER_ID }}" >> $GITHUB_ENV
-      #     echo "FASTLANE_USER=${{ secrets.FASTLANE_USER }}" >> $GITHUB_ENV
-      #     echo "FASTLANE_PASSWORD=${{ secrets.FASTLANE_PASSWORD }}" >> $GITHUB_ENV
-      #     echo "MATCH_PASSWORD=${{ secrets.MATCH_PASSWORD }}" >> $GITHUB_ENV
-      #     echo "MATCH_GIT_BASIC_AUTHORIZATION=${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}" >> $GITHUB_ENV
-      #     echo "FASTLANE_XCODEBUILD_SETTINGS_TIMEOUT=60" >> $GITHUB_ENV
-      #     echo "FASTLANE_XCODEBUILD_SETTINGS_RETRIES=6" >> $GITHUB_ENV
+      # 11) Set up Fastlane Environment Variables
+      - name: Set up Fastlane Environment Variables
+        run: |
+          mkdir -p ios  # Ensure directory exists
+          echo "APPLE_CONNECT_KEY_ID=${{ secrets.APPLE_CONNECT_KEY_ID }}" >> $GITHUB_ENV
+          echo "APPLE_CONNECT_ISSUER_ID=${{ secrets.APPLE_CONNECT_ISSUER_ID }}" >> $GITHUB_ENV
+          echo "FASTLANE_USER=${{ secrets.FASTLANE_USER }}" >> $GITHUB_ENV
+          echo "FASTLANE_PASSWORD=${{ secrets.FASTLANE_PASSWORD }}" >> $GITHUB_ENV
+          echo "MATCH_PASSWORD=${{ secrets.MATCH_PASSWORD }}" >> $GITHUB_ENV
+          echo "MATCH_GIT_BASIC_AUTHORIZATION=${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}" >> $GITHUB_ENV
+          echo "FASTLANE_XCODEBUILD_SETTINGS_TIMEOUT=60" >> $GITHUB_ENV
+          echo "FASTLANE_XCODEBUILD_SETTINGS_RETRIES=6" >> $GITHUB_ENV
 
       # # 14) Clear Xcode Derived Data
       # - name: Clear Xcode Derived Data
