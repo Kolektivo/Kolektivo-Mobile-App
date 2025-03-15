@@ -103,6 +103,9 @@ jobs:
           cat ios/AuthKey.p8 | grep "BEGIN PRIVATE KEY" || echo "❌ Invalid PEM format detected!"
           echo "APPLE_CONNECT_CERTIFICATE_PATH=ios/AuthKey.p8" >> $GITHUB_ENV
 
+      - name: Set File Permissions for AuthKey.p8
+        run: chmod 600 ios/AuthKey.p8
+
       # 15) Run Fastlane for TestFlight Upload
       - name: Run Fastlane for TestFlight Upload 🚀
         run: fastlane ios mainnet
