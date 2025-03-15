@@ -134,7 +134,19 @@ before_all do
   lane :build do |options|
     env = options[:environment]
 
+    # Fetch credentials from ENV or .env.<environment>
+    authentication_key_path = fetch_env_var_or_dotenv('APPLE_CONNECT_CERTIFICATE_PATH', env)
+    authentication_key_id = fetch_env_var_or_dotenv('APPLE_CONNECT_KEY_ID', env)
+    authentication_key_issuer_id = fetch_env_var_or_dotenv('APPLE_CONNECT_ISSUER_ID', env)
+
     # setup_ci if ENV['CI']
+
+    app_store_connect_api_key(
+      key_id: authentication_key_id,
+      issuer_id: authentication_key_issuer_id,
+      key_filepath: authentication_key_path,
+      duration: 1200
+    )
 
     sync_code_signing(
       type: 'appstore',
@@ -146,11 +158,6 @@ before_all do
       type: 'appstore',
       readonly: true,
     )
-
-    # Fetch credentials from ENV or .env.<environment>
-    authentication_key_path = fetch_env_var_or_dotenv('APPLE_CONNECT_CERTIFICATE_PATH', env)
-    authentication_key_id = fetch_env_var_or_dotenv('APPLE_CONNECT_KEY_ID', env)
-    authentication_key_issuer_id = fetch_env_var_or_dotenv('APPLE_CONNECT_ISSUER_ID', env)
 
     gym(
       workspace: 'ios/celo.xcworkspace',
