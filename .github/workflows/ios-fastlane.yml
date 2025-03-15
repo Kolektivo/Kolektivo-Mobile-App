@@ -72,8 +72,6 @@ jobs:
       - name: Set up Fastlane Environment Variables
         run: |
           mkdir -p ios  # Ensure directory exists
-          echo "${{ secrets.APPLE_CONNECT_CERTIFICATE_BASE64 }}" | base64 --decode > $(pwd)/ios/AuthKey.p8
-          echo "APPLE_CONNECT_CERTIFICATE_PATH=$(pwd)/ios/AuthKey.p8" >> $GITHUB_ENV
           echo "APPLE_CONNECT_KEY_ID=${{ secrets.APPLE_CONNECT_KEY_ID }}" >> $GITHUB_ENV
           echo "APPLE_CONNECT_ISSUER_ID=${{ secrets.APPLE_CONNECT_ISSUER_ID }}" >> $GITHUB_ENV
           echo "FASTLANE_USER=${{ secrets.FASTLANE_USER }}" >> $GITHUB_ENV
@@ -96,6 +94,14 @@ jobs:
 
       - name: Debug SSH Access
         run: ssh -T git@github.com || echo "SSH authentication failed"
+
+      - name: Decode and Validate Apple Certificate
+        run: |
+          mkdir -p ios
+          echo "${{ secrets.APPLE_CONNECT_CERTIFICATE_BASE64 }}" | base64 --decode > ios/AuthKey.p8
+          file ios/AuthKey.p8
+          cat ios/AuthKey.p8 | grep "BEGIN PRIVATE KEY" || echo "❌ Invalid PEM format detected!"
+          echo "APPLE_CONNECT_CERTIFICATE_PATH=$(pwd)/ios/AuthKey.p8" >> $GITHUB_ENV
 
       # 15) Run Fastlane for TestFlight Upload
       - name: Run Fastlane for TestFlight Upload 🚀
