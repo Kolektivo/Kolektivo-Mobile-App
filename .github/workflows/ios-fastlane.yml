@@ -85,7 +85,7 @@ jobs:
       - name: Clear Xcode Derived Data
         run: rm -rf ~/Library/Developer/Xcode/DerivedData
 
-      - name: Setup SSH for Private Repo Access
+      - name: Setup SSH for Repo Access
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.DEPLOY_KEY }}" > ~/.ssh/id_rsa
