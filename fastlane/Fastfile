@@ -145,8 +145,7 @@ before_all do
     app_store_connect_api_key(
       key_id: authentication_key_id,
       issuer_id: authentication_key_issuer_id,
-      key_content: authentication_key_content,
-      is_key_content_base64: true,
+      key_content: authentication_key_path,
       duration: 1200
     )
 
@@ -169,6 +168,9 @@ before_all do
       configuration: 'Release',
       xcargs: [
         "-allowProvisioningUpdates",
+        "-authenticationKeyPath #{authentication_key_path}",
+        "-authenticationKeyID #{authentication_key_id}",
+        "-authenticationKeyIssuerID #{authentication_key_issuer_id}",
       ].join(' '),
       output_directory: 'build',
       # verbose: true
