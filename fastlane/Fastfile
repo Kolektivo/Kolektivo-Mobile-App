@@ -116,6 +116,8 @@ end
 platform :ios do
 
 before_all do
+  setup_ci
+  load_asc_api_token
   xcodes(
     version: '15.2',
     select_for_current_build_only: true,
@@ -142,6 +144,29 @@ before_all do
 
     setup_ci if ENV['CI']
 
+    api_key = lane_context[SharedValues::APP_STORE_CONNECT_API_KEY]
+
+    sync_code_signing(
+      api_key: api_key,
+      type: "appstore",
+      readonly: true,
+    )  
+
+    keychain_password = SecureRandom.base64
+    create_keychain(
+      name: "fastlane",
+      unlock: true,
+      timeout: 3600,
+      lock_when_sleeps: true,
+      password: keychain_password
+    )
+
+    import_certificate(
+      certificate_path: authentication_key_path,
+      keychain_name: "fastlane",
+      keychain_password: keychain_password
+    )
+
     match(
       type: "appstore", 
       readonly: is_ci
@@ -163,6 +188,17 @@ before_all do
       output_directory: 'build',
       # verbose: true
      ) 
+  end
+
+  desc "Load the App Store Connect API token"
+  lane :load_asc_api_token do
+    app_store_connect_api_key(
+      key_id: ENV["APPLE_CONNECT_KEY_ID"],
+      issuer_id: ENV["APPLE_CONNECT_ISSUER_ID"],
+      key_content: ENV["APPLE_CONNECT_CERTIFICATE_BASE64"],
+      is_key_content_base64: true,
+      in_house: false
+    )
   end
   
   desc 'Upload to TestFlight'
