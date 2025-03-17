@@ -169,9 +169,6 @@ before_all do
       configuration: 'Release',
       xcargs: [
         "-allowProvisioningUpdates",
-        "-authenticationKeyPath #{authentication_key_path}",
-        "-authenticationKeyID #{authentication_key_id}",
-        "-authenticationKeyIssuerID #{authentication_key_issuer_id}",
       ].join(' '),
       output_directory: 'build',
       # verbose: true
