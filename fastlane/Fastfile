@@ -171,11 +171,6 @@ before_all do
       keychain_password: keychain_password
     )
 
-    match(
-      type: 'appstore',
-      readonly: true,
-    )
-
     gym(
       workspace: 'ios/celo.xcworkspace',
       # Needs double quotes because Ruby differentiates
