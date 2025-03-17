@@ -142,15 +142,13 @@ before_all do
 
     # setup_ci if ENV['CI']
 
-    app_store_connect_api_key(
-      key_id: authentication_key_id,
-      issuer_id: authentication_key_issuer_id,
-      key_content: authentication_key_content,
-      is_key_content_base64: true,
-      duration: 1200
-    )
-
-    match_nuke(type: "appstore")
+    # app_store_connect_api_key(
+    #   key_id: authentication_key_id,
+    #   issuer_id: authentication_key_issuer_id,
+    #   key_content: authentication_key_content,
+    #   is_key_content_base64: true,
+    #   duration: 1200
+    # )
 
     # sync_code_signing(
     #   type: 'appstore',
