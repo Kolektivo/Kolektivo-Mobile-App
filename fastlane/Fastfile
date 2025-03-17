@@ -172,9 +172,10 @@ before_all do
     )
 
     match(
-      type: 'appstore',
-      readonly: true,
-    )
+      type: "appstore", 
+      readonly: is_ci
+      )
+
 
     gym(
       workspace: 'ios/celo.xcworkspace',
