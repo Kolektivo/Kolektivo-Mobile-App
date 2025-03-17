@@ -142,35 +142,6 @@ before_all do
 
     setup_ci if ENV['CI']
 
-    app_store_connect_api_key(
-      key_id: authentication_key_id,
-      issuer_id: authentication_key_issuer_id,
-      key_content: authentication_key_content,
-      is_key_content_base64: true,
-      duration: 1200
-    )
-
-    sync_code_signing(
-      type: 'appstore',
-      app_identifier: ['tt.kolektivo.mainnet'],
-      readonly: true,
-    )
-
-    keychain_password = SecureRandom.base64
-    create_keychain(
-      name: "fastlane",
-      unlock: true,
-      timeout: 3600,
-      lock_when_sleeps: true,
-      password: keychain_password
-    )
-
-    import_certificate(
-      certificate_path: authentication_key_path,
-      keychain_name: "fastlane",
-      keychain_password: keychain_password
-    )
-
     match(
       type: "appstore", 
       readonly: is_ci
