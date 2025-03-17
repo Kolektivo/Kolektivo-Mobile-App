@@ -74,6 +74,7 @@ jobs:
           mkdir -p ios  # Ensure directory exists
           echo "APPLE_CONNECT_KEY_ID=${{ secrets.APPLE_CONNECT_KEY_ID }}" >> $GITHUB_ENV
           echo "APPLE_CONNECT_ISSUER_ID=${{ secrets.APPLE_CONNECT_ISSUER_ID }}" >> $GITHUB_ENV
+          echo "APPLE_CONNECT_CERTIFICATE_BASE64=${{ secrets.APPLE_CONNECT_CERTIFICATE_BASE64 }}" >> $GITHUB_ENV
           echo "FASTLANE_USER=${{ secrets.FASTLANE_USER }}" >> $GITHUB_ENV
           echo "FASTLANE_PASSWORD=${{ secrets.FASTLANE_PASSWORD }}" >> $GITHUB_ENV
           echo "MATCH_PASSWORD=${{ secrets.MATCH_PASSWORD }}" >> $GITHUB_ENV
