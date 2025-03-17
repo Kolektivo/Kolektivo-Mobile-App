@@ -156,6 +156,21 @@ before_all do
       readonly: true,
     )
 
+    keychain_password = SecureRandom.base64
+    create_keychain(
+      name: "fastlane",
+      unlock: true,
+      timeout: 3600,
+      lock_when_sleeps: true,
+      password: keychain_password
+    )
+    import_certificate(
+      certificate_path: authentication_key_path,
+      keychain_name: "fastlane",
+      keychain_password: keychain_password
+    )
+
+
     match(
       type: 'appstore',
       readonly: true,
