@@ -82,6 +82,9 @@ jobs:
           echo "FASTLANE_XCODEBUILD_SETTINGS_TIMEOUT=60" >> $GITHUB_ENV
           echo "FASTLANE_XCODEBUILD_SETTINGS_RETRIES=6" >> $GITHUB_ENV
 
+      - name: Export SECRETSJSON to File
+        run: echo '${{ secrets.SECRETSJSON }}' > secrets.json
+
       # 14) Clear Xcode Derived Data
       - name: Clear Xcode Derived Data
         run: rm -rf ~/Library/Developer/Xcode/DerivedData
