@@ -48,6 +48,15 @@ jobs:
           bundle config set --local path 'vendor/bundle'
           bundle install --jobs 4 --retry 3
 
+      # check if ios/celo/Base.lproj/LaunchScreen.xib exists
+      - name: Check if LaunchScreen.xib exists
+        run: |
+          if [ -f ios/celo/Base.lproj/LaunchScreen.xib ]; then
+            echo "LaunchScreen.xib exists"
+          else
+            echo "LaunchScreen.xib does not exist"
+          fi
+
       - name: Restore CocoaPods Cache
         uses: actions/cache/restore@v4
         id: cache-cocoapods
