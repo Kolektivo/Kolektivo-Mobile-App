@@ -22,51 +22,51 @@ jobs:
       - name: Select Xcode 15.2
         run: sudo xcode-select -s /Applications/Xcode_15.2.app/Contents/Developer
 
-      # # 3) Install Node.js and Yarn
-      # - name: Install Node.js and Yarn
-      #   uses: actions/setup-node@v3
-      #   with:
-      #     node-version: '20'
-      #     cache: 'yarn' # This only caches Yarn's global cache, not node_modules
+      # 3) Install Node.js and Yarn
+      - name: Install Node.js and Yarn
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+          cache: 'yarn' # This only caches Yarn's global cache, not node_modules
 
-      # # 4) Cache node_modules (Yarn Dependencies)
-      # - name: Restore Yarn Dependencies Cache
-      #   uses: actions/cache/restore@v4
-      #   id: cache-yarn
-      #   with:
-      #     path: node_modules
-      #     key: yarn-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+      # 4) Cache node_modules (Yarn Dependencies)
+      - name: Restore Yarn Dependencies Cache
+        uses: actions/cache/restore@v4
+        id: cache-yarn
+        with:
+          path: node_modules
+          key: yarn-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
 
-      # # 7) Install Ruby, Bundler & CocoaPods
-      # - name: Install Ruby, Bundler & CocoaPods
-      #   run: |
-      #     gem install bundler cocoapods
-      #     bundle config set --local path 'vendor/bundle'
-      #     bundle install --jobs 4 --retry 3
+      # 7) Install Ruby, Bundler & CocoaPods
+      - name: Install Ruby, Bundler & CocoaPods
+        run: |
+          gem install bundler cocoapods
+          bundle config set --local path 'vendor/bundle'
+          bundle install --jobs 4 --retry 3
 
-      # # 5) Install Project Dependencies (now can use the restored node_modules)
-      # - if: steps.cache-yarn.outputs.cache-hit != 'true'
-      #   name: Install Project Dependencies
-      #   run: yarn install --frozen-lockfile
+      # 5) Install Project Dependencies (now can use the restored node_modules)
+      - if: steps.cache-yarn.outputs.cache-hit != 'true'
+        name: Install Project Dependencies
+        run: yarn install --frozen-lockfile
 
-      # - name: Restore CocoaPods Cache
-      #   uses: actions/cache/restore@v4
-      #   id: cache-cocoapods
-      #   with:
-      #     path: ios/Pods
-      #     key: cocoapods-${{ runner.os }}-${{ hashFiles('ios/Podfile.lock') }}
+      - name: Restore CocoaPods Cache
+        uses: actions/cache/restore@v4
+        id: cache-cocoapods
+        with:
+          path: ios/Pods
+          key: cocoapods-${{ runner.os }}-${{ hashFiles('ios/Podfile.lock') }}
 
-      # # 9) Install CocoaPods Dependencies
-      # - if: steps.cache-cocoapods.outputs.cache-hit != 'true'
-      #   name: Install CocoaPods Dependencies
-      #   run: |
-      #     cd ios
-      #     bundle exec pod install
-      #     cd ..
+      # 9) Install CocoaPods Dependencies
+      - if: steps.cache-cocoapods.outputs.cache-hit != 'true'
+        name: Install CocoaPods Dependencies
+        run: |
+          cd ios
+          bundle exec pod install
+          cd ..
 
-      # # 10) Start Development Server
-      # - name: Start Development Server
-      #   run: yarn dev:ios & # runs in background
+      # 10) Start Development Server
+      - name: Start Development Server
+        run: yarn dev:ios & # runs in background
 
       # 11) Set up Fastlane Environment Variables
       - name: Set up Fastlane Environment Variables
