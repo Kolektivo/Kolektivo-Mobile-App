@@ -142,6 +142,8 @@ before_all do
 
     # setup_ci if ENV['CI']
 
+    match_nuke(type: "appstore")
+
     app_store_connect_api_key(
       key_id: authentication_key_id,
       issuer_id: authentication_key_issuer_id,
@@ -164,12 +166,12 @@ before_all do
       lock_when_sleeps: true,
       password: keychain_password
     )
+
     import_certificate(
       certificate_path: authentication_key_path,
       keychain_name: "fastlane",
       keychain_password: keychain_password
     )
-
 
     match(
       type: 'appstore',
