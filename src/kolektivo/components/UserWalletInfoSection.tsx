@@ -1,14 +1,18 @@
 import React from 'react'
 import { StyleSheet, Text, View } from 'react-native'
 import { TouchableOpacity } from 'react-native-gesture-handler'
+import { useSelector } from 'react-redux'
 import KolCurrency from 'src/icons/KolCurrency'
 import LinearBackground from 'src/kolektivo/components/LinearBackground'
 import { TokenBalance } from 'src/kolektivo/components/TokenBalance'
 import Clipboard from 'src/kolektivo/icons/Clipboard'
 import { typeScale } from 'src/kolektivo/styles/kolektivoFonts'
 import variables from 'src/kolektivo/styles/variables'
+import { currentAccountSelector } from 'src/web3/selectors'
 
 export default function UserWalletInfoSection() {
+  const account = useSelector(currentAccountSelector)
+
   return (
     <View style={styles.container}>
       <LinearBackground
@@ -16,7 +20,7 @@ export default function UserWalletInfoSection() {
         backgroundImage={require('src/kolektivo/images/UserWalletDetailsMask.png')}
       >
         <TouchableOpacity style={styles.addressClipboard}>
-          <Text style={{ paddingRight: 8 }}>YolandaCW1</Text>
+          <Text style={{ paddingRight: 8 }}>{account?.slice(0, 9)}...</Text>
           <Clipboard />
         </TouchableOpacity>
         <View style={styles.currency}>

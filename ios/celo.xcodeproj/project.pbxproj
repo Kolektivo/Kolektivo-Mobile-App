@@ -8,9 +8,9 @@
 
 /* Begin PBXBuildFile section */
 		00E356F31AD99517003FC87E /* celoTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 00E356F21AD99517003FC87E /* celoTests.m */; };
-		0317E786245B696200AAAC2E /* Inter-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 0317E783245B696200AAAC2E /* Inter-Regular.ttf */; };
-		0317E788245B696200AAAC2E /* Inter-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 0317E784245B696200AAAC2E /* Inter-Medium.ttf */; };
-		0317E78A245B696200AAAC2E /* Inter-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 0317E785245B696200AAAC2E /* Inter-SemiBold.ttf */; };
+		0317E786245B696200AAAC2E /* ../fonts/Inter-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 0317E783245B696200AAAC2E /* ../fonts/Inter-Regular.ttf */; };
+		0317E788245B696200AAAC2E /* ../fonts/Inter-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 0317E784245B696200AAAC2E /* ../fonts/Inter-Medium.ttf */; };
+		0317E78A245B696200AAAC2E /* ../fonts/Inter-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 0317E785245B696200AAAC2E /* ../fonts/Inter-SemiBold.ttf */; };
 		0350D7F2EBD64D0585FEF0AF /* Hind-Light.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 95E01263B685485BA7D5CEB0 /* Hind-Light.ttf */; };
 		0445977E03C74B20A93158B5 /* Hind-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = B59F6FDB7D084157A12E7A52 /* Hind-Bold.ttf */; };
 		0581BC2D3AEB42D086D403E3 /* Hind-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = AAE92820119F4CC5B23C6636 /* Hind-Medium.ttf */; };
@@ -84,9 +84,9 @@
 		00E356EE1AD99517003FC87E /* celoTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = celoTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		00E356F11AD99517003FC87E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		00E356F21AD99517003FC87E /* celoTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = celoTests.m; sourceTree = "<group>"; };
-		0317E783245B696200AAAC2E /* Inter-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "../fonts/Inter-Regular.ttf"; sourceTree = "<group>"; };
-		0317E784245B696200AAAC2E /* Inter-Medium.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "../fonts/Inter-Medium.ttf"; sourceTree = "<group>"; };
-		0317E785245B696200AAAC2E /* Inter-SemiBold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "../fonts/Inter-SemiBold.ttf"; sourceTree = "<group>"; };
+		0317E783245B696200AAAC2E /* ../fonts/Inter-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "../fonts/Inter-Regular.ttf"; sourceTree = "<group>"; };
+		0317E784245B696200AAAC2E /* ../fonts/Inter-Medium.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "../fonts/Inter-Medium.ttf"; sourceTree = "<group>"; };
+		0317E785245B696200AAAC2E /* ../fonts/Inter-SemiBold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "../fonts/Inter-SemiBold.ttf"; sourceTree = "<group>"; };
 		0F3673F62673A63800F9586A /* celo-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "celo-Bridging-Header.h"; path = "celo/celo-Bridging-Header.h"; sourceTree = "<group>"; };
 		0F3673F72673A63900F9586A /* File.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = File.swift; path = celo/File.swift; sourceTree = "<group>"; };
 		0F49F5ED270F2F2A0005F897 /* NotificationService.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = NotificationService.appex; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -293,9 +293,9 @@
 		E3041EF3155B4320B4CF8300 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
-				0317E784245B696200AAAC2E /* Inter-Medium.ttf */,
-				0317E783245B696200AAAC2E /* Inter-Regular.ttf */,
-				0317E785245B696200AAAC2E /* Inter-SemiBold.ttf */,
+				0317E784245B696200AAAC2E /* ../fonts/Inter-Medium.ttf */,
+				0317E783245B696200AAAC2E /* ../fonts/Inter-Regular.ttf */,
+				0317E785245B696200AAAC2E /* ../fonts/Inter-SemiBold.ttf */,
 				B59F6FDB7D084157A12E7A52 /* Hind-Bold.ttf */,
 				95E01263B685485BA7D5CEB0 /* Hind-Light.ttf */,
 				AAE92820119F4CC5B23C6636 /* Hind-Medium.ttf */,
@@ -360,7 +360,6 @@
 				0F49F5F5270F2F2A0005F897 /* Embed App Extensions */,
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
 				0FA148AE242137AC009239C6 /* Copy GoogleService-Info.plist */,
-				FAA606D3D7E04ED7985FC9FF /* Upload Debug Symbols to Sentry */,
 				17C74982970FB703473BB542 /* [CP-User] [RNFB] Core Configuration */,
 				32DB46242FD085CEFD30BC90 /* [CP] Copy Pods Resources */,
 			);
@@ -427,11 +426,12 @@
 					0F49F5EC270F2F2A0005F897 = {
 						CreatedOnToolsVersion = 12.5;
 						DevelopmentTeam = 2QB23S3GZ3;
-						ProvisioningStyle = Automatic;
+						ProvisioningStyle = Manual;
 					};
 					13B07F861A680F5B00A75B9A = {
 						DevelopmentTeam = 2QB23S3GZ3;
 						LastSwiftMigration = 1250;
+						ProvisioningStyle = Manual;
 						SystemCapabilities = {
 							com.apple.BackgroundModes = {
 								enabled = 1;
@@ -508,7 +508,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				6844FCD52570513C0057A74F /* QBImagePicker.storyboard in Resources */,
-				0317E78A245B696200AAAC2E /* Inter-SemiBold.ttf in Resources */,
+				0317E78A245B696200AAAC2E /* ../fonts/Inter-SemiBold.ttf in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				13B07FBD1A68108700A75B9A /* LaunchScreen.xib in Resources */,
 				0FC6C310256FEF2700C35F47 /* InfoPlist.strings in Resources */,
@@ -516,10 +516,10 @@
 				27DBFF6B2BDA6EED00863BC5 /* PrivacyInfo.xcprivacy in Resources */,
 				E4F98D8C2ABA81A300BFC13B /* Inter-Bold.ttf in Resources */,
 				0350D7F2EBD64D0585FEF0AF /* Hind-Light.ttf in Resources */,
-				0317E786245B696200AAAC2E /* Inter-Regular.ttf in Resources */,
+				0317E786245B696200AAAC2E /* ../fonts/Inter-Regular.ttf in Resources */,
 				0581BC2D3AEB42D086D403E3 /* Hind-Medium.ttf in Resources */,
 				2CE54C7D16D44C5380C53609 /* Hind-Regular.ttf in Resources */,
-				0317E788245B696200AAAC2E /* Inter-Medium.ttf in Resources */,
+				0317E788245B696200AAAC2E /* ../fonts/Inter-Medium.ttf in Resources */,
 				5575263ED1EA4F568D328DE9 /* Hind-SemiBold.ttf in Resources */,
 				EB3CF5B346854570A1EC69B3 /* Jost-Book.ttf in Resources */,
 				2E6B8DA1BF6440D89CB45CCA /* Jost-Medium.ttf in Resources */,
@@ -556,7 +556,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# First set the path to sentry.properties\nexport SENTRY_PROPERTIES=sentry.properties\n\n# Setup nvm and set node\n[ -z \"$NVM_DIR\" ] && export NVM_DIR=\"$HOME/.nvm\"\n\nif [[ -s \"$HOME/.nvm/nvm.sh\" ]]; then\n. \"$HOME/.nvm/nvm.sh\"\nelif [[ -x \"$(command -v brew)\" && -s \"$(brew --prefix nvm)/nvm.sh\" ]]; then\n. \"$(brew --prefix nvm)/nvm.sh\"\nfi\n\n# Set up the nodenv node version manager if present\nif [[ -x \"$HOME/.nodenv/bin/nodenv\" ]]; then\neval \"$(\"$HOME/.nodenv/bin/nodenv\" init -)\"\nfi\n\n# Set up asdf version manager if present\nif [[ -s \"$HOME/.asdf/asdf.sh\" ]]; then\n. \"$HOME/.asdf/asdf.sh\"\nfi\n\n[ -z \"$NODE_BINARY\" ] && export NODE_BINARY=\"node\"\n\n# Fixes bundling failing with our monorepo setup\nexport PROJECT_ROOT=\"$PROJECT_DIR/..\"\n\nif [[ \"$APP_BUNDLE_ID\" = \"org.celo.mobile.test\" ]]; then\n    ../node_modules/react-native/scripts/react-native-xcode.sh\nelse\n    $NODE_BINARY ../node_modules/@sentry/cli/bin/sentry-cli react-native xcode \\\n        ../node_modules/react-native/scripts/react-native-xcode.sh\nfi\n";
+			shellScript = "# First set the path to sentry.properties\nexport SENTRY_PROPERTIES=sentry.properties\n\n# Setup nvm and set node\n[ -z \"$NVM_DIR\" ] && export NVM_DIR=\"$HOME/.nvm\"\n\nif [[ -s \"$HOME/.nvm/nvm.sh\" ]]; then\n. \"$HOME/.nvm/nvm.sh\"\nelif [[ -x \"$(command -v brew)\" && -s \"$(brew --prefix nvm)/nvm.sh\" ]]; then\n. \"$(brew --prefix nvm)/nvm.sh\"\nfi\n\n# Set up the nodenv node version manager if present\nif [[ -x \"$HOME/.nodenv/bin/nodenv\" ]]; then\neval \"$(\"$HOME/.nodenv/bin/nodenv\" init -)\"\nfi\n\n# Set up asdf version manager if present\nif [[ -s \"$HOME/.asdf/asdf.sh\" ]]; then\n. \"$HOME/.asdf/asdf.sh\"\nfi\n\n[ -z \"$NODE_BINARY\" ] && export NODE_BINARY=\"node\"\n\n# Fixes bundling failing with our monorepo setup\nexport PROJECT_ROOT=\"$PROJECT_DIR/..\"\n\nif [[ \"$APP_BUNDLE_ID\" = \"org.celo.mobile.test\" ]]; then\n    ../node_modules/react-native/scripts/react-native-xcode.sh\nelse\n    ../node_modules/react-native/scripts/react-native-xcode.sh\nfi\n";
 		};
 		0FA148AE242137AC009239C6 /* Copy GoogleService-Info.plist */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -785,20 +785,6 @@
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
-		FAA606D3D7E04ED7985FC9FF /* Upload Debug Symbols to Sentry */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-			);
-			name = "Upload Debug Symbols to Sentry";
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "if [[ \"$CONFIGURATION\" = *Debug* ]]; then\n    echo \"Debug build; skipping upload debug symbols.\"\n    exit 0\nfi\n\nif [[ \"$APP_BUNDLE_ID\" = \"org.celo.mobile.test\" ]]; then\n    echo \"Test build; skipping upload debug symbols.\"\n    exit 0\nfi\n\nexport SENTRY_PROPERTIES=sentry.properties\n\n# Setup nvm and set node\n[ -z \"$NVM_DIR\" ] && export NVM_DIR=\"$HOME/.nvm\"\n\nif [[ -s \"$HOME/.nvm/nvm.sh\" ]]; then\n. \"$HOME/.nvm/nvm.sh\"\nelif [[ -x \"$(command -v brew)\" && -s \"$(brew --prefix nvm)/nvm.sh\" ]]; then\n. \"$(brew --prefix nvm)/nvm.sh\"\nfi\n\n# Set up the nodenv node version manager if present\nif [[ -x \"$HOME/.nodenv/bin/nodenv\" ]]; then\neval \"$(\"$HOME/.nodenv/bin/nodenv\" init -)\"\nfi\n\n[ -z \"$NODE_BINARY\" ] && export NODE_BINARY=\"node\"\n\n$NODE_BINARY ../node_modules/@sentry/cli/bin/sentry-cli debug-files upload \"$DWARF_DSYM_FOLDER_PATH\"\n";
-		};
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -922,6 +908,7 @@
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/celo.app/celo";
+				VERSIONING_SYSTEM = "apple-generic";
 			};
 			name = Debug;
 		};
@@ -945,6 +932,7 @@
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/celo.app/celo";
+				VERSIONING_SYSTEM = "apple-generic";
 			};
 			name = Release;
 		};
@@ -969,9 +957,12 @@
 				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
-				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
+				CODE_SIGN_STYLE = Manual;
 				DEBUG_INFORMATION_FORMAT = dwarf;
-				DEVELOPMENT_TEAM = 2QB23S3GZ3;
+				DEVELOPMENT_TEAM = "";
+				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = 2QB23S3GZ3;
 				ENABLE_TESTABILITY = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -982,6 +973,8 @@
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = "$(APP_BUNDLE_ID).NotificationService";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = "XC tt kolektivo mainnet NotificationService";
 				SKIP_INSTALL = YES;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -1008,10 +1001,13 @@
 				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
-				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
+				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				DEVELOPMENT_TEAM = 2QB23S3GZ3;
+				DEVELOPMENT_TEAM = "";
+				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = 2QB23S3GZ3;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_NO_COMMON_BLOCKS = YES;
 				INFOPLIST_FILE = NotificationService/Info.plist;
@@ -1020,6 +1016,8 @@
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = "$(APP_BUNDLE_ID).NotificationService";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = "XC tt kolektivo mainnet NotificationService";
 				SKIP_INSTALL = YES;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -1033,8 +1031,12 @@
 				CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES = YES;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = celo/celo.entitlements;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
+				CODE_SIGN_STYLE = Manual;
+				CURRENT_PROJECT_VERSION = 7245;
 				DEAD_CODE_STRIPPING = YES;
-				DEVELOPMENT_TEAM = 2QB23S3GZ3;
+				DEVELOPMENT_TEAM = "";
+				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = 2QB23S3GZ3;
 				INFOPLIST_FILE = celo/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				LIBRARY_SEARCH_PATHS = (
@@ -1049,9 +1051,12 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "$(APP_BUNDLE_ID)";
 				PRODUCT_NAME = valora;
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = "match AppStore tt.kolektivo.mainnet 1741807379";
 				SWIFT_OBJC_BRIDGING_HEADER = "celo/celo-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
+				VERSIONING_SYSTEM = "apple-generic";
 			};
 			name = Debug;
 		};
@@ -1063,7 +1068,11 @@
 				CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES = YES;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = celo/celo.entitlements;
-				DEVELOPMENT_TEAM = 2QB23S3GZ3;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
+				CODE_SIGN_STYLE = Manual;
+				CURRENT_PROJECT_VERSION = 7245;
+				DEVELOPMENT_TEAM = "";
+				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = 2QB23S3GZ3;
 				INFOPLIST_FILE = celo/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				LIBRARY_SEARCH_PATHS = (
@@ -1078,8 +1087,11 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "$(APP_BUNDLE_ID)";
 				PRODUCT_NAME = valora;
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = "match AppStore tt.kolektivo.mainnet 1741807379";
 				SWIFT_OBJC_BRIDGING_HEADER = "celo/celo-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
+				VERSIONING_SYSTEM = "apple-generic";
 			};
 			name = Release;
 		};
@@ -1111,6 +1123,7 @@
 				SDKROOT = appletvos;
 				TARGETED_DEVICE_FAMILY = 3;
 				TVOS_DEPLOYMENT_TARGET = 9.2;
+				VERSIONING_SYSTEM = "apple-generic";
 			};
 			name = Debug;
 		};
@@ -1142,6 +1155,7 @@
 				SDKROOT = appletvos;
 				TARGETED_DEVICE_FAMILY = 3;
 				TVOS_DEPLOYMENT_TARGET = 9.2;
+				VERSIONING_SYSTEM = "apple-generic";
 			};
 			name = Release;
 		};
@@ -1219,7 +1233,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 153;
+				CURRENT_PROJECT_VERSION = 7245;
 				ENABLE_BITCODE = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = "arm64 ";
@@ -1239,12 +1253,13 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
-				MARKETING_VERSION = 1.88.0;
+				MARKETING_VERSION = 1.88;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_LDFLAGS = "$(inherited)";
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
+				VERSIONING_SYSTEM = "apple-generic";
 			};
 			name = Debug;
 		};
@@ -1268,7 +1283,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = YES;
-				CURRENT_PROJECT_VERSION = 153;
+				CURRENT_PROJECT_VERSION = 7245;
 				ENABLE_BITCODE = NO;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -1285,12 +1300,13 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
-				MARKETING_VERSION = 1.88.0;
+				MARKETING_VERSION = 1.88;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				OTHER_LDFLAGS = "$(inherited)";
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
 				VALIDATE_PRODUCT = YES;
+				VERSIONING_SYSTEM = "apple-generic";
 			};
 			name = Release;
 		};

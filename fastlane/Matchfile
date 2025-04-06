@@ -1,10 +1,12 @@
-git_url("https://github.com/zed-io/kolektivo-app-certificates")
+git_url("git@github.com:Kolektivo-Labs/kolektivo-app-certificates.git")
 
 storage_mode("git")
+type("appstore")
+
 
 # app_identifier(["tools.fastlane.app", "tools.fastlane.app2"])
-username("mabrahamtt@icloud.com") # Your Apple Developer Portal username
-app_identifier(["tt.kolektivo.alfajores", "tt.kolektivo.mainnet"]) # Bundle identifier of your app
+username("hello@obsidianlab.io") # Your Apple Developer Portal username
+app_identifier(["tt.kolektivo.mainnet","tt.kolektivo.mainnet.NotificationService"]) # Bundle identifiers of your app
 team_id("2QB23S3GZ3")
 # For all available options run `fastlane match --help`
 # Remove the # in the beginning of the line to enable the other options

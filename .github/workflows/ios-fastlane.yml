@@ -1,0 +1,143 @@
+name: iOS Fastlane Release 🚀
+
+on:
+  push:
+    tags:
+      - 'v*' # Run only on version tags like v1.0.0, v2.3.4
+  workflow_dispatch: # Allows manual triggering
+
+jobs:
+  release:
+    name: Build & Deploy iOS App
+    runs-on: macos-13 # Use macOS runner with Xcode 15.2
+
+    steps:
+      # 1) Checkout
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # 2) Select Xcode 15.2
+      - name: Select Xcode 15.2
+        run: sudo xcode-select -s /Applications/Xcode_15.2.app/Contents/Developer
+
+      # 3) Install Node.js and Yarn
+      - name: Install Node.js and Yarn
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+          cache: 'yarn' # This only caches Yarn's global cache, not node_modules
+
+      # 4) Cache node_modules (Yarn Dependencies)
+      - name: Restore Yarn Dependencies Cache
+        uses: actions/cache/restore@v4
+        id: cache-yarn
+        with:
+          path: node_modules
+          key: yarn-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+
+      # 5) Install Project Dependencies (now can use the restored node_modules)
+      - if: steps.cache-yarn.outputs.cache-hit != 'true'
+        name: Install Project Dependencies
+        run: yarn install --frozen-lockfile
+
+      # 6) Run Yarn Postinsall
+      - name: Run Yarn Postinstall
+        run: yarn postinstall
+
+      # 7) Install Ruby, Bundler & CocoaPods
+      - name: Install Ruby, Bundler & CocoaPods
+        run: |
+          gem install bundler cocoapods
+          bundle config set --local path 'vendor/bundle'
+          bundle install --jobs 4 --retry 3
+
+      - name: Restore CocoaPods Cache
+        uses: actions/cache/restore@v4
+        id: cache-cocoapods
+        with:
+          path: ios/Pods
+          key: cocoapods-${{ runner.os }}-${{ hashFiles('ios/Podfile.lock') }}
+
+      # 9) Install CocoaPods Dependencies
+      - if: steps.cache-cocoapods.outputs.cache-hit != 'true'
+        name: Install CocoaPods Dependencies
+        run: |
+          cd ios
+          bundle exec pod install
+          cd ..
+
+      # 10) Start Development Server
+      - name: Start Development Server
+        run: yarn dev:ios & # runs in background
+
+      # 11) Set up Fastlane Environment Variables
+      - name: Set up Fastlane Environment Variables
+        run: |
+          mkdir -p ios  # Ensure directory exists
+          echo "APPLE_CONNECT_KEY_ID=${{ secrets.APPLE_CONNECT_KEY_ID }}" >> $GITHUB_ENV
+          echo "APPLE_CONNECT_ISSUER_ID=${{ secrets.APPLE_CONNECT_ISSUER_ID }}" >> $GITHUB_ENV
+          echo "APPLE_CONNECT_CERTIFICATE_BASE64=${{ secrets.APPLE_CONNECT_CERTIFICATE_BASE64 }}" >> $GITHUB_ENV
+          echo "FASTLANE_USER=${{ secrets.FASTLANE_USER }}" >> $GITHUB_ENV
+          echo "FASTLANE_PASSWORD=${{ secrets.FASTLANE_PASSWORD }}" >> $GITHUB_ENV
+          echo "MATCH_PASSWORD=${{ secrets.MATCH_PASSWORD }}" >> $GITHUB_ENV
+          echo "MATCH_GIT_BASIC_AUTHORIZATION=${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}" >> $GITHUB_ENV
+          echo "FASTLANE_XCODEBUILD_SETTINGS_TIMEOUT=60" >> $GITHUB_ENV
+          echo "FASTLANE_XCODEBUILD_SETTINGS_RETRIES=6" >> $GITHUB_ENV
+          echo "${{ secrets.GOOGLE_SERVICE_INFO_PLIST_BASE64 }}" | base64 --decode > ios/GoogleService-Info.mainnet.plist
+
+      - name: Export SECRETSJSON to File
+        run: echo '${{ secrets.SECRETSJSON }}' > secrets.json
+
+      # 14) Clear Xcode Derived Data
+      - name: Clear Xcode Derived Data
+        run: |
+          rm -rf ~/Library/Developer/Xcode/DerivedData
+          rm -rf ~/Library/MobileDevice/Provisioning\ Profiles/*
+
+      - name: Setup SSH for Repo Access
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.DEPLOY_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan github.com >> ~/.ssh/known_hosts
+
+      - name: Debug SSH Access
+        run: ssh -T git@github.com || echo "SSH authentication failed"
+
+      - name: Decode and Validate Apple Certificate
+        run: |
+          mkdir -p ios
+          echo "${{ secrets.APPLE_CONNECT_CERTIFICATE_BASE64 }}" | base64 --decode > ios/AuthKey.p8
+          file ios/AuthKey.p8
+          cat ios/AuthKey.p8 | grep "BEGIN PRIVATE KEY" || echo "❌ Invalid PEM format detected!"
+          echo "APPLE_CONNECT_CERTIFICATE_PATH=$(pwd)/ios/AuthKey.p8" >> $GITHUB_ENV
+
+      - name: Set File Permissions for AuthKey.p8
+        run: chmod 600 ios/AuthKey.p8
+
+      # 15) Run Fastlane for TestFlight Upload
+      - name: Run Fastlane for TestFlight Upload 🚀
+        run: fastlane ios mainnet
+
+      # 16) Upload Build Artifacts
+      - name: Upload Build Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: iOS-Build
+          path: build/*.ipa
+
+      # Cache node_modules (Yarn Dependencies)
+      - name: Cache Yarn Dependencies
+        uses: actions/cache/save@v4
+        if: always()
+        with:
+          path: node_modules
+          key: yarn-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+
+      # Cache CocoaPods
+      - name: Cache CocoaPods
+        uses: actions/cache/save@v4
+        if: always()
+        with:
+          path: ios/Pods
+          key: cocoapods-${{ runner.os }}-${{ hashFiles('ios/Podfile.lock') }}

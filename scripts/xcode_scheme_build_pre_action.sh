@@ -12,7 +12,7 @@ echo "" >> /tmp/.env-xcode
 # Then we load the env variables
 # From https://stackoverflow.com/a/56229034/158525
 # Supports vars with spaces and single or double quotes
-eval "$(grep -v -e '^#' /tmp/.env-xcode | xargs -I {} echo export \'{}\')"
+eval "$(grep -v -e '^#' /tmp/.env-xcode | grep -E '^[^=]+=' | xargs -I {} echo export \'{}\')"
 
 # Now augment it with network specific "secrets" (not real secrets, just API keys)
 # See https://newbedev.com/how-to-convert-a-json-object-to-key-value-format-in-jq

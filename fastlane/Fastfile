@@ -2,6 +2,14 @@ fastlane_version '2.94.0'
 
 default_platform(:android)
 
+
+require 'dotenv'
+
+# Helper function to fetch env variables or fall back to .env file
+def fetch_env_var_or_dotenv(var_name, env)
+  ENV[var_name] || Dotenv.parse("../.env.#{env}")[var_name] || UI.user_error!("❌ ERROR: Missing #{var_name} for environment: #{env}")
+end
+
 def get_app_bundle_id(env)
   Dotenv.parse("../.env.#{env}")['APP_BUNDLE_ID']
 end
@@ -57,10 +65,11 @@ platform :android do
       skip_upload_screenshots: true
     )
 
-    fastlane_emerge(
-      environment: env, 
-      file_path: lane_context[SharedValues::GRADLE_AAB_OUTPUT_PATH],
-    )
+    # NOT APPLICABLE
+    # fastlane_emerge(
+    #   environment: env, 
+    #   file_path: lane_context[SharedValues::GRADLE_AAB_OUTPUT_PATH],
+    # )
   end
 
   desc 'Ship Alfajores to Playstore Internal'
@@ -106,8 +115,64 @@ end
 
 platform :ios do
 
+before_all do
+  setup_ci
+  load_asc_api_token
+  xcodes(
+    version: '15.2',
+    select_for_current_build_only: true,
+    )
+  end
+
+    increment_version_number(
+      xcodeproj: 'ios/celo.xcodeproj'
+    )
+    
+    increment_build_number(
+      xcodeproj: 'ios/celo.xcodeproj'
+    )
+
   desc 'Build the iOS application - requires environment param'
   lane :build do |options|
+    env = options[:environment]
+
+    # Fetch credentials from ENV or .env.<environment>
+    authentication_key_path = fetch_env_var_or_dotenv('APPLE_CONNECT_CERTIFICATE_PATH', env)
+    authentication_key_id = fetch_env_var_or_dotenv('APPLE_CONNECT_KEY_ID', env)
+    authentication_key_issuer_id = fetch_env_var_or_dotenv('APPLE_CONNECT_ISSUER_ID', env)
+    authentication_key_content = fetch_env_var_or_dotenv('APPLE_CONNECT_CERTIFICATE_BASE64', env)
+
+    setup_ci if ENV['CI']
+
+    api_key = lane_context[SharedValues::APP_STORE_CONNECT_API_KEY]
+
+    sync_code_signing(
+      api_key: api_key,
+      type: "appstore",
+      readonly: true,
+    )  
+
+    keychain_password = SecureRandom.base64
+    create_keychain(
+      name: "fastlane",
+      unlock: true,
+      timeout: 3600,
+      lock_when_sleeps: true,
+      password: keychain_password
+    )
+
+    import_certificate(
+      certificate_path: authentication_key_path,
+      keychain_name: "fastlane",
+      keychain_password: keychain_password
+    )
+
+    match(
+      type: "appstore", 
+      readonly: is_ci
+      )
+
+
     gym(
       workspace: 'ios/celo.xcworkspace',
       # Needs double quotes because Ruby differentiates
@@ -116,24 +181,47 @@ platform :ios do
       configuration: 'Release',
       xcargs: [
         "-allowProvisioningUpdates",
-        "-authenticationKeyPath #{ENV['APPLE_CONNECT_CERTIFICATE_PATH']}",
-        "-authenticationKeyID #{ENV['APPLE_CONNECT_KEY_ID']}",
-        "-authenticationKeyIssuerID #{ENV['APPLE_CONNECT_ISSUER_ID']}",
+        "-authenticationKeyPath #{authentication_key_path}",
+        "-authenticationKeyID #{authentication_key_id}",
+        "-authenticationKeyIssuerID #{authentication_key_issuer_id}",
       ].join(' '),
       output_directory: 'build',
       # verbose: true
      ) 
   end
+
+  desc "Load the App Store Connect API token"
+  lane :load_asc_api_token do
+    app_store_connect_api_key(
+      key_id: ENV["APPLE_CONNECT_KEY_ID"],
+      issuer_id: ENV["APPLE_CONNECT_ISSUER_ID"],
+      key_content: ENV["APPLE_CONNECT_CERTIFICATE_BASE64"],
+      is_key_content_base64: true,
+      in_house: false
+    )
+  end
   
   desc 'Upload to TestFlight'
   lane :upload do |options|
+
+    env = options[:environment]
+
+    # Fetch credentials from ENV or .env.<environment>
+    authentication_key_path = fetch_env_var_or_dotenv('APPLE_CONNECT_CERTIFICATE_PATH', env)
+    authentication_key_id = fetch_env_var_or_dotenv('APPLE_CONNECT_KEY_ID', env)
+    authentication_key_issuer_id = fetch_env_var_or_dotenv('APPLE_CONNECT_ISSUER_ID', env)
+
     api_key = app_store_connect_api_key(
-      key_id: "#{ENV['APPLE_CONNECT_KEY_ID']}",
-      issuer_id: "#{ENV['APPLE_CONNECT_ISSUER_ID']}",
-      # CI path is '/Volumes/Temporary/AuthKey.p8'
-      key_filepath: "#{ENV['APPLE_CONNECT_CERTIFICATE_PATH']}",
+      key_id: authentication_key_id,
+      issuer_id: authentication_key_issuer_id,
+      key_filepath: authentication_key_path,
       duration: 1200,
     )
+
+    xcodes(
+      version: '15.2',
+      select_for_current_build_only: true,
+      )
     
     upload_to_testflight(
       api_key: api_key,
@@ -141,10 +229,16 @@ platform :ios do
       skip_waiting_for_build_processing: true,
     )
 
-    fastlane_emerge(
-      environment: options[:environment], 
-      file_path: lane_context[SharedValues::XCODEBUILD_ARCHIVE],
-    )
+    # NOT APPLICABLE
+    # fastlane_emerge(
+    #   environment: options[:environment], 
+    #   file_path: lane_context[SharedValues::XCODEBUILD_ARCHIVE],
+    # )
+  end
+
+  desc 'Clean release'
+  lane :clean_build do
+    sh "rm -rf ios/build"
   end
 
   desc 'Ship Alfajores to TestFlight'
@@ -164,6 +258,7 @@ platform :ios do
   desc 'Ship Mainnet to TestFlight'
   lane :mainnet do
     env = 'mainnet'
+    clean_build
     build(environment: env)
     upload(environment: env)
   end
