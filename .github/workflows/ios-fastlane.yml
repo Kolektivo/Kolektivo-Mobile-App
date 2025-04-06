@@ -4,8 +4,6 @@ on:
   push:
     tags:
       - 'v*' # Run only on version tags like v1.0.0, v2.3.4
-    branches:
-      - '@noah/fastlane-ios-integration'
   workflow_dispatch: # Allows manual triggering
 
 jobs:
