@@ -1,14 +1,23 @@
+import { merge } from 'lodash'
 import { retry } from 'ts-retry-promise'
 
-export const launchApp = async (
-  launchArgs = {
-    newInstance: true,
-    permissions: { notifications: 'YES', contacts: 'YES', camera: 'YES' },
-    launchArgs: {
-      detoxPrintBusyIdleResources: 'YES',
-    },
-  }
-) => {
+const defaultLaunchArgs = {
+  newInstance: true,
+  permissions: { notifications: 'YES', contacts: 'YES', camera: 'YES' },
+  launchArgs: {
+    detoxPrintBusyIdleResources: 'YES',
+    // Use new tx feed from Zerion by default, disable positions
+    statsigGateOverrides: 'show_zerion_transaction_feed=true,show_positions=false',
+    // prettier will remove the regex escaping backslashes
+    // prettier-ignore
+    detoxURLBlacklistRegex: '\\("^https://api\.mainnet\.valora\.xyz.*"\\)',
+  },
+}
+
+export const launchApp = async (customArgs = {}) => {
+  // Deep merge customArgs into defaultLaunchArgs
+  const launchArgs = merge({}, defaultLaunchArgs, customArgs)
+
   await retry(
     async () => {
       try {
@@ -19,9 +28,7 @@ export const launchApp = async (
       }
     },
     { retries: 5, delay: 10 * 1000, timeout: 30 * 10000 }
-  ).then(async () => {
-    await device.setURLBlacklist(['.*blockchain-api-dot-celo-mobile-alfajores.*'])
-  })
+  )
 }
 
 export const reloadReactNative = async () => {
@@ -32,7 +39,7 @@ export const reloadReactNative = async () => {
       } catch (error) {
         // eslint-disable-next-line no-console
         console.error('Failed to reload react native with error', error)
-        await launchApp()
+        await launchApp(defaultLaunchArgs)
       }
     },
     { retries: 5, delay: 10 * 1000, timeout: 30 * 10000 }

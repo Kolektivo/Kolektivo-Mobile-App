@@ -1,21 +1,18 @@
-import { valueToBigNumber } from '@celo/contractkit/lib/wrappers/BaseWrapper'
 import { PayloadAction } from '@reduxjs/toolkit'
 import BigNumber from 'bignumber.js'
-import erc20 from 'src/abis/IERC20'
+import AppAnalytics from 'src/analytics/AppAnalytics'
 import { SwapEvents } from 'src/analytics/Events'
 import { SwapTimeMetrics, SwapTxsReceiptProperties } from 'src/analytics/Properties'
-import ValoraAnalytics from 'src/analytics/ValoraAnalytics'
+import { isRegistrationTransaction } from 'src/divviProtocol/registerReferral'
 import { navigateHome } from 'src/navigator/NavigationService'
 import { CANCELLED_PIN_INPUT } from 'src/pincode/authentication'
-import { trackPointsEvent } from 'src/points/slice'
 import { vibrateError } from 'src/styles/hapticFeedback'
 import { getSwapTxsAnalyticsProperties } from 'src/swap/getSwapTxsAnalyticsProperties'
 import { swapCancel, swapError, swapStart, swapSuccess } from 'src/swap/slice'
 import { Field, SwapInfo } from 'src/swap/types'
 import { tokensByIdSelector } from 'src/tokens/selectors'
 import { TokenBalance, TokenBalances } from 'src/tokens/slice'
-import { getSupportedNetworkIdsForSwap } from 'src/tokens/utils'
-import { BaseStandbyTransaction } from 'src/transactions/actions'
+import { BaseStandbyTransaction } from 'src/transactions/slice'
 import {
   NetworkId,
   TokenTransactionTypeV2,
@@ -32,11 +29,9 @@ import { safely } from 'src/utils/safely'
 import { publicClient } from 'src/viem'
 import { getPreparedTransactions } from 'src/viem/preparedTransactionSerialization'
 import { sendPreparedTransactions } from 'src/viem/saga'
-import { getViemWallet } from 'src/web3/contracts'
-import networkConfig from 'src/web3/networkConfig'
-import { getNetworkFromNetworkId } from 'src/web3/utils'
+import { getNetworkFromNetworkId, getSupportedNetworkIds } from 'src/web3/utils'
 import { call, put, select, takeEvery } from 'typed-redux-saga'
-import { decodeFunctionData } from 'viem'
+import { decodeFunctionData, erc20Abi } from 'viem'
 
 const TAG = 'swap/saga'
 
@@ -51,7 +46,7 @@ function calculateEstimatedUsdValue({
     return undefined
   }
 
-  return valueToBigNumber(tokenAmount).times(tokenInfo.priceUsd).toNumber()
+  return new BigNumber(tokenAmount).times(tokenInfo.priceUsd).toNumber()
 }
 
 function getSwapTxsReceiptAnalyticsProperties(
@@ -89,14 +84,15 @@ export function* swapSubmitSaga(action: PayloadAction<SwapInfo>) {
     estimatedPriceImpact,
     preparedTransactions: serializablePreparedTransactions,
     receivedAt: quoteReceivedAt,
+    swapType,
   } = quote
   const amountType = updatedField === Field.TO ? ('buyAmount' as const) : ('sellAmount' as const)
   const amount = swapAmount[updatedField]
-  const preparedTransactions = getPreparedTransactions(serializablePreparedTransactions)
-
-  const tokensById = yield* select((state) =>
-    tokensByIdSelector(state, getSupportedNetworkIdsForSwap())
+  const preparedTransactions = getPreparedTransactions(
+    serializablePreparedTransactions.filter((tx) => !isRegistrationTransaction(tx))
   )
+
+  const tokensById = yield* select((state) => tokensByIdSelector(state, getSupportedNetworkIds()))
   const fromToken = tokensById[fromTokenId]
   const toToken = tokensById[toTokenId]
 
@@ -148,6 +144,7 @@ export function* swapSubmitSaga(action: PayloadAction<SwapInfo>) {
     web3Library: 'viem' as const,
     areSwapTokensShuffled,
     ...getSwapTxsAnalyticsProperties(preparedTransactions, fromToken.networkId, tokensById),
+    swapType,
   }
 
   let quoteToTransactionElapsedTimeInMs: number | undefined
@@ -168,12 +165,6 @@ export function* swapSubmitSaga(action: PayloadAction<SwapInfo>) {
       throw new Error('Unknown token network')
     }
 
-    const wallet = yield* call(getViemWallet, networkConfig.viemChain[network])
-    if (!wallet.account) {
-      // this should never happen
-      throw new Error('no account found in the wallet')
-    }
-
     for (const tx of preparedTransactions) {
       trackedTxs.push({
         tx,
@@ -183,7 +174,7 @@ export function* swapSubmitSaga(action: PayloadAction<SwapInfo>) {
     }
 
     // Execute transaction(s)
-    Logger.debug(TAG, `Starting to swap execute for address: ${wallet.account.address}`)
+    Logger.debug(TAG, `Starting to execute swap for swapId ${swapId}`)
 
     const beforeSwapExecutionTimestamp = Date.now()
     quoteToTransactionElapsedTimeInMs = beforeSwapExecutionTimestamp - quoteReceivedAt
@@ -193,7 +184,7 @@ export function* swapSubmitSaga(action: PayloadAction<SwapInfo>) {
     // add a standby transaction for it
     if (preparedTransactions.length > 1 && preparedTransactions[0].data) {
       const { functionName, args } = yield* call(decodeFunctionData, {
-        abi: erc20.abi,
+        abi: erc20Abi,
         data: preparedTransactions[0].data,
       })
       if (functionName === 'approve' && preparedTransactions[0].to === fromToken.address && args) {
@@ -208,7 +199,6 @@ export function* swapSubmitSaga(action: PayloadAction<SwapInfo>) {
         ): BaseStandbyTransaction => {
           return {
             context: swapApproveContext,
-            __typename: 'TokenApproval',
             networkId,
             type: TokenTransactionTypeV2.Approval,
             transactionHash,
@@ -226,9 +216,11 @@ export function* swapSubmitSaga(action: PayloadAction<SwapInfo>) {
       feeCurrencyId?: string
     ): BaseStandbyTransaction => ({
       context: swapExecuteContext,
-      __typename: 'TokenExchangeV3',
       networkId,
-      type: TokenTransactionTypeV2.SwapTransaction,
+      type:
+        swapType === 'same-chain'
+          ? TokenTransactionTypeV2.SwapTransaction
+          : TokenTransactionTypeV2.CrossChainSwapTransaction,
       inAmount: {
         value: swapAmount[Field.TO],
         tokenId: toToken.tokenId,
@@ -271,28 +263,44 @@ export function* swapSubmitSaga(action: PayloadAction<SwapInfo>) {
       throw new Error(`Swap transaction reverted: ${swapTxReceipt?.transactionHash}`)
     }
 
-    yield* put(swapSuccess({ swapId, fromTokenId, toTokenId }))
     yield* put(
-      trackPointsEvent({
-        activityId: 'swap',
+      swapSuccess({
+        swapId,
+        fromTokenId,
+        toTokenId,
         transactionHash: swapTxReceipt.transactionHash,
         networkId,
-        toTokenId,
-        fromTokenId,
       })
     )
-    ValoraAnalytics.track(SwapEvents.swap_execute_success, {
-      ...defaultSwapExecuteProps,
-      ...getTimeMetrics(),
-      ...getSwapTxsReceiptAnalyticsProperties(trackedTxs, networkId, tokensById),
-    })
+
+    // Success is tracked only for same-chain swaps. Cross-chain swap success is tracked in the query helper
+    // because for the cross-chain swaps, we have to wait for the transaction to be included in the
+    // destination chain before we can consider the swap successful
+    if (swapType === 'same-chain') {
+      AppAnalytics.track(SwapEvents.swap_execute_success, {
+        ...defaultSwapExecuteProps,
+        ...getTimeMetrics(),
+        ...getSwapTxsReceiptAnalyticsProperties(trackedTxs, networkId, tokensById),
+        swapType,
+        swapId,
+      })
+    }
   } catch (err) {
+    const error = ensureError(err)
+
     if (err === CANCELLED_PIN_INPUT) {
       Logger.info(TAG, 'Swap cancelled by user')
       yield* put(swapCancel(swapId))
+
+      AppAnalytics.track(SwapEvents.swap_cancel, {
+        ...defaultSwapExecuteProps,
+        ...getTimeMetrics(),
+        ...getSwapTxsReceiptAnalyticsProperties(trackedTxs, networkId, tokensById),
+        swapId,
+      })
+
       return
     }
-    const error = ensureError(err)
     // dispatch the error early, in case the rest of the handling throws
     // and leaves the app in a bad state
     yield* put(swapError(swapId))
@@ -304,11 +312,12 @@ export function* swapSubmitSaga(action: PayloadAction<SwapInfo>) {
     }
 
     Logger.error(TAG, 'Error while swapping', error)
-    ValoraAnalytics.track(SwapEvents.swap_execute_error, {
+    AppAnalytics.track(SwapEvents.swap_execute_error, {
       ...defaultSwapExecuteProps,
       ...getTimeMetrics(),
       ...getSwapTxsReceiptAnalyticsProperties(trackedTxs, networkId, tokensById),
       error: error.message,
+      swapId,
     })
   }
 }

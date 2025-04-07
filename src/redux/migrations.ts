@@ -1,13 +1,20 @@
 import _ from 'lodash'
-import { FinclusiveKycStatus, RecoveryPhraseInOnboardingStatus } from 'src/account/reducer'
-import { MultichainBetaStatus } from 'src/app/actions'
-import { DEFAULT_SENTRY_NETWORK_ERRORS, DEFAULT_SENTRY_TRACES_SAMPLE_RATE } from 'src/config'
+import {
+  FinclusiveKycStatus,
+  PincodeType,
+  RecoveryPhraseInOnboardingStatus,
+} from 'src/account/reducer'
+import {
+  DEFAULT_SENTRY_NETWORK_ERRORS,
+  DEFAULT_SENTRY_TRACES_SAMPLE_RATE,
+  ONBOARDING_FEATURES_ENABLED,
+} from 'src/config'
 import { Dapp } from 'src/dapps/types'
 import { CachedQuoteParams, SendingFiatAccountStatus } from 'src/fiatconnect/slice'
-import { REMOTE_CONFIG_VALUES_DEFAULTS } from 'src/firebase/remoteConfigValuesDefaults'
 import { AddressToDisplayNameType } from 'src/identity/reducer'
 import { LocalCurrencyCode } from 'src/localCurrency/consts'
 import { Screens } from 'src/navigator/Screens'
+import { ToggleableOnboardingFeatures } from 'src/onboarding/types'
 import { Position } from 'src/positions/types'
 import { Recipient } from 'src/recipients/recipient'
 import { Network, NetworkId, StandbyTransaction, TokenTransaction } from 'src/transactions/types'
@@ -457,7 +464,7 @@ export const migrations = {
     ...state,
     app: {
       ...state.app,
-      superchargeApy: REMOTE_CONFIG_VALUES_DEFAULTS.superchargeApy,
+      superchargeApy: 12,
       superchargeTokens: [],
       rewardsPercent: undefined,
       rewardsStartDate: undefined,
@@ -656,8 +663,8 @@ export const migrations = {
     ...state,
     app: {
       ...state.app,
-      fiatConnectCashInEnabled: REMOTE_CONFIG_VALUES_DEFAULTS.fiatConnectCashInEnabled,
-      fiatConnectCashOutEnabled: REMOTE_CONFIG_VALUES_DEFAULTS.fiatConnectCashOutEnabled,
+      fiatConnectCashInEnabled: false,
+      fiatConnectCashOutEnabled: false,
     },
   }),
   53: (state: any) => ({
@@ -711,7 +718,7 @@ export const migrations = {
     ...state,
     app: {
       ...state.app,
-      coinbasePayEnabled: REMOTE_CONFIG_VALUES_DEFAULTS.coinbasePayEnabled,
+      coinbasePayEnabled: false,
     },
   }),
   59: (state: any) => ({
@@ -735,7 +742,7 @@ export const migrations = {
     ...state,
     app: {
       ...state.app,
-      showSwapMenuInDrawerMenu: REMOTE_CONFIG_VALUES_DEFAULTS.showSwapMenuInDrawerMenu,
+      showSwapMenuInDrawerMenu: false,
     },
   }),
   62: (state: any) => ({
@@ -809,7 +816,7 @@ export const migrations = {
     ...state,
     app: {
       ...state.app,
-      maxSwapSlippagePercentage: REMOTE_CONFIG_VALUES_DEFAULTS.maxSwapSlippagePercentage,
+      maxSwapSlippagePercentage: 0.3,
       swapFeeEnabled: false,
       swapFeePercentage: false,
     },
@@ -899,7 +906,7 @@ export const migrations = {
     ...state,
     app: {
       ...state.app,
-      networkTimeoutSeconds: REMOTE_CONFIG_VALUES_DEFAULTS.networkTimeoutSeconds,
+      networkTimeoutSeconds: 30,
     },
   }),
   89: (state: any) => ({
@@ -1442,7 +1449,7 @@ export const migrations = {
     ...state,
     app: {
       ...state.app,
-      multichainBetaStatus: MultichainBetaStatus.NotSeen,
+      multichainBetaStatus: 'NotSeen',
     },
   }),
   172: (state: any) => ({
@@ -1798,5 +1805,235 @@ export const migrations = {
       depositStatus: 'idle',
       withdrawStatus: 'idle',
     },
+  }),
+  217: (state: any) => ({
+    ...state,
+    points: {
+      ...state.points,
+      trackOnceActivities: {
+        'create-wallet': false,
+      },
+    },
+  }),
+  218: (state: any) => ({
+    ...state,
+    earn: {
+      ...state.earn,
+      poolInfoFetchStatus: 'idle',
+    },
+  }),
+  219: (state: any) => ({
+    ...state,
+    positions: {
+      ...state.positions,
+      positions: [], // clear positions, they will be fetched again
+    },
+  }),
+  220: (state: any) => state,
+  221: (state: any) => state,
+  222: (state: any) => ({
+    ...state,
+    positions: {
+      ...state.positions,
+      // Note: we're not clearing positions again here, even if we added positionId
+      // because migration 219 already cleared positions, and positionIds were already returned by the hooks API
+      earnPositionIds: [],
+    },
+  }),
+  223: (state: any) => ({
+    ...state,
+    recipients: {
+      ..._.omit(state.recipients, 'valoraRecipientCache'),
+      appRecipientCache: state.recipients.valoraRecipientCache || {},
+    },
+  }),
+  224: (state: any) => ({
+    ...(_.omit(state, 'supercharge') as any),
+    app: _.omit(state.app, 'superchargeApy', 'superchargeTokenConfigByToken'),
+    account: _.omit(state.account, 'dismissedKeepSupercharging', 'dismissedStartSupercharging'),
+  }),
+  225: (state: any) => ({
+    ...(_.omit(state, 'escrow') as any),
+    transactions: _.omit(
+      state.transactions,
+      'recentTxRecipientsCache',
+      'inviteTransactions',
+      'knownFeedTransactions'
+    ),
+  }),
+  226: (state: any) => ({
+    ...(_.omit(state, 'fees') as any),
+  }),
+  227: (state: any) => ({
+    ...state,
+    account: _.omit(state.account, 'pictureUri'),
+  }),
+  228: (state: any) => ({
+    ...state,
+    identity: _.omit(
+      state.identity,
+      'walletToAccountAddress',
+      'e164NumberToSalt',
+      'addressToDataEncryptionKey'
+    ),
+    web3: _.omit(
+      state.web3,
+      'accountInWeb3Keystore',
+      'dataEncryptionKey',
+      'isDekRegistered',
+      'mtwAddress'
+    ),
+  }),
+  229: (state: any) => {
+    const transactionsByNetworkId: any = {}
+    for (const networkId of Object.keys(state.transactions.transactionsByNetworkId)) {
+      const transactions = []
+      for (const tx of state.transactions.transactionsByNetworkId[networkId]) {
+        ;(networkId === NetworkId['arbitrum-one'] || networkId === NetworkId['arbitrum-sepolia']) &&
+        tx.providerId &&
+        tx.providerId === 'aave-v3'
+          ? transactions.push({ ...tx, providerId: 'aave' })
+          : transactions.push(tx)
+      }
+      transactionsByNetworkId[networkId] = transactions
+    }
+    return {
+      ...state,
+      transactions: {
+        ...state.transactions,
+        transactionsByNetworkId,
+        standbyTransactions: state.transactions.standbyTransactions.map((tx: any) => {
+          return tx.providerId && tx.providerId === 'aave-v3' ? { ...tx, providerId: 'aave' } : tx
+        }),
+      },
+    }
+  },
+  230: (state: any) => ({
+    ...state,
+    app: _.omit(state.app, 'minVersion'),
+  }),
+  231: (state: any) => ({
+    ...state,
+    jumpstart: {
+      ...state.jumpstart,
+      introHasBeenSeen: false,
+    },
+  }),
+  232: (state: any) => ({
+    ...state,
+    app: _.omit(state.app, 'numberVerified'),
+  }),
+  233: (state: any) => state,
+  234: (state: any) => ({
+    ...state,
+    transactions: {
+      ...state.transactions,
+      feedFirstPage: [],
+    },
+  }),
+  235: (state: any) => state,
+  236: (state: any) => ({
+    ...state,
+    tokens: _.omit(state.tokens, 'loading'),
+  }),
+  237: (state: any) => {
+    // This migration is taken directly from the old initial route logic. The
+    // only difference is that the multi-chain beta screen has been removed, since
+    // it required fetching a feature gate.
+    const lastOnboardingStepScreen = (() => {
+      if (!state.i18n.language) {
+        return Screens.Language
+      } else if (!state.account.acceptedTerms || state.account.pincodeType === PincodeType.Unset) {
+        return Screens.Welcome
+      } else if (!state.web3.account) {
+        return state.account.choseToRestoreAccount
+          ? ONBOARDING_FEATURES_ENABLED[ToggleableOnboardingFeatures.CloudBackup]
+            ? Screens.ImportSelect
+            : Screens.ImportWallet
+          : Screens.Welcome
+      } else if (
+        state.account.recoveryPhraseInOnboardingStatus ===
+        RecoveryPhraseInOnboardingStatus.InProgress
+      ) {
+        return Screens.ProtectWallet
+      } else if (
+        !state.identity.hasSeenVerificationNux &&
+        ONBOARDING_FEATURES_ENABLED[ToggleableOnboardingFeatures.PhoneVerification]
+      ) {
+        return Screens.VerificationStartScreen
+      } else {
+        return Screens.TabNavigator
+      }
+    })()
+    const onboardingCompleted = lastOnboardingStepScreen === Screens.TabNavigator
+
+    return {
+      ...state,
+      account: {
+        ...state.account,
+        onboardingCompleted,
+        lastOnboardingStepScreen,
+      },
+      identity: _.omit(state.identity, 'hasSeenVerificationNux'),
+    }
+  },
+  238: (state: any) => ({
+    ...state,
+    app: _.omit(state.app, 'multichainBetaStatus'),
+  }),
+  239: (state: any) => ({
+    ...state,
+    app: _.omit(state.app, 'showSwapMenuInDrawerMenu'),
+  }),
+  240: (state: any) => ({
+    ...state,
+    web3: {
+      ...state.web3,
+      demoModeEnabled: false,
+    },
+  }),
+  241: (state: any) => ({
+    ...state,
+    app: _.omit(
+      state.app,
+      'walletConnectV2Enabled',
+      'logPhoneNumberTypeEnabled',
+      'coinbasePayEnabled',
+      'maxSwapSlippagePercentage',
+      'networkTimeoutSeconds',
+      'celoEducationUri',
+      'pincodeUseExpandedBlocklist'
+    ),
+  }),
+  242: (state: any) => ({
+    ...state,
+    app: _.omit(state.app, 'celoNews'),
+    dapps: _.omit(state.dapps, 'dappListApiUrl', 'maxNumRecentDapps', 'dappsWebViewEnabled'),
+    swap: _.omit(state.swap, 'priceImpactWarningThreshold'),
+  }),
+  243: (state: any) => ({
+    ...state,
+    app: _.omit(state.app, 'sentryTracesSampleRate', 'sentryNetworkErrors'),
+    i18n: _.omit(state.i18n, 'allowOtaTranslations'),
+  }),
+  244: (state: any) => ({
+    ...state,
+    app: {
+      ..._.omit(state.app, 'loggedIn'),
+      divviRegistrations: {},
+    },
+  }),
+  245: (state: any) => ({
+    ...state,
+    app: _.omit(state.app, 'fiatConnectCashInEnabled', 'fiatConnectCashOutEnabled'),
+  }),
+  246: (state: any) => ({
+    ...state,
+    send: _.omit(state.send, 'inviteRewardsVersion'),
+    fiatConnect: _.omit(state.fiatConnect, 'schemaCountryOverrides'),
+  }),
+  247: (state: any) => ({
+    ...state,
+    home: _.omit(state.home, 'cleverTapInboxMessages'),
   }),
 }

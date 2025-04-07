@@ -1,8 +1,8 @@
 import { debounce } from 'lodash'
-import React, { ReactNode, useCallback } from 'react'
+import React, { ReactElement, ReactNode, useCallback } from 'react'
 import { ActivityIndicator, StyleProp, StyleSheet, Text, View, ViewStyle } from 'react-native'
 import Touchable from 'src/components/Touchable'
-import colors, { Colors } from 'src/styles/colors'
+import Colors, { ColorValue } from 'src/styles/colors'
 import { typeScale } from 'src/styles/fonts'
 import { vibrateInformative } from 'src/styles/hapticFeedback'
 
@@ -15,7 +15,7 @@ const DEBOUNCE_OPTIONS = {
 export enum BtnTypes {
   PRIMARY = 'Primary',
   SECONDARY = 'Secondary',
-  ONBOARDING_SECONDARY = 'OnboardingSecondary',
+  TERTIARY = 'Tertiary',
 }
 
 export enum BtnSizes {
@@ -24,22 +24,26 @@ export enum BtnSizes {
   FULL = 'full',
 }
 
+export enum TextSizes {
+  SMALL = 'small',
+  MEDIUM = 'medium',
+}
+
 export interface ButtonProps {
   onPress: () => void
   style?: StyleProp<ViewStyle>
   text: string | ReactNode
   showLoading?: boolean // shows activity indicator on the button, but doesn't disable it. disabled must explicitly be set to disable the button
-  loadingColor?: string
   accessibilityLabel?: string
   type?: BtnTypes
-  icon?: ReactNode
+  icon?: ReactElement
   iconPositionLeft?: boolean
-  rounded?: boolean
   disabled?: boolean
   size?: BtnSizes
   testID?: string
   touchableStyle?: StyleProp<ViewStyle>
   iconMargin?: number
+  textSize?: TextSizes
 }
 
 export default React.memo(function Button(props: ButtonProps) {
@@ -52,12 +56,11 @@ export default React.memo(function Button(props: ButtonProps) {
     icon,
     iconPositionLeft = true,
     type = BtnTypes.PRIMARY,
-    rounded = true,
     style,
     showLoading,
-    loadingColor,
     touchableStyle,
     iconMargin = 4,
+    textSize = TextSizes.MEDIUM,
   } = props
 
   // Debounce onPress event so that it is called once on trigger and
@@ -76,12 +79,12 @@ export default React.memo(function Button(props: ButtonProps) {
     [props.onPress, type, disabled]
   )
 
-  const { textColor, backgroundColor, opacity, borderColor } = getColors(type, disabled)
+  const { contentColor, backgroundColor, opacity, borderColor } = getColors(type, disabled)
 
   return (
     <View style={getStyleForWrapper(size, style)}>
       {/* these Views cannot be combined as it will cause ripple to not respect the border radius */}
-      <View style={[styles.containRipple, rounded && styles.rounded]}>
+      <View style={[styles.containRipple, styles.rounded]}>
         <Touchable
           onPress={debouncedOnPress}
           disabled={disabled}
@@ -92,20 +95,19 @@ export default React.memo(function Button(props: ButtonProps) {
           testID={testID}
         >
           {showLoading ? (
-            <ActivityIndicator
-              size="small"
-              color={loadingColor ?? textColor}
-              testID="Button/Loading"
-            />
+            <ActivityIndicator size="small" color={contentColor} testID="Button/Loading" />
           ) : (
             <>
-              {icon}
+              {!!icon &&
+                React.cloneElement(icon, {
+                  color: contentColor,
+                })}
               <Text
                 maxFontSizeMultiplier={1}
                 accessibilityLabel={accessibilityLabel}
                 style={{
-                  ...styles.fontStyle,
-                  color: textColor,
+                  ...getTextStyle(textSize),
+                  color: contentColor,
                   marginLeft: icon && iconPositionLeft ? iconMargin : 0,
                   marginRight: icon && !iconPositionLeft ? iconMargin : 0,
                 }}
@@ -146,44 +148,43 @@ const styles = StyleSheet.create({
     height: 48,
     flexGrow: 1,
   },
-  fontStyle: {
-    ...typeScale.labelSemiBoldMedium,
-  },
 })
 
 function getColors(type: BtnTypes, disabled: boolean | undefined) {
-  let textColor
+  let contentColor
   let backgroundColor
   let opacity
   let borderColor
   switch (type) {
     case BtnTypes.PRIMARY:
-      textColor = colors.white
-      backgroundColor = colors.black
+      contentColor = Colors.buttonPrimaryContent
+      backgroundColor = Colors.buttonPrimaryBackground
+      borderColor = Colors.buttonPrimaryBorder
       opacity = disabled ? 0.25 : 1.0
       break
     case BtnTypes.SECONDARY:
-      textColor = colors.black
-      backgroundColor = colors.gray1
-      borderColor = colors.gray2
+      contentColor = Colors.buttonSecondaryContent
+      backgroundColor = Colors.buttonSecondaryBackground
+      borderColor = Colors.buttonSecondaryBorder
       opacity = disabled ? 0.5 : 1.0
       break
-    /** @deprecated TODO(ACT-1200): Remove and replace with GRAY_WITHBORDER*/
-    case BtnTypes.ONBOARDING_SECONDARY:
-      textColor = colors.successDark
-      backgroundColor = colors.white
+
+    case BtnTypes.TERTIARY:
+      contentColor = Colors.buttonTertiaryContent
+      backgroundColor = Colors.buttonTertiaryBackground
+      borderColor = Colors.buttonTertiaryBorder
       opacity = disabled ? 0.5 : 1.0
       break
   }
 
-  return { textColor, backgroundColor, opacity, borderColor }
+  return { contentColor, backgroundColor, opacity, borderColor }
 }
 
 function getStyle(
   size: BtnSizes | undefined,
-  backgroundColor: Colors,
+  backgroundColor: ColorValue,
   opacity: number | undefined,
-  borderColor: Colors | undefined,
+  borderColor: ColorValue | undefined,
   iconPositionLeft: boolean
 ) {
   const borderStyles = borderColor
@@ -216,6 +217,15 @@ function getStyle(
         ...commonStyles,
         ...styles.medium,
       }
+  }
+}
+
+function getTextStyle(textSize: TextSizes | undefined) {
+  switch (textSize) {
+    case TextSizes.SMALL:
+      return typeScale.labelSemiBoldSmall
+    default:
+      return typeScale.labelSemiBoldMedium
   }
 }
 

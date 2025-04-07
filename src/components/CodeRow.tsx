@@ -6,7 +6,7 @@ import withTextInputPasteAware from 'src/components/WithTextInputPasteAware'
 import { withTranslation } from 'src/i18n'
 import Checkmark from 'src/icons/Checkmark'
 import colors from 'src/styles/colors'
-import fontStyles from 'src/styles/fonts'
+import { typeScale } from 'src/styles/fonts'
 
 const CodeInput = withTextInputPasteAware(TextInput)
 
@@ -65,7 +65,11 @@ function CodeRow({
     return (
       <View style={styles.codeProcessingContainer}>
         <Text style={styles.codeValue}>{shortenedInput || t('processing')}</Text>
-        <ActivityIndicator size="small" color={colors.primary} style={styles.codeInputSpinner} />
+        <ActivityIndicator
+          size="small"
+          color={colors.loadingIndicator}
+          style={styles.codeInputSpinner}
+        />
       </View>
     )
   }
@@ -99,8 +103,8 @@ function CodeRow({
 const styles = StyleSheet.create({
   codeInput: {
     flex: 0,
-    backgroundColor: '#FFF',
-    borderColor: colors.gray2,
+    backgroundColor: colors.backgroundPrimary,
+    borderColor: colors.borderPrimary,
     borderRadius: 3,
     borderWidth: 1,
     height: 50,
@@ -110,30 +114,30 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginVertical: 5,
     paddingHorizontal: 10,
-    backgroundColor: colors.gray1,
+    backgroundColor: colors.backgroundSecondary,
     borderRadius: 3,
     height: 50,
   },
   checkmarkContainer: {
-    backgroundColor: colors.gray1,
+    backgroundColor: colors.backgroundSecondary,
     position: 'absolute',
     top: 3,
     right: 3,
     padding: 10,
   },
   codeProcessingContainer: {
-    backgroundColor: '#FFF',
+    backgroundColor: colors.backgroundPrimary,
     position: 'relative',
     justifyContent: 'center',
     marginVertical: 5,
     paddingHorizontal: 10,
-    borderColor: colors.gray2,
+    borderColor: colors.borderPrimary,
     borderRadius: 3,
     borderWidth: 1,
     height: 50,
   },
   codeInputSpinner: {
-    backgroundColor: '#FFF',
+    backgroundColor: colors.backgroundPrimary,
     position: 'absolute',
     top: 5,
     right: 3,
@@ -143,16 +147,16 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 10,
     marginVertical: 5,
-    borderColor: colors.gray2,
+    borderColor: colors.borderPrimary,
     borderRadius: 3,
     borderWidth: 1,
     height: 50,
-    backgroundColor: '#F0F0F0',
+    backgroundColor: colors.backgroundSecondary,
   },
   codeValue: {
-    ...fontStyles.regular,
+    ...typeScale.bodyMedium,
     fontSize: 15,
-    color: colors.gray5,
+    color: colors.contentSecondary,
   },
 })
 

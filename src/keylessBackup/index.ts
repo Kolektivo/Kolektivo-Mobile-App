@@ -1,10 +1,11 @@
 import { SiweClient } from '@fiatconnect/fiatconnect-sdk'
+import AppAnalytics from 'src/analytics/AppAnalytics'
 import { KeylessBackupEvents } from 'src/analytics/Events'
-import ValoraAnalytics from 'src/analytics/ValoraAnalytics'
 import { getWalletAddressFromPrivateKey } from 'src/keylessBackup/encryption'
 import { getDynamicConfigParams } from 'src/statsig'
 import { DynamicConfigs } from 'src/statsig/constants'
 import { StatsigDynamicConfigs } from 'src/statsig/types'
+import { Network } from 'src/transactions/types'
 import { fetchWithTimeout } from 'src/utils/fetchWithTimeout'
 import networkConfig from 'src/web3/networkConfig'
 import { Hex } from 'viem'
@@ -35,7 +36,7 @@ export async function storeEncryptedMnemonic({
     }),
   })
   if (!response.ok) {
-    ValoraAnalytics.track(KeylessBackupEvents.cab_post_encrypted_mnemonic_failed, {
+    AppAnalytics.track(KeylessBackupEvents.cab_post_encrypted_mnemonic_failed, {
       backupAlreadyExists: response.status === 409,
     })
     const message = (await response.json())?.message
@@ -53,7 +54,7 @@ function getSIWEClient(privateKey: Hex) {
       accountAddress,
       statement: SIWE_STATEMENT,
       version: SIWE_VERSION,
-      chainId: parseInt(networkConfig.networkId),
+      chainId: networkConfig.viemChain[Network.Celo].id,
       sessionDurationMs: SESSION_DURATION_MS,
       loginUrl: networkConfig.cabLoginUrl,
       clockUrl: networkConfig.cabClockUrl,

@@ -4,10 +4,11 @@ import { useTranslation } from 'react-i18next'
 import { Image, StyleSheet, Text, View } from 'react-native'
 import Animated from 'react-native-reanimated'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import AppAnalytics from 'src/analytics/AppAnalytics'
 import { DappShortcutsEvents } from 'src/analytics/Events'
-import ValoraAnalytics from 'src/analytics/ValoraAnalytics'
 import Button, { BtnSizes } from 'src/components/Button'
 import LegacyTokenDisplay from 'src/components/LegacyTokenDisplay'
+import TokenDisplay from 'src/components/TokenDisplay'
 import { navigate } from 'src/navigator/NavigationService'
 import { Screens } from 'src/navigator/Screens'
 import {
@@ -18,7 +19,7 @@ import { triggerShortcut } from 'src/positions/slice'
 import { ClaimablePosition } from 'src/positions/types'
 import { useDispatch, useSelector } from 'src/redux/hooks'
 import Colors from 'src/styles/colors'
-import fontStyles from 'src/styles/fonts'
+import { typeScale } from 'src/styles/fonts'
 import { Spacing } from 'src/styles/styles'
 import Logger from 'src/utils/Logger'
 import { Currency } from 'src/utils/currencies'
@@ -35,7 +36,7 @@ function DappShortcutsRewards() {
   const [claimablePositions, setClaimablePositions] = useState(positionsWithClaimableRewards)
 
   useEffect(() => {
-    ValoraAnalytics.track(DappShortcutsEvents.dapp_shortcuts_rewards_screen_open, {
+    AppAnalytics.track(DappShortcutsEvents.dapp_shortcuts_rewards_screen_open, {
       numRewards: positionsWithClaimableRewards.length,
     })
   }, [])
@@ -77,7 +78,7 @@ function DappShortcutsRewards() {
       const { appName, displayProps, claimableShortcut, appId } = position
       const rewardId = getClaimableRewardId(position.address, claimableShortcut)
 
-      ValoraAnalytics.track(DappShortcutsEvents.dapp_shortcuts_reward_claim_start, {
+      AppAnalytics.track(DappShortcutsEvents.dapp_shortcuts_reward_claim_start, {
         appName,
         shortcutId: claimableShortcut.id,
         rewardId,
@@ -97,6 +98,7 @@ function DappShortcutsRewards() {
             address,
             appId,
             networkId: position.networkId,
+            positionId: position.positionId,
             positionAddress: position.address,
             shortcutId: claimableShortcut.id,
           },
@@ -128,9 +130,9 @@ function DappShortcutsRewards() {
               {item.claimableShortcut.claimableTokens.map((token, index) => (
                 <React.Fragment key={token.address}>
                   {index > 0 && ', '}
-                  <LegacyTokenDisplay
+                  <TokenDisplay
                     amount={token.balance}
-                    tokenAddress={token.address}
+                    tokenId={token.tokenId}
                     showLocalAmount={false}
                   />
                 </React.Fragment>
@@ -203,7 +205,7 @@ function DappShortcutsRewards() {
 const styles = StyleSheet.create({
   card: {
     borderWidth: 1,
-    borderColor: Colors.gray2,
+    borderColor: Colors.borderPrimary,
     borderRadius: 12,
     marginBottom: Spacing.Regular16,
   },
@@ -218,22 +220,22 @@ const styles = StyleSheet.create({
     marginRight: Spacing.Small12,
   },
   rewardLabel: {
-    ...fontStyles.xsmall,
-    color: Colors.gray3,
+    ...typeScale.bodyXSmall,
+    color: Colors.contentSecondary,
   },
   rewardAmount: {
-    ...fontStyles.large600,
+    ...typeScale.labelSemiBoldLarge,
     lineHeight: 28,
     flexWrap: 'wrap',
   },
   rewardFiatAmount: {
-    ...fontStyles.small,
+    ...typeScale.bodySmall,
   },
   dappInfoContainer: {
     flexDirection: 'row',
     paddingHorizontal: Spacing.Regular16,
     paddingVertical: Spacing.Small12,
-    backgroundColor: Colors.gray1,
+    backgroundColor: Colors.backgroundSecondary,
     borderBottomLeftRadius: 12,
     borderBottomRightRadius: 12,
   },
@@ -241,39 +243,39 @@ const styles = StyleSheet.create({
     width: 18,
     height: 18,
     marginRight: Spacing.Smallest8,
-    backgroundColor: Colors.white,
+    backgroundColor: Colors.backgroundPrimary,
     borderRadius: 100,
   },
   dappName: {
-    ...fontStyles.small600,
+    ...typeScale.labelSemiBoldSmall,
   },
   headerContainer: {
     paddingTop: Spacing.Smallest8,
     paddingBottom: Spacing.Thick24,
   },
   heading: {
-    ...fontStyles.large600,
+    ...typeScale.labelSemiBoldLarge,
     fontSize: 24,
     lineHeight: 32,
     marginBottom: Spacing.Tiny4,
   },
   subHeading: {
-    ...fontStyles.small,
-    color: Colors.gray3,
+    ...typeScale.bodySmall,
+    color: Colors.contentSecondary,
   },
   claimButton: {
     minWidth: 72,
   },
   chip: {
     marginTop: Spacing.Smallest8,
-    backgroundColor: Colors.infoLight,
+    backgroundColor: Colors.successSecondary,
     paddingVertical: 2,
     paddingHorizontal: Spacing.Smallest8,
     borderRadius: 100,
     alignSelf: 'flex-start', // prevent from defaulting to full width of container
   },
   chipText: {
-    ...fontStyles.xsmall600,
+    ...typeScale.labelSemiBoldXSmall,
     fontSize: 10,
     lineHeight: 12,
   },

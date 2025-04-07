@@ -2,15 +2,14 @@ import { fireEvent, render, waitFor } from '@testing-library/react-native'
 import BigNumber from 'bignumber.js'
 import React from 'react'
 import { Provider } from 'react-redux'
+import AppAnalytics from 'src/analytics/AppAnalytics'
 import { SendEvents } from 'src/analytics/Events'
-import ValoraAnalytics from 'src/analytics/ValoraAnalytics'
 import { SendOrigin } from 'src/analytics/types'
 import { navigate } from 'src/navigator/NavigationService'
 import { Screens } from 'src/navigator/Screens'
 import { RecipientType } from 'src/recipients/recipient'
 import SendEnterAmount from 'src/send/SendEnterAmount'
 import { usePrepareSendTransactions } from 'src/send/usePrepareSendTransactions'
-import { getDynamicConfigParams } from 'src/statsig'
 import { PreparedTransactionsPossible } from 'src/viem/prepareTransactions'
 import MockedNavigator from 'test/MockedNavigator'
 import { createMockStore, mockStoreBalancesToTokenBalances } from 'test/utils'
@@ -75,6 +74,7 @@ const store = createMockStore({
 const refreshPreparedTransactionsSpy = jest.fn()
 jest.mocked(usePrepareSendTransactions).mockReturnValue({
   prepareTransactionsResult: undefined,
+  prepareTransactionLoading: false,
   refreshPreparedTransactions: refreshPreparedTransactionsSpy,
   clearPreparedTransactions: jest.fn(),
   prepareTransactionError: undefined,
@@ -92,9 +92,6 @@ const params = {
 describe('SendEnterAmount', () => {
   beforeEach(() => {
     jest.clearAllMocks()
-    jest.mocked(getDynamicConfigParams).mockReturnValue({
-      showSend: ['celo-alfajores'],
-    })
   })
 
   it('should render only the allowed send tokens', () => {
@@ -128,16 +125,13 @@ describe('SendEnterAmount', () => {
       walletAddress: mockAccount.toLowerCase(),
       recipientAddress: '0x123', // matches mock screen nav params
       feeCurrencies: mockStoreBalancesToTokenBalances(feeCurrencies),
-      comment: expect.any(String),
     })
-    expect(refreshPreparedTransactionsSpy.mock.calls[0][0].comment.length).toBeGreaterThanOrEqual(
-      640
-    )
   })
 
   it('should handle navigating to the next step', async () => {
     jest.mocked(usePrepareSendTransactions).mockReturnValue({
       prepareTransactionsResult: mockPrepareTransactionsResultPossible,
+      prepareTransactionLoading: false,
       refreshPreparedTransactions: jest.fn(),
       clearPreparedTransactions: jest.fn(),
       prepareTransactionError: undefined,
@@ -153,8 +147,8 @@ describe('SendEnterAmount', () => {
     await waitFor(() => expect(getByText('review')).not.toBeDisabled())
     fireEvent.press(getByText('review'))
 
-    await waitFor(() => expect(ValoraAnalytics.track).toHaveBeenCalledTimes(1))
-    expect(ValoraAnalytics.track).toHaveBeenCalledWith(SendEvents.send_amount_continue, {
+    await waitFor(() => expect(AppAnalytics.track).toHaveBeenCalledTimes(1))
+    expect(AppAnalytics.track).toHaveBeenCalledWith(SendEvents.send_amount_continue, {
       amountInUsd: '106.01',
       isScan: false,
       localCurrency: 'PHP',

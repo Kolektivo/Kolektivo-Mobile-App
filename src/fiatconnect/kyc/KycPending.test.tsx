@@ -2,10 +2,10 @@ import { FiatAccountType, KycStatus as FiatConnectKycStatus } from '@fiatconnect
 import { fireEvent, render } from '@testing-library/react-native'
 import React from 'react'
 import { Provider } from 'react-redux'
+import AppAnalytics from 'src/analytics/AppAnalytics'
 import { FiatExchangeEvents } from 'src/analytics/Events'
-import ValoraAnalytics from 'src/analytics/ValoraAnalytics'
 import FiatConnectQuote from 'src/fiatExchanges/quotes/FiatConnectQuote'
-import { CICOFlow } from 'src/fiatExchanges/utils'
+import { CICOFlow } from 'src/fiatExchanges/types'
 import { FiatConnectQuoteSuccess } from 'src/fiatconnect'
 import KycPending from 'src/fiatconnect/kyc/KycPending'
 import getNavigationOptions from 'src/fiatconnect/kyc/getNavigationOptions'
@@ -14,7 +14,7 @@ import { Screens } from 'src/navigator/Screens'
 import { createMockStore, getMockStackScreenProps } from 'test/utils'
 import { mockCusdTokenId, mockFiatConnectQuotes } from 'test/values'
 
-jest.mock('src/analytics/ValoraAnalytics')
+jest.mock('src/analytics/AppAnalytics')
 jest.mock('src/fiatconnect/kyc/getNavigationOptions')
 
 describe('KycPending', () => {
@@ -70,15 +70,12 @@ describe('KycPending', () => {
     )
     expect(queryByTestId('closeButton')).toBeTruthy()
     fireEvent.press(getByTestId('closeButton'))
-    expect(ValoraAnalytics.track).toHaveBeenCalledTimes(1)
-    expect(ValoraAnalytics.track).toHaveBeenCalledWith(
-      FiatExchangeEvents.cico_fc_kyc_status_close,
-      {
-        provider: mockQuote.getProviderId(),
-        flow: CICOFlow.CashOut,
-        fiatConnectKycStatus: FiatConnectKycStatus.KycPending,
-      }
-    )
+    expect(AppAnalytics.track).toHaveBeenCalledTimes(1)
+    expect(AppAnalytics.track).toHaveBeenCalledWith(FiatExchangeEvents.cico_fc_kyc_status_close, {
+      provider: mockQuote.getProviderId(),
+      flow: CICOFlow.CashOut,
+      fiatConnectKycStatus: FiatConnectKycStatus.KycPending,
+    })
     expect(navigateHome).toHaveBeenCalledTimes(1)
     expect(navigateHome).toHaveBeenCalledWith()
   })

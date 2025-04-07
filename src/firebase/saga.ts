@@ -1,4 +1,3 @@
-import { sleep } from '@celo/utils/lib/async'
 import firebase from '@react-native-firebase/app'
 import { handleUpdateAccountRegistration } from 'src/account/saga'
 import { showError } from 'src/alert/actions'
@@ -16,6 +15,7 @@ import {
 import { setLanguage } from 'src/i18n/slice'
 import Logger from 'src/utils/Logger'
 import { safely } from 'src/utils/safely'
+import { sleep } from 'src/utils/sleep'
 import { getAccount } from 'src/web3/saga'
 import { call, put, spawn, takeEvery, takeLatest } from 'typed-redux-saga'
 
@@ -33,8 +33,7 @@ export function* initializeFirebase() {
     return
   }
   if (!FIREBASE_ENABLED) {
-    Logger.info(TAG, 'Firebase disabled')
-    yield* put(showError(ErrorMessages.FIREBASE_DISABLED))
+    Logger.info(`${TAG}/initializeFirebase`, 'Firebase disabled')
     return
   }
 

@@ -1,13 +1,16 @@
 export enum StatsigDynamicConfigs {
   USERNAME_BLOCK_LIST = 'username_block_list',
   WALLET_NETWORK_TIMEOUT_SECONDS = 'wallet_network_timeout_seconds',
-  MULTI_CHAIN_FEATURES = 'multi_chain_features',
   DAPP_WEBVIEW_CONFIG = 'dapp_webview_config',
   SWAP_CONFIG = 'swap_config',
   CICO_TOKEN_INFO = 'cico_token_info',
   WALLET_JUMPSTART_CONFIG = 'wallet_jumpstart_config',
   NFT_CELEBRATION_CONFIG = 'nft_celebration_config',
-  EARN_STABLECOIN_CONFIG = 'earn_stablecoin_config',
+  APP_CONFIG = 'app_config',
+  EARN_CONFIG = 'earn_config',
+  DEMO_MODE_CONFIG = 'demo_mode_config',
+  FIAT_CONNECT_CONFIG = 'fiat_connect_config',
+  INVITE_REWARDS_CONFIG = 'invite_rewards_config',
 }
 
 export enum StatsigFeatureGates {
@@ -15,32 +18,26 @@ export enum StatsigFeatureGates {
   SHOW_CLAIM_SHORTCUTS = 'show_claim_shortcuts',
   ALLOW_HOOKS_PREVIEW = 'allow_hooks_preview',
   APP_REVIEW = 'app_review',
-  SHOW_CLOUD_ACCOUNT_BACKUP_SETUP = 'show_cloud_account_backup_setup',
-  SHOW_CLOUD_ACCOUNT_BACKUP_RESTORE = 'show_cloud_account_backup_restore',
-  RESTRICT_SUPERCHARGE_FOR_CLAIM_ONLY = 'restrict_supercharge_for_claim_only',
   SHOW_IMPORT_TOKENS_FLOW = 'show_import_tokens_flow',
-  SHOW_MULTICHAIN_BETA_SCREEN = 'show_multichain_beta_screen',
-  SHOW_BETA_TAG = 'show_beta_tag',
   SAVE_CONTACTS = 'save_contacts',
-  SHOW_GET_STARTED = 'show_get_started',
-  CLEVERTAP_INBOX = 'clevertap_inbox',
   SHOW_SWAP_TOKEN_FILTERS = 'show_swap_token_filters',
   SHUFFLE_SWAP_TOKENS_ORDER = 'shuffle_swap_tokens_order',
   SHOW_NFT_CELEBRATION = 'show_nft_celebration',
   SHOW_NFT_REWARD = 'show_nft_reward',
   SHOW_JUMPSTART_SEND = 'show_jumpstart_send',
   SHOW_POINTS = 'show_points',
-  SHOW_STABLECOIN_EARN = 'show_stablecoin_earn',
   SUBSIDIZE_STABLECOIN_EARN_GAS_FEES = 'subsidize_stablecoin_earn_gas_fees',
-  SHOW_CASH_IN_TOKEN_FILTERS = 'show_cash_in_token_filters',
-  SHOW_CAB_IN_ONBOARDING = 'show_cab_in_onboarding',
+  ALLOW_CROSS_CHAIN_SWAPS = 'allow_cross_chain_swaps',
+  SHOW_UK_COMPLIANT_VARIANT = 'show_uk_compliant_variant',
+  ALLOW_EARN_PARTIAL_WITHDRAWAL = 'allow_earn_partial_withdrawal',
+  SHOW_ZERION_TRANSACTION_FEED = 'show_zerion_transaction_feed',
+  SHOW_NEW_ENTER_AMOUNT_FOR_SWAP = 'show_new_enter_amount_for_swap',
+  ALLOW_CROSS_CHAIN_SWAP_AND_DEPOSIT = 'allow_cross_chain_swap_and_deposit',
+  DISABLE_WALLET_CONNECT_V2 = 'disable_wallet_connect_v2',
 }
 
 export enum StatsigExperiments {
-  DAPP_RANKINGS = 'dapp_rankings',
-  SWAP_BUY_AMOUNT = 'swap_buy_amount',
-  ONBOARDING_PHONE_VERIFICATION = 'onboarding_phone_verification',
-  ONBOARDING_TERMS_AND_CONDITIONS = 'onboarding_terms_and_conditions',
+  SAMPLE = 'sample', // Needed for CI, remove if there are actual experiments
 }
 
 export type StatsigParameter =

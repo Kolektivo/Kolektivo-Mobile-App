@@ -13,4 +13,5 @@ export default {
   fontSizeBase: 15,
   borderRadius: 20,
   iconHitslop,
+  demoModeBorderWidth: 3,
 }

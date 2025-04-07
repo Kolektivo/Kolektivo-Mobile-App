@@ -3,8 +3,8 @@ import * as React from 'react'
 import { useTranslation } from 'react-i18next'
 import { ScrollView, StyleSheet, Text, View } from 'react-native'
 import { connect } from 'react-redux'
+import AppAnalytics from 'src/analytics/AppAnalytics'
 import { OnboardingEvents } from 'src/analytics/Events'
-import ValoraAnalytics from 'src/analytics/ValoraAnalytics'
 import BackupPhraseContainer, {
   BackupPhraseContainerMode,
   BackupPhraseType,
@@ -12,13 +12,13 @@ import BackupPhraseContainer, {
 import { useAccountKey } from 'src/backup/utils'
 import Button from 'src/components/Button'
 import TextButton from 'src/components/TextButton'
-import Logo from 'src/icons/Logo'
+import Logo from 'src/images/Logo'
 import { navigate } from 'src/navigator/NavigationService'
 import { Screens } from 'src/navigator/Screens'
 import { StackParamList } from 'src/navigator/types'
 import { RootState } from 'src/redux/reducers'
 import colors from 'src/styles/colors'
-import fontStyles from 'src/styles/fonts'
+import { typeScale } from 'src/styles/fonts'
 import { Spacing } from 'src/styles/styles'
 
 interface StateProps {
@@ -42,7 +42,7 @@ const mapStateToProps = (state: RootState): StateProps => {
  */
 class BackupIntroduction extends React.Component<Props> {
   onPressBackup = () => {
-    ValoraAnalytics.track(OnboardingEvents.backup_start)
+    AppAnalytics.track(OnboardingEvents.backup_start)
     navigate(Screens.AccountKeyEducation)
   }
 
@@ -117,7 +117,7 @@ function goToAccountKeyGuide() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.white,
+    backgroundColor: colors.backgroundPrimary,
   },
   introContainer: {
     flexGrow: 1,
@@ -130,20 +130,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.Regular16,
   },
   postSetupTitle: {
-    ...fontStyles.h2,
+    ...typeScale.titleMedium,
     marginBottom: Spacing.Smallest8,
   },
   h1: {
-    ...fontStyles.h1,
+    ...typeScale.titleMedium,
     paddingBottom: Spacing.Regular16,
     paddingTop: Spacing.Regular16,
   },
   body: {
-    ...fontStyles.large,
+    ...typeScale.bodyLarge,
     paddingBottom: Spacing.Regular16,
   },
   postSetupBody: {
-    ...fontStyles.regular,
+    ...typeScale.bodyMedium,
     marginVertical: Spacing.Regular16,
     flexGrow: 1,
   },

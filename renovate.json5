@@ -1,6 +1,11 @@
 {
   extends: ['github>valora-inc/renovate-config:default.json5', ':disableDigestUpdates'],
 
+  // Restrict semantic commit type to "chore"
+  // See: https://docs.renovatebot.com/presets-default/#semanticprefixfixdepschoreothers
+  //      https://github.com/renovatebot/renovate/discussions/14026
+  ignorePresets: [':semanticPrefixFixDepsChoreOthers'],
+
   // Limit number of concurrent renovate branches/PRs, to avoid spamming the repo
   prConcurrentLimit: 4,
 
@@ -53,14 +58,6 @@
       prPriority: -1,
     },
     {
-      // Group updates for @celo packages
-      matchPackagePatterns: ['^@celo/'],
-      groupName: 'celo',
-      // major upgrade has multiple breaking changes
-      // TODO(ACT-1088): enable once done
-      enabled: false,
-    },
-    {
       // Group updates for @testing-library packages
       matchPackagePatterns: ['^@testing-library/'],
       groupName: 'testing-library',
@@ -83,6 +80,11 @@
       groupName: 'prettier',
     },
     {
+      // Group updates for walletconnect packages
+      matchPackagePatterns: ['^@walletconnect/'],
+      groupName: 'walletconnect',
+    },
+    {
       // Avoid auto merge of major updates on rn, auth0, firebase and walletconnect
       matchPackagePatterns: [
         '^@react-native-firebase/',
@@ -97,5 +99,8 @@
   // A list of dependencies to be ignored by Renovate - "exact match" only
   ignoreDeps: [
     'lottie-react-native', // TODO (act-1187): handle 6.x breaking changes and upgrade
+    'react-native-shake', // https://github.com/Doko-Demo-Doa/react-native-shake/issues/62
+    'react-native-adjust', // TODO: remove once this issue is resolved https://github.com/segmentio/analytics-react-native/issues/1036
+    'react-native-quick-crypto', // 0.7.10 breaks dev android builds
   ],
 }

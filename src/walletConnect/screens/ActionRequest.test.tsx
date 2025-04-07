@@ -1,8 +1,8 @@
 import Clipboard from '@react-native-clipboard/clipboard'
+import { WalletKitTypes } from '@reown/walletkit'
 import { fireEvent, render, within } from '@testing-library/react-native'
 import { SessionTypes } from '@walletconnect/types'
 import { getSdkError } from '@walletconnect/utils'
-import { Web3WalletTypes } from '@walletconnect/web3wallet'
 import * as React from 'react'
 import 'react-native'
 import { Provider } from 'react-redux'
@@ -21,10 +21,10 @@ describe('ActionRequest with WalletConnect V2', () => {
     expiry: 1670411909,
     self: {
       metadata: {
-        icons: ['https://valoraapp.com/favicon.ico'],
+        icons: ['https://example.com/favicon.ico'],
         description: 'A mobile payments wallet that works worldwide',
-        name: 'Valora',
-        url: 'https://valoraapp.com/',
+        name: 'App Name',
+        url: 'https://example.com/',
       },
       publicKey: 'b991206845c62280479fd1f24087e9c6f0df3921b5f9d94f4619fbf995a81149',
     },
@@ -73,7 +73,7 @@ describe('ActionRequest with WalletConnect V2', () => {
     optionalNamespaces: {},
   }
 
-  const pendingAction: Web3WalletTypes.EventArguments['session_request'] = {
+  const pendingAction: WalletKitTypes.EventArguments['session_request'] = {
     id: 1669810746892321,
     topic: 'd8afe1f5c3efa38bbb62c68005f572a7218afcd48703e4b02bdc5df2549ac5b5',
     params: {
@@ -114,6 +114,7 @@ describe('ActionRequest with WalletConnect V2', () => {
     maxFeePerGas: '12000000000',
     maxPriorityFeePerGas: '2000000000',
     gas: '100000',
+    _baseFeePerGas: '5000000000',
   }
 
   const supportedChains = ['eip155:44787']
@@ -208,8 +209,8 @@ describe('ActionRequest with WalletConnect V2', () => {
         getByText('walletConnectRequest.estimatedNetworkFee, {"networkName":"Celo Alfajores"}')
       ).toBeTruthy()
       const fee = within(getByTestId('EstimatedNetworkFee'))
-      expect(fee.getByText('0.0012 CELO')).toBeTruthy()
-      expect(fee.getByText('₱0.008')).toBeTruthy()
+      expect(fee.getByText('0.0007 CELO')).toBeTruthy() // gas * (_baseFeePerGas + maxPriorityFeePerGas)
+      expect(fee.getByText('₱0.0047')).toBeTruthy()
 
       fireEvent.press(getByText('walletConnectRequest.sendTransactionAction'))
       expect(store.getActions()).toEqual([
@@ -366,7 +367,6 @@ describe('ActionRequest with WalletConnect V2', () => {
     it('should use the name from activeDapp if the request domain matches', () => {
       const store = createMockStore({
         dapps: {
-          dappsWebViewEnabled: true,
           activeDapp,
         },
         walletConnect: {
@@ -408,7 +408,6 @@ describe('ActionRequest with WalletConnect V2', () => {
     it("should use the payload domain if activeDapp doesn't match", () => {
       const store = createMockStore({
         dapps: {
-          dappsWebViewEnabled: true,
           activeDapp,
         },
         walletConnect: {
@@ -450,7 +449,6 @@ describe('ActionRequest with WalletConnect V2', () => {
     it('should display an empty fallback', () => {
       const store = createMockStore({
         dapps: {
-          dappsWebViewEnabled: true,
           activeDapp,
         },
         walletConnect: {

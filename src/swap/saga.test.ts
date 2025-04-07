@@ -2,15 +2,13 @@ import { PayloadAction } from '@reduxjs/toolkit'
 import { expectSaga } from 'redux-saga-test-plan'
 import * as matchers from 'redux-saga-test-plan/matchers'
 import { EffectProviders, StaticProvider, dynamic } from 'redux-saga-test-plan/providers'
+import AppAnalytics from 'src/analytics/AppAnalytics'
 import { SwapEvents } from 'src/analytics/Events'
-import ValoraAnalytics from 'src/analytics/ValoraAnalytics'
 import { navigate, navigateHome } from 'src/navigator/NavigationService'
-import { trackPointsEvent } from 'src/points/slice'
-import { getDynamicConfigParams } from 'src/statsig'
 import { swapSubmitSaga } from 'src/swap/saga'
 import { swapCancel, swapError, swapStart, swapSuccess } from 'src/swap/slice'
 import { Field, SwapInfo } from 'src/swap/types'
-import { Actions, addStandbyTransaction } from 'src/transactions/actions'
+import { actions, addStandbyTransaction } from 'src/transactions/slice'
 import { Network, NetworkId, TokenTransactionTypeV2 } from 'src/transactions/types'
 import Logger from 'src/utils/Logger'
 import { publicClient } from 'src/viem'
@@ -103,6 +101,7 @@ const mockSwapFromParams = (toTokenId: string, feeCurrency?: Address): PayloadAc
         estimatedPriceImpact: '0.1',
         allowanceTarget: mockAllowanceTarget,
         receivedAt: mockQuoteReceivedTimestamp,
+        swapType: 'same-chain',
       },
       areSwapTokensShuffled: false,
     },
@@ -152,6 +151,7 @@ const mockSwapEthereum: PayloadAction<SwapInfo> = {
       estimatedPriceImpact: '0.1',
       allowanceTarget: mockAllowanceTarget,
       receivedAt: mockQuoteReceivedTimestamp,
+      swapType: 'same-chain',
     },
     areSwapTokensShuffled: false,
   },
@@ -185,6 +185,20 @@ const mockSwapWithWBTCBuyToken: PayloadAction<SwapInfo> = {
     userInput: {
       ...mockSwap.payload.userInput,
       toTokenId: mockWBTCTokenId,
+    },
+  },
+}
+const mockCrossChainSwap: PayloadAction<SwapInfo> = {
+  ...mockSwap,
+  payload: {
+    ...mockSwap.payload,
+    quote: {
+      ...mockSwap.payload.quote,
+      swapType: 'cross-chain',
+    },
+    userInput: {
+      ...mockSwap.payload.userInput,
+      toTokenId: mockEthTokenId,
     },
   },
 }
@@ -308,9 +322,6 @@ describe(swapSubmitSaga, () => {
 
   beforeEach(() => {
     sendCallCount = 0
-    jest.mocked(getDynamicConfigParams).mockReturnValue({
-      showSwap: ['celo-alfajores', 'ethereum-sepolia'],
-    })
   })
 
   const testCases = [
@@ -372,7 +383,15 @@ describe(swapSubmitSaga, () => {
       await expectSaga(swapSubmitSaga, swapPrepared)
         .withState(store.getState())
         .provide(createDefaultProviders(network))
-        .put(swapSuccess({ swapId: 'test-swap-id', fromTokenId, toTokenId }))
+        .put(
+          swapSuccess({
+            swapId: 'test-swap-id',
+            fromTokenId,
+            toTokenId,
+            transactionHash: '0x2',
+            networkId,
+          })
+        )
         .put(
           addStandbyTransaction({
             context: {
@@ -380,7 +399,6 @@ describe(swapSubmitSaga, () => {
               tag: 'swap/saga',
               description: 'Swap/Approve',
             },
-            __typename: 'TokenApproval',
             networkId,
             type: TokenTransactionTypeV2.Approval,
             transactionHash: mockApproveTxReceipt.transactionHash,
@@ -396,7 +414,6 @@ describe(swapSubmitSaga, () => {
               tag: 'swap/saga',
               description: 'Swap/Execute',
             },
-            __typename: 'TokenExchangeV3',
             networkId,
             type: TokenTransactionTypeV2.SwapTransaction,
             inAmount: {
@@ -420,8 +437,8 @@ describe(swapSubmitSaga, () => {
       expect(loggerErrorSpy).not.toHaveBeenCalled()
       expect(navigateHome).toHaveBeenCalledWith()
 
-      expect(ValoraAnalytics.track).toHaveBeenCalledTimes(1)
-      expect(ValoraAnalytics.track).toHaveBeenCalledWith(SwapEvents.swap_execute_success, {
+      expect(AppAnalytics.track).toHaveBeenCalledTimes(1)
+      expect(AppAnalytics.track).toHaveBeenCalledWith(SwapEvents.swap_execute_success, {
         toToken: toTokenAddress,
         toTokenId: toTokenId,
         toTokenNetworkId: networkId,
@@ -484,9 +501,11 @@ describe(swapSubmitSaga, () => {
         swapTxGasFeeUsd: 0.000929185,
         swapTxHash: '0x2',
         areSwapTokensShuffled: false,
+        swapType: 'same-chain',
+        swapId: 'test-swap-id',
       })
 
-      const analyticsProps = (ValoraAnalytics.track as jest.Mock).mock.calls[0][1]
+      const analyticsProps = (AppAnalytics.track as jest.Mock).mock.calls[0][1]
       expect(analyticsProps.gas).toBeCloseTo(
         analyticsProps.approveTxGas + analyticsProps.swapTxGas,
         8
@@ -523,6 +542,8 @@ describe(swapSubmitSaga, () => {
           swapId: 'test-swap-id',
           fromTokenId: mockCeurTokenId,
           toTokenId: mockCeloTokenId,
+          transactionHash: '0x1',
+          networkId: NetworkId['celo-alfajores'],
         })
       )
       .put(
@@ -532,7 +553,6 @@ describe(swapSubmitSaga, () => {
             tag: 'swap/saga',
             description: 'Swap/Execute',
           },
-          __typename: 'TokenExchangeV3',
           networkId: NetworkId['celo-alfajores'],
           type: TokenTransactionTypeV2.SwapTransaction,
           inAmount: {
@@ -549,22 +569,13 @@ describe(swapSubmitSaga, () => {
       )
       .not.put.like({
         action: {
-          type: Actions.ADD_STANDBY_TRANSACTION,
+          type: actions.addStandbyTransaction.type,
           transaction: {
-            __typename: 'TokenApproval',
+            type: TokenTransactionTypeV2.Approval,
           },
         },
       })
       .call([publicClient.celo, 'waitForTransactionReceipt'], { hash: '0x1' })
-      .put(
-        trackPointsEvent({
-          activityId: 'swap',
-          transactionHash: '0x1',
-          networkId: NetworkId['celo-alfajores'],
-          toTokenId: mockCeloTokenId,
-          fromTokenId: mockCeurTokenId,
-        })
-      )
       .run()
 
     expect(mockViemWallet.signTransaction).toHaveBeenCalledTimes(1)
@@ -584,7 +595,6 @@ describe(swapSubmitSaga, () => {
             tag: 'swap/saga',
             description: 'Swap/Approve',
           },
-          __typename: 'TokenApproval',
           networkId: NetworkId['celo-alfajores'],
           type: TokenTransactionTypeV2.Approval,
           transactionHash: mockApproveTxReceipt.transactionHash,
@@ -600,7 +610,6 @@ describe(swapSubmitSaga, () => {
             tag: 'swap/saga',
             description: 'Swap/Execute',
           },
-          __typename: 'TokenExchangeV3',
           networkId: NetworkId['celo-alfajores'],
           type: TokenTransactionTypeV2.SwapTransaction,
           inAmount: {
@@ -609,6 +618,49 @@ describe(swapSubmitSaga, () => {
           },
           outAmount: {
             value: mockSwapWithWBTCBuyToken.payload.userInput.swapAmount[Field.FROM],
+            tokenId: mockCeurTokenId,
+          },
+          transactionHash: mockSwapTxReceipt.transactionHash,
+          feeCurrencyId: mockCeloTokenId,
+        })
+      )
+      .run()
+  })
+
+  it('should display the correct standby values for a cross chain swap', async () => {
+    await expectSaga(swapSubmitSaga, mockCrossChainSwap)
+      .withState(store.getState())
+      .provide(createDefaultProviders(Network.Celo))
+      .put(
+        addStandbyTransaction({
+          context: {
+            id: 'id-swap/saga-Swap/Approve',
+            tag: 'swap/saga',
+            description: 'Swap/Approve',
+          },
+          networkId: NetworkId['celo-alfajores'],
+          type: TokenTransactionTypeV2.Approval,
+          transactionHash: mockApproveTxReceipt.transactionHash,
+          tokenId: mockCeurTokenId,
+          approvedAmount: '1',
+          feeCurrencyId: mockCeloTokenId,
+        })
+      )
+      .put(
+        addStandbyTransaction({
+          context: {
+            id: 'id-swap/saga-Swap/Execute',
+            tag: 'swap/saga',
+            description: 'Swap/Execute',
+          },
+          networkId: NetworkId['celo-alfajores'],
+          type: TokenTransactionTypeV2.CrossChainSwapTransaction,
+          inAmount: {
+            value: mockSwap.payload.userInput.swapAmount[Field.TO],
+            tokenId: mockEthTokenId,
+          },
+          outAmount: {
+            value: mockSwap.payload.userInput.swapAmount[Field.FROM],
             tokenId: mockCeurTokenId,
           },
           transactionHash: mockSwapTxReceipt.transactionHash,
@@ -632,6 +684,8 @@ describe(swapSubmitSaga, () => {
           swapId: 'test-swap-id',
           fromTokenId: mockCeurTokenId,
           toTokenId: mockTestTokenTokenId,
+          transactionHash: '0x2',
+          networkId: NetworkId['celo-alfajores'],
         })
       )
       .run()
@@ -641,8 +695,8 @@ describe(swapSubmitSaga, () => {
     expect(loggerErrorSpy).not.toHaveBeenCalled()
     expect(navigateHome).toHaveBeenCalledWith()
 
-    expect(ValoraAnalytics.track).toHaveBeenCalledTimes(1)
-    expect(ValoraAnalytics.track).toHaveBeenLastCalledWith(
+    expect(AppAnalytics.track).toHaveBeenCalledTimes(1)
+    expect(AppAnalytics.track).toHaveBeenLastCalledWith(
       SwapEvents.swap_execute_success,
       expect.objectContaining({ fromTokenIsImported: false, toTokenIsImported: true })
     )
@@ -663,8 +717,8 @@ describe(swapSubmitSaga, () => {
       .put(swapError('test-swap-id'))
       .run()
     expect(navigate).not.toHaveBeenCalled()
-    expect(ValoraAnalytics.track).toHaveBeenCalledTimes(1)
-    expect(ValoraAnalytics.track).toHaveBeenCalledWith(SwapEvents.swap_execute_error, {
+    expect(AppAnalytics.track).toHaveBeenCalledTimes(1)
+    expect(AppAnalytics.track).toHaveBeenCalledWith(SwapEvents.swap_execute_error, {
       error: 'fake error',
       toToken: mockCeloAddress,
       toTokenId: mockCeloTokenId,
@@ -729,8 +783,10 @@ describe(swapSubmitSaga, () => {
       swapTxGasFeeUsd: undefined,
       swapTxHash: undefined,
       areSwapTokensShuffled: false,
+      swapType: 'same-chain',
+      swapId: 'test-swap-id',
     })
-    const analyticsProps = (ValoraAnalytics.track as jest.Mock).mock.calls[0][1]
+    const analyticsProps = (AppAnalytics.track as jest.Mock).mock.calls[0][1]
     expect(analyticsProps.gas).toBeCloseTo(
       analyticsProps.approveTxGas + analyticsProps.swapTxGas,
       8
@@ -757,7 +813,7 @@ describe(swapSubmitSaga, () => {
       .not.put(swapError('test-swap-id'))
       .run()
     expect(navigate).not.toHaveBeenCalled()
-    expect(ValoraAnalytics.track).not.toHaveBeenCalled()
+    expect(AppAnalytics.track).toHaveBeenLastCalledWith(SwapEvents.swap_cancel, expect.anything())
   })
 
   it('should track swap result for a user in the swap tokens order holdout group', async () => {
@@ -773,7 +829,7 @@ describe(swapSubmitSaga, () => {
       .provide(createDefaultProviders(Network.Celo))
       .run()
 
-    expect(ValoraAnalytics.track).toHaveBeenLastCalledWith(
+    expect(AppAnalytics.track).toHaveBeenLastCalledWith(
       SwapEvents.swap_execute_error,
       expect.objectContaining({ areSwapTokensShuffled: true })
     )
@@ -786,9 +842,21 @@ describe(swapSubmitSaga, () => {
       .provide(createDefaultProviders(Network.Celo))
       .run()
 
-    expect(ValoraAnalytics.track).toHaveBeenLastCalledWith(
+    expect(AppAnalytics.track).toHaveBeenLastCalledWith(
       SwapEvents.swap_execute_success,
       expect.objectContaining({ areSwapTokensShuffled: true })
+    )
+  })
+
+  it('should not sent success analytics event for cross-chain swap', async () => {
+    await expectSaga(swapSubmitSaga, mockCrossChainSwap)
+      .withState(store.getState())
+      .provide(createDefaultProviders(Network.Celo))
+      .run()
+
+    expect(AppAnalytics.track).not.toHaveBeenCalledWith(
+      SwapEvents.swap_execute_success,
+      expect.anything()
     )
   })
 })

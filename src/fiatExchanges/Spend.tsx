@@ -2,8 +2,8 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
 import { SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native'
+import AppAnalytics from 'src/analytics/AppAnalytics'
 import { FiatExchangeEvents } from 'src/analytics/Events'
-import ValoraAnalytics from 'src/analytics/ValoraAnalytics'
 import BackButton from 'src/components/BackButton'
 import ListItem from 'src/components/ListItem'
 import { SPEND_MERCHANT_LINKS } from 'src/config'
@@ -13,7 +13,7 @@ import { emptyHeader } from 'src/navigator/Headers'
 import { Screens } from 'src/navigator/Screens'
 import { StackParamList } from 'src/navigator/types'
 import colors from 'src/styles/colors'
-import fontStyles from 'src/styles/fonts'
+import { typeScale } from 'src/styles/fonts'
 import variables from 'src/styles/variables'
 import { navigateToURI } from 'src/utils/linking'
 
@@ -39,7 +39,7 @@ function Spend(props: Props) {
   const goToMerchant = (merchant: SpendMerchant) => {
     const { name, link } = merchant
     return () => {
-      ValoraAnalytics.track(FiatExchangeEvents.spend_merchant_link, {
+      AppAnalytics.track(FiatExchangeEvents.spend_merchant_link, {
         name,
         link,
       })
@@ -56,7 +56,7 @@ function Spend(props: Props) {
     <ScrollView style={styles.container}>
       <SafeAreaView>
         <Text style={styles.pleaseSelectProvider}>{t('useBalanceWithMerchants')}</Text>
-        <View style={styles.providersContainer}>
+        <View>
           {merchants
             .filter((merchant) => !!merchant.link)
             .map((merchant) => {
@@ -83,7 +83,7 @@ const styles = StyleSheet.create({
     paddingVertical: variables.contentPadding,
   },
   pleaseSelectProvider: {
-    ...fontStyles.regular,
+    ...typeScale.bodyMedium,
     paddingHorizontal: variables.contentPadding,
     paddingBottom: variables.contentPadding,
   },
@@ -92,15 +92,12 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  providersContainer: {
-    paddingRight: variables.contentPadding,
-  },
   optionTitle: {
-    ...fontStyles.regular,
+    ...typeScale.bodyMedium,
   },
   optionSubtitle: {
-    ...fontStyles.small,
-    color: colors.gray4,
+    ...typeScale.bodySmall,
+    color: colors.contentSecondary,
   },
 })
 

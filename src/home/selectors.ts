@@ -10,6 +10,7 @@ import { StatsigFeatureGates } from 'src/statsig/types'
 import { isVersionInRange } from 'src/utils/versionCheck'
 
 const homeNotificationsSelector = (state: RootState) => state.home.notifications
+export const balancesLoadingSelector = (state: RootState) => state.home.loading
 
 export const getExtraNotifications = createSelector(
   [homeNotificationsSelector, userLocationDataSelector],
@@ -31,9 +32,6 @@ export const getExtraNotifications = createSelector(
     })
   }
 )
-
-export const cleverTapInboxMessagesSelector = (state: RootState) =>
-  getFeatureGate(StatsigFeatureGates.CLEVERTAP_INBOX) ? state.home.cleverTapInboxMessages : []
 
 export const hasVisitedHomeSelector = (state: RootState) => state.home.hasVisitedHome
 

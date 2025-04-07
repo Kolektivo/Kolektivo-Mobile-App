@@ -20,7 +20,7 @@ export enum WalletConnectPairingOrigin {
   Deeplink = 'deeplink',
 }
 
-// Origin of WalletConnect/DappKit request
+// Origin of WalletConnect request
 export enum DappRequestOrigin {
   InAppWebView = 'in_app_web_view',
   External = 'external',
@@ -31,3 +31,15 @@ export enum HooksEnablePreviewOrigin {
   Scan = 'scan',
   Deeplink = 'deeplink',
 }
+
+export type TransactionOrigin =
+  | 'send'
+  | 'swap'
+  | 'earn-deposit'
+  | 'earn-swap-deposit'
+  | 'earn-withdraw'
+  | 'earn-claim-rewards'
+  | 'jumpstart-send'
+  | 'jumpstart-claim'
+  | 'wallet-connect'
+  | 'shortcut'

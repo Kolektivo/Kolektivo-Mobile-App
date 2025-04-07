@@ -8,18 +8,17 @@ import {
 } from '@fiatconnect/fiatconnect-types'
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 import { isEqual } from 'lodash'
-import { Actions as AppActions, UpdateConfigValuesAction } from 'src/app/actions'
-import { FeeInfo } from 'src/fees/saga'
 import {
   FiatConnectProviderInfo,
   FiatConnectQuoteError,
   FiatConnectQuoteSuccess,
 } from 'src/fiatconnect'
-import { FiatAccountSchemaCountryOverrides } from 'src/fiatconnect/types'
 import FiatConnectQuote from 'src/fiatExchanges/quotes/FiatConnectQuote'
-import { CICOFlow } from 'src/fiatExchanges/utils'
+import { CICOFlow } from 'src/fiatExchanges/types'
 import { getRehydratePayload, REHYDRATE, RehydrateAction } from 'src/redux/persist-helper'
+import { NetworkId } from 'src/transactions/types'
 import { CiCoCurrency } from 'src/utils/currencies'
+import { SerializableTransactionRequest } from 'src/viem/preparedTransactionSerialization'
 
 export enum SendingTransferStatus {
   Sending = 'Sending',
@@ -74,7 +73,6 @@ export interface State {
       [kycSchema: string]: CachedQuoteParams
     }
   }
-  schemaCountryOverrides: FiatAccountSchemaCountryOverrides
   personaInProgress: boolean
 }
 
@@ -91,7 +89,6 @@ export const initialState: State = {
   sendingFiatAccountStatus: SendingFiatAccountStatus.NotSending,
   kycTryAgainLoading: false,
   cachedQuoteParams: {},
-  schemaCountryOverrides: {},
   personaInProgress: false,
 }
 
@@ -147,7 +144,8 @@ export interface CreateFiatConnectTransferAction {
   flow: CICOFlow
   fiatConnectQuote: FiatConnectQuote
   fiatAccountId: string
-  feeInfo?: FeeInfo
+  serializablePreparedTransaction?: SerializableTransactionRequest
+  networkId?: NetworkId
 }
 
 export interface CreateFiatConnectTransferFailedAction {
@@ -343,26 +341,19 @@ export const slice = createSlice({
     },
   },
   extraReducers: (builder) => {
-    builder
-      .addCase(
-        AppActions.UPDATE_REMOTE_CONFIG_VALUES,
-        (state, action: UpdateConfigValuesAction) => {
-          state.schemaCountryOverrides = action.configValues.fiatAccountSchemaCountryOverrides
-        }
-      )
-      .addCase(REHYDRATE, (state, action: RehydrateAction) => ({
-        ...state,
-        ...getRehydratePayload(action, 'fiatConnect'),
-        quotes: [], // reset quotes since we want to always re-fetch a new set of quotes
-        quotesLoading: false,
-        quotesError: null,
-        transfer: null,
-        attemptReturnUserFlowLoading: false,
-        selectFiatConnectQuoteLoading: false,
-        sendingFiatAccountStatus: SendingFiatAccountStatus.NotSending,
-        kycTryAgainLoading: false,
-        personaInProgress: false,
-      }))
+    builder.addCase(REHYDRATE, (state, action: RehydrateAction) => ({
+      ...state,
+      ...getRehydratePayload(action, 'fiatConnect'),
+      quotes: [], // reset quotes since we want to always re-fetch a new set of quotes
+      quotesLoading: false,
+      quotesError: null,
+      transfer: null,
+      attemptReturnUserFlowLoading: false,
+      selectFiatConnectQuoteLoading: false,
+      sendingFiatAccountStatus: SendingFiatAccountStatus.NotSending,
+      kycTryAgainLoading: false,
+      personaInProgress: false,
+    }))
   },
 })
 

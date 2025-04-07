@@ -1,14 +1,14 @@
-import GorhomBottomSheet from '@gorhom/bottom-sheet'
+import { BottomSheetModal } from '@gorhom/bottom-sheet'
 import React, { useRef } from 'react'
-import { StyleSheet, Text, TextStyle, View } from 'react-native'
+import { StyleSheet, Text, TextStyle, View, ViewStyle } from 'react-native'
 import { ScrollView } from 'react-native-gesture-handler'
 import BottomSheetBase from 'src/components/BottomSheetBase'
 import BottomSheetScrollView from 'src/components/BottomSheetScrollView'
-import fontStyles from 'src/styles/fonts'
+import { typeScale } from 'src/styles/fonts'
 import { Spacing } from 'src/styles/styles'
 
 interface Props {
-  forwardedRef: React.RefObject<GorhomBottomSheet>
+  forwardedRef: React.RefObject<BottomSheetModal>
   title?: string | null
   titleStyle?: TextStyle
   description?: string | null
@@ -16,21 +16,18 @@ interface Props {
   onClose?: () => void
   onOpen?: () => void
   snapPoints?: (string | number)[]
+  contentContainerStyle?: ViewStyle
   stickyTitle?: boolean
   stickyHeaderComponent?: React.ReactNode
-  testId: string
+  testId?: string
 }
 
-export type BottomSheetRefType = GorhomBottomSheet
+export type BottomSheetModalRefType = BottomSheetModal
 
-// Note that dynamic sizing currently does not work well with sticky headers.
-// The dynamic height in this case is always a little shorter than should be,
-// however the content is scrollable and not obstructed. As a workaround,
-// providing `snapPoints` is recommended when using sticky headers.
 const BottomSheet = ({
   forwardedRef,
   title,
-  titleStyle = fontStyles.h2,
+  titleStyle = typeScale.titleSmall,
   description,
   children,
   onClose,
@@ -79,7 +76,7 @@ const styles = StyleSheet.create({
     padding: Spacing.Thick24,
   },
   description: {
-    ...fontStyles.small,
+    ...typeScale.bodySmall,
     marginBottom: Spacing.Smallest8,
   },
 })

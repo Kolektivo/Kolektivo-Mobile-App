@@ -1,18 +1,21 @@
 import { PayloadAction, createSlice } from '@reduxjs/toolkit'
 import { REHYDRATE, RehydrateAction } from 'redux-persist'
-import { DepositInfo, WithdrawInfo } from 'src/earn/types'
+import { DepositInfo, DepositSuccess, PoolInfo, WithdrawInfo } from 'src/earn/types'
 import { getRehydratePayload } from 'src/redux/persist-helper'
 
-type Status = 'idle' | 'loading' | 'success' | 'error'
+export type Status = 'idle' | 'loading' | 'success' | 'error'
 
 interface State {
   depositStatus: Status
   withdrawStatus: Status
+  poolInfoFetchStatus: Status
+  poolInfo?: PoolInfo
 }
 
 const initialState: State = {
   depositStatus: 'idle',
   withdrawStatus: 'idle',
+  poolInfoFetchStatus: 'idle',
 }
 
 export const slice = createSlice({
@@ -22,7 +25,7 @@ export const slice = createSlice({
     depositStart: (state, action: PayloadAction<DepositInfo>) => {
       state.depositStatus = 'loading'
     },
-    depositSuccess: (state) => {
+    depositSuccess: (state, _action: PayloadAction<DepositSuccess>) => {
       state.depositStatus = 'success'
     },
     depositError: (state) => {
@@ -50,6 +53,8 @@ export const slice = createSlice({
       ...getRehydratePayload(action, 'earn'),
       depositStatus: 'idle',
       withdrawStatus: 'idle',
+      poolInfoFetchStatus: 'idle',
+      poolInfo: undefined,
     }))
   },
 })

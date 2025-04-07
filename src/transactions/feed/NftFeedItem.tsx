@@ -1,13 +1,13 @@
 import React from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, Text, View } from 'react-native'
+import AppAnalytics from 'src/analytics/AppAnalytics'
 import { HomeEvents } from 'src/analytics/Events'
-import ValoraAnalytics from 'src/analytics/ValoraAnalytics'
 import IconWithNetworkBadge from 'src/components/IconWithNetworkBadge'
 import Touchable from 'src/components/Touchable'
 import ImageErrorIcon from 'src/icons/ImageErrorIcon'
-import NftReceivedIcon from 'src/icons/NftReceivedIcon'
-import NftSentIcon from 'src/icons/NftSentIcon'
+import NftReceivedIcon from 'src/images/NftReceivedIcon'
+import NftSentIcon from 'src/images/NftSentIcon'
 import { navigate } from 'src/navigator/NavigationService'
 import { Screens } from 'src/navigator/Screens'
 import NftMedia from 'src/nfts/NftMedia'
@@ -28,7 +28,9 @@ function NftFeedItem({ transaction }: Props) {
 
   const openNftTransactionDetails = () => {
     navigate(Screens.NftsInfoCarousel, { nfts, networkId: transaction.networkId })
-    ValoraAnalytics.track(HomeEvents.transaction_feed_item_select)
+    AppAnalytics.track(HomeEvents.transaction_feed_item_select, {
+      itemType: transaction.type,
+    })
   }
 
   return (
@@ -79,7 +81,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: colors.gray2,
+    backgroundColor: colors.backgroundTertiary,
     alignItems: 'center',
     justifyContent: 'center',
   },

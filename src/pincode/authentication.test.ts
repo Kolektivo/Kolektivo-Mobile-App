@@ -1,27 +1,13 @@
-import CryptoJS from 'crypto-js'
-import * as Keychain from 'react-native-keychain'
+import * as Keychain from '@divvi/react-native-keychain'
 import { expectSaga } from 'redux-saga-test-plan'
 import { select } from 'redux-saga/effects'
 import { PincodeType } from 'src/account/reducer'
 import { pincodeTypeSelector } from 'src/account/selectors'
+import AppAnalytics from 'src/analytics/AppAnalytics'
 import { AuthenticationEvents } from 'src/analytics/Events'
-import ValoraAnalytics from 'src/analytics/ValoraAnalytics'
+import { encryptMnemonic } from 'src/backup/utils'
 import { storedPasswordRefreshed } from 'src/identity/actions'
 import { navigate, navigateBack } from 'src/navigator/NavigationService'
-import {
-  CANCELLED_PIN_INPUT,
-  checkPin,
-  DEFAULT_CACHE_ACCOUNT,
-  getPasswordSaga,
-  getPincode,
-  getPincodeWithBiometry,
-  passwordHashStorageKey,
-  PinBlocklist,
-  removeStoredPin,
-  retrieveOrGeneratePepper,
-  setPincodeWithBiometry,
-  updatePin,
-} from 'src/pincode/authentication'
 import {
   clearPasswordCaches,
   getCachedPepper,
@@ -30,31 +16,60 @@ import {
   setCachedPepper,
   setCachedPin,
 } from 'src/pincode/PasswordCache'
+import {
+  CANCELLED_PIN_INPUT,
+  DEFAULT_CACHE_ACCOUNT,
+  _getPasswordHash,
+  checkPin,
+  getPasswordSaga,
+  getPincode,
+  getPincodeWithBiometry,
+  passwordHashStorageKey,
+  removeStoredPin,
+  retrieveOrGeneratePepper,
+  setPincodeWithBiometry,
+  updatePin,
+} from 'src/pincode/authentication'
 import { store } from 'src/redux/store'
-import { ensureError } from 'src/utils/ensureError'
 import Logger from 'src/utils/Logger'
-import { getWalletAsync } from 'src/web3/contracts'
+import { aesDecrypt, aesEncrypt } from 'src/utils/aes'
+import { ensureError } from 'src/utils/ensureError'
+import { getKeychainAccounts } from 'src/web3/contracts'
 import { getMockStoreData } from 'test/utils'
-import { mockAccount } from 'test/values'
+import { mockAccount, mockMnemonic } from 'test/values'
 
 jest.mock('src/web3/contracts')
 jest.unmock('src/pincode/authentication')
 jest.mock('src/redux/store', () => ({ store: { getState: jest.fn() } }))
-jest.mock('react-native-securerandom', () => ({
-  ...(jest.requireActual('react-native-securerandom') as any),
-  generateSecureRandom: jest.fn(() => new Uint8Array(16).fill(1)),
+jest.mock('crypto', () => ({
+  ...jest.requireActual('crypto'),
+  // So the pepper is deterministic
+  // WARNING: in this test, it might affect more things than just the pepper
+  randomBytes: jest.fn((length) => Buffer.alloc(length, 1)),
 }))
-jest.mock('src/analytics/ValoraAnalytics')
-jest.mock('@celo/utils/lib/async', () => ({
+jest.mock('src/analytics/AppAnalytics')
+jest.mock('src/utils/sleep', () => ({
+  ...jest.requireActual('src/utils/sleep'),
   sleep: jest.fn().mockResolvedValue(true),
 }))
+
+jest.mock('src/utils/aes', () => {
+  const originalAes = jest.requireActual('src/utils/aes')
+
+  return {
+    ...originalAes,
+    aesEncrypt: jest.fn().mockImplementation((...args) => originalAes.aesEncrypt(...args)),
+    aesDecrypt: jest.fn().mockImplementation((...args) => originalAes.aesDecrypt(...args)),
+  }
+})
 
 const loggerErrorSpy = jest.spyOn(Logger, 'error')
 const mockPepper = {
   username: 'some username',
-  password: '01010101010101010101010101010101',
+  password:
+    '01010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101',
   service: 'some service',
-  storage: 'some string',
+  storage: Keychain.STORAGE_TYPE.RSA,
 }
 const mockPin = '111555'
 const mockedKeychain = jest.mocked(Keychain)
@@ -72,6 +87,18 @@ const expectPincodeEntered = () => {
   )
   expect(navigateBack).toHaveBeenCalled()
 }
+
+// Keep initial mocked implementation from __mocks__/react-native-keychain.ts
+const originalGetGenericPassword = mockedKeychain.getGenericPassword.getMockImplementation()
+const originalSetGenericPassword = mockedKeychain.setGenericPassword.getMockImplementation()
+const originalResetGenericPassword = mockedKeychain.resetGenericPassword.getMockImplementation()
+
+beforeEach(async () => {
+  // Reset to the original mocked implementation to get better isolation between tests
+  mockedKeychain.getGenericPassword.mockImplementation(originalGetGenericPassword)
+  mockedKeychain.setGenericPassword.mockImplementation(originalSetGenericPassword)
+  mockedKeychain.resetGenericPassword.mockImplementation(originalResetGenericPassword)
+})
 
 describe(getPasswordSaga, () => {
   beforeEach(() => {
@@ -141,7 +168,7 @@ describe(getPincode, () => {
       password: mockPin,
       username: 'username',
       service: 'service',
-      storage: 'storage',
+      storage: Keychain.STORAGE_TYPE.RSA,
     })
 
     const pin = await getPincode()
@@ -152,6 +179,7 @@ describe(getPincode, () => {
       authenticationPrompt: {
         title: 'unlockWithBiometryPrompt',
       },
+      rules: 'none',
       service: 'PIN',
     })
   })
@@ -170,6 +198,7 @@ describe(getPincode, () => {
       authenticationPrompt: {
         title: 'unlockWithBiometryPrompt',
       },
+      rules: 'none',
       service: 'PIN',
     })
     expect(loggerErrorSpy).toHaveBeenCalledWith(
@@ -196,6 +225,7 @@ describe(getPincode, () => {
       authenticationPrompt: {
         title: 'unlockWithBiometryPrompt',
       },
+      rules: 'none',
       service: 'PIN',
     })
     expect(loggerErrorSpy).not.toHaveBeenCalled()
@@ -225,18 +255,18 @@ describe(getPincodeWithBiometry, () => {
       password: mockPin,
       username: 'username',
       service: 'service',
-      storage: 'storage',
+      storage: Keychain.STORAGE_TYPE.RSA,
     })
     const retrievedPin = await getPincodeWithBiometry()
 
     expect(retrievedPin).toEqual(mockPin)
     expect(getCachedPin(DEFAULT_CACHE_ACCOUNT)).toEqual(mockPin)
 
-    expect(ValoraAnalytics.track).toHaveBeenCalledTimes(2)
-    expect(ValoraAnalytics.track).toHaveBeenCalledWith(
+    expect(AppAnalytics.track).toHaveBeenCalledTimes(2)
+    expect(AppAnalytics.track).toHaveBeenCalledWith(
       AuthenticationEvents.get_pincode_with_biometry_start
     )
-    expect(ValoraAnalytics.track).toHaveBeenCalledWith(
+    expect(AppAnalytics.track).toHaveBeenCalledWith(
       AuthenticationEvents.get_pincode_with_biometry_complete
     )
   })
@@ -248,11 +278,11 @@ describe(getPincodeWithBiometry, () => {
       'Failed to retrieve pin with biometry, recieved null value'
     )
 
-    expect(ValoraAnalytics.track).toHaveBeenCalledTimes(2)
-    expect(ValoraAnalytics.track).toHaveBeenCalledWith(
+    expect(AppAnalytics.track).toHaveBeenCalledTimes(2)
+    expect(AppAnalytics.track).toHaveBeenCalledWith(
       AuthenticationEvents.get_pincode_with_biometry_start
     )
-    expect(ValoraAnalytics.track).toHaveBeenCalledWith(
+    expect(AppAnalytics.track).toHaveBeenCalledWith(
       AuthenticationEvents.get_pincode_with_biometry_error
     )
   })
@@ -271,7 +301,7 @@ describe(setPincodeWithBiometry, () => {
       password: mockPin,
       username: 'username',
       service: 'PIN',
-      storage: 'storage',
+      storage: Keychain.STORAGE_TYPE.RSA,
     })
 
     await setPincodeWithBiometry()
@@ -283,7 +313,6 @@ describe(setPincodeWithBiometry, () => {
       expect.objectContaining({
         service: 'PIN',
         accessControl: Keychain.ACCESS_CONTROL.BIOMETRY_CURRENT_SET,
-        authenticationType: Keychain.AUTHENTICATION_TYPE.BIOMETRICS,
       })
     )
   })
@@ -296,7 +325,7 @@ describe(setPincodeWithBiometry, () => {
       password: mockPin,
       username: 'username',
       service: 'PIN',
-      storage: 'storage',
+      storage: Keychain.STORAGE_TYPE.RSA,
     })
 
     await setPincodeWithBiometry()
@@ -309,7 +338,6 @@ describe(setPincodeWithBiometry, () => {
       expect.objectContaining({
         service: 'PIN',
         accessControl: Keychain.ACCESS_CONTROL.BIOMETRY_CURRENT_SET,
-        authenticationType: Keychain.AUTHENTICATION_TYPE.BIOMETRICS,
       })
     )
   })
@@ -319,7 +347,7 @@ describe(setPincodeWithBiometry, () => {
       password: 'some random password',
       username: 'username',
       service: 'PIN',
-      storage: 'storage',
+      storage: Keychain.STORAGE_TYPE.RSA,
     })
 
     await expect(setPincodeWithBiometry()).rejects.toThrowError(
@@ -333,45 +361,50 @@ describe(updatePin, () => {
   const oldPassword = mockPepper.password + oldPin
   const newPassword = mockPepper.password + mockPin
   // expectedPasswordHash generated from newPassword
-  const newPasswordHash = 'd9bb2d77ec27dc8bf4269a6241daaa0388e8908518458f6ce0314380d11411cd'
+  const newPasswordHash = '30fb8abeffeaeeef688d8d52a48ac60506db2e890aa32651c975e31cf06369a0'
   // expectedAccountHash generated from normalizeAddress(mockAccount)
   const accountHash = 'PASSWORD_HASH-0000000000000000000000000000000000007e57'
+  let encryptedMnemonicOldPin: string
 
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks()
     clearPasswordCaches()
+
+    encryptedMnemonicOldPin = await encryptMnemonic(mockMnemonic, oldPassword)
+
     mockedKeychain.getGenericPassword.mockImplementation((options) => {
-      if (options?.service === 'PEPPER') {
+      const service = (options as Keychain.GetOptions)?.service ?? options
+      if (service === 'PEPPER') {
         return Promise.resolve(mockPepper)
       }
-      if (options?.service === 'mnemonic') {
+      if (service === 'mnemonic') {
         return Promise.resolve({
           username: 'some username',
-          password: 'mockEncryptedValue',
+          password: encryptedMnemonicOldPin,
           service: 'some service',
-          storage: 'some string',
+          storage: Keychain.STORAGE_TYPE.RSA,
         })
       }
-      if (options?.service === accountHash) {
+      if (service === accountHash) {
         return Promise.resolve({
           username: 'some username',
           password: newPasswordHash,
           service: 'some service',
-          storage: 'some string',
+          storage: Keychain.STORAGE_TYPE.RSA,
         })
       }
-      if (options?.service === 'PIN') {
+      if (service === 'PIN') {
         return Promise.resolve({
           username: 'some username',
           password: mockPin,
           service: 'some service',
-          storage: 'some string',
+          storage: Keychain.STORAGE_TYPE.RSA,
         })
       }
       return Promise.resolve(false)
     })
-    jest.mocked(getWalletAsync).mockResolvedValue({
-      updateAccount: jest.fn().mockResolvedValue(true),
+    jest.mocked(getKeychainAccounts).mockResolvedValue({
+      updatePassphrase: jest.fn().mockResolvedValue(true),
     } as any)
   })
 
@@ -388,13 +421,11 @@ describe(updatePin, () => {
     expect(mockedKeychain.setGenericPassword).toHaveBeenNthCalledWith(
       2,
       'CELO',
-      'mockEncryptedValue',
+      expect.any(String), // Encrypted mnemonic new pin
       expect.objectContaining({ service: 'mnemonic' })
     )
-    // as we are mocking the outcome of encryption/decryption of mnemonic, check
-    // that they are called with the expected params
-    expect(CryptoJS.AES.decrypt).toHaveBeenCalledWith('mockEncryptedValue', oldPassword)
-    expect(CryptoJS.AES.encrypt).toHaveBeenCalledWith('mockDecryptedValue', newPassword)
+    expect(jest.mocked(aesDecrypt)).toHaveBeenCalledWith(encryptedMnemonicOldPin, oldPassword)
+    expect(jest.mocked(aesEncrypt)).toHaveBeenCalledWith(mockMnemonic, newPassword)
   })
 
   it('should update the cached pin, stored password, store mnemonic, and stored pin if biometry is enabled', async () => {
@@ -413,7 +444,7 @@ describe(updatePin, () => {
     expect(mockedKeychain.setGenericPassword).toHaveBeenNthCalledWith(
       3,
       'CELO',
-      'mockEncryptedValue',
+      expect.any(String), // Encrypted mnemonic new pin
       expect.objectContaining({ service: 'mnemonic' })
     )
     expect(mockedKeychain.setGenericPassword).toHaveBeenNthCalledWith(
@@ -423,14 +454,19 @@ describe(updatePin, () => {
       expect.objectContaining({
         service: 'PIN',
         accessControl: Keychain.ACCESS_CONTROL.BIOMETRY_CURRENT_SET,
-        authenticationType: Keychain.AUTHENTICATION_TYPE.BIOMETRICS,
       })
     )
   })
 })
 
 describe(removeStoredPin, () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
+    clearPasswordCaches()
+  })
+
   it('should remove the item from keychain', async () => {
+    expect(mockedKeychain.resetGenericPassword).toHaveBeenCalledTimes(0)
     mockedKeychain.resetGenericPassword.mockResolvedValueOnce(true)
     await removeStoredPin()
 
@@ -468,7 +504,7 @@ describe(retrieveOrGeneratePepper, () => {
     mockedKeychain.getGenericPassword.mockResolvedValueOnce(false)
     mockedKeychain.setGenericPassword.mockResolvedValueOnce({
       service: 'PEPPER',
-      storage: 'some storage',
+      storage: Keychain.STORAGE_TYPE.RSA,
     })
     mockedKeychain.getGenericPassword.mockResolvedValueOnce(mockPepper)
     const pepper = await retrieveOrGeneratePepper()
@@ -481,7 +517,7 @@ describe(retrieveOrGeneratePepper, () => {
     mockedKeychain.getGenericPassword.mockResolvedValueOnce(false)
     mockedKeychain.setGenericPassword.mockResolvedValueOnce({
       service: 'PEPPER',
-      storage: 'some storage',
+      storage: Keychain.STORAGE_TYPE.RSA,
     })
     mockedKeychain.getGenericPassword.mockResolvedValueOnce({
       ...mockPepper,
@@ -495,58 +531,9 @@ describe(retrieveOrGeneratePepper, () => {
   })
 })
 
-describe(PinBlocklist, () => {
-  const blocklist = new PinBlocklist()
-
-  describe('#contains', () => {
-    const commonPins = [
-      '000000',
-      '123456',
-      '111111',
-      '123123',
-      '159951',
-      '007007',
-      '110989',
-      '789789',
-      '456456',
-      '852456',
-      '999999',
-    ]
-
-    for (const commonPin of commonPins) {
-      it(`indicates the list contains common PIN ${commonPin}`, () => {
-        expect(blocklist.contains(commonPin)).toBe(true)
-      })
-    }
-
-    it('indicates inclusion of a small portion of random PINs', () => {
-      // Using the frequentist estimator of true probability for a Bernoulli process.
-      // https://en.wikipedia.org/wiki/Checking_whether_a_coin_is_fair#Estimator_of_true_probability
-      // Using 2000 trials, and a confidence interval Z value of 3.89 gives the test a 1 in 10,000
-      // chance of randomly failing. Tolerance is calulated to match these choices using the
-      // formulas in the article above.
-      const blockProbability = blocklist.size() / 1000000
-      const trials = 2000
-      const tolerance = 3.89 * Math.sqrt((blockProbability * (1 - blockProbability)) / trials)
-
-      let positives = 0
-      for (let i = 0; i < trials; i++) {
-        const randomPin = String(Math.floor(Math.random() * 1000000)).padStart(6, '0')
-        if (blocklist.contains(randomPin)) {
-          positives++
-        }
-      }
-
-      const estimate = positives / trials
-      const withinTolerance = Math.abs(blockProbability - estimate) <= tolerance
-      expect(withinTolerance).toBe(true)
-    })
-  })
-})
-
 describe(checkPin, () => {
   const expectedPassword = mockPepper.password + mockPin
-  const expectedPasswordHash = 'd9bb2d77ec27dc8bf4269a6241daaa0388e8908518458f6ce0314380d11411cd' // sha256 of expectedPassword
+  const expectedPasswordHash = '30fb8abeffeaeeef688d8d52a48ac60506db2e890aa32651c975e31cf06369a0' // sha256 of expectedPassword
   const mockUnlockAccount = jest.fn().mockImplementation((_account, password, _duration) => {
     if (password === expectedPassword) {
       return Promise.resolve(true)
@@ -560,8 +547,8 @@ describe(checkPin, () => {
     setCachedPepper(DEFAULT_CACHE_ACCOUNT, mockPepper.password)
     setCachedPasswordHash(mockAccount, expectedPasswordHash)
 
-    jest.mocked(getWalletAsync).mockResolvedValue({
-      unlockAccount: mockUnlockAccount,
+    jest.mocked(getKeychainAccounts).mockResolvedValue({
+      unlock: mockUnlockAccount,
     } as any)
   })
 
@@ -646,5 +633,22 @@ describe(checkPin, () => {
     expect(mockUnlockAccount).toHaveBeenCalledWith(mockAccount, incorrectPassword, 600)
     expect(mockedKeychain.setGenericPassword).not.toHaveBeenCalled()
     expect(mockStore.dispatch).not.toHaveBeenCalled()
+  })
+})
+
+describe(_getPasswordHash, () => {
+  // See some of these are producing the same hash, though the password is different
+  // Because the current implementation treats the input as hex string (without the '0x' prefix)
+  // But we'll change this to treat the input as a raw string/buffer in the future
+  it.each([
+    ['123456', 'bf7cbe09d71a1bcc373ab9a764917f730a6ed951ffa1a7399b7abd8f8fd73cb4'],
+    ['0x123456', 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'],
+    ['0x1234567', 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'],
+    ['abx', '087d80f7f182dd44f184aa86ca34488853ebcc04f0c60d5294919a466b463831'],
+    ['abxy', '087d80f7f182dd44f184aa86ca34488853ebcc04f0c60d5294919a466b463831'],
+    ['ABXY', '087d80f7f182dd44f184aa86ca34488853ebcc04f0c60d5294919a466b463831'],
+    ['0xabxy', 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'],
+  ])(`returns the expected password hash for %s`, (password, expectedHash) => {
+    expect(_getPasswordHash(password)).toBe(expectedHash)
   })
 })

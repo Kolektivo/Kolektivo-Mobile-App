@@ -1,3 +1,4 @@
+import { useHeaderHeight } from '@react-navigation/elements'
 import { NativeStackScreenProps } from '@react-navigation/native-stack'
 import React, { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -6,6 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import Touchable from 'src/components/Touchable'
 import ImageErrorIcon from 'src/icons/ImageErrorIcon'
 import OpenLinkIcon from 'src/icons/OpenLinkIcon'
+import { headerWithBackButton } from 'src/navigator/Headers'
 import { navigate } from 'src/navigator/NavigationService'
 import { Screens } from 'src/navigator/Screens'
 import { StackParamList } from 'src/navigator/types'
@@ -13,7 +15,7 @@ import NftMedia from 'src/nfts/NftMedia'
 import NftsLoadError from 'src/nfts/NftsLoadError'
 import { Nft, NftOrigin } from 'src/nfts/types'
 import colors from 'src/styles/colors'
-import fontStyles from 'src/styles/fonts'
+import { typeScale } from 'src/styles/fonts'
 import { Spacing } from 'src/styles/styles'
 import variables from 'src/styles/variables'
 import { NetworkId } from 'src/transactions/types'
@@ -106,6 +108,7 @@ export default function NftsInfoCarousel({ route }: Props) {
   const { nfts, networkId } = route.params
   const [activeNft, setActiveNft] = useState<Nft | null>(nfts[0] ?? null)
   const { t } = useTranslation()
+  const headerHeight = useHeaderHeight()
 
   const blockExplorerUri = useMemo(() => {
     if (
@@ -161,7 +164,11 @@ export default function NftsInfoCarousel({ route }: Props) {
   }
 
   return (
-    <SafeAreaView edges={['top']} style={styles.safeAreaView} testID="NftsInfoCarousel">
+    <SafeAreaView
+      style={[styles.safeAreaView, { paddingTop: headerHeight }]}
+      edges={[]}
+      testID="NftsInfoCarousel"
+    >
       <ScrollView>
         {/* Main Nft Video or Image */}
         <NftMedia
@@ -223,7 +230,7 @@ export default function NftsInfoCarousel({ route }: Props) {
             <Touchable onPress={pressExplorerLink} testID="ViewOnExplorer">
               <View style={styles.explorerLinkContainer}>
                 <Text style={styles.explorerLink}>{networkIdToExplorerString[networkId]}</Text>
-                <OpenLinkIcon color={colors.successDark} />
+                <OpenLinkIcon color={colors.successPrimary} />
               </View>
             </Touchable>
           </View>
@@ -233,14 +240,24 @@ export default function NftsInfoCarousel({ route }: Props) {
   )
 }
 
+NftsInfoCarousel.navigationOptions = () => ({
+  ...headerWithBackButton,
+  headerTransparent: true,
+  headerShown: true,
+  headerStyle: {
+    backgroundColor: 'transparent',
+  },
+  animation: 'slide_from_right',
+  animationDuration: 130,
+})
+
 const styles = StyleSheet.create({
   attributeText: {
-    ...fontStyles.regular,
-    color: colors.black,
+    ...typeScale.bodyMedium,
   },
   attributeTitle: {
-    ...fontStyles.small500,
-    color: colors.gray3,
+    ...typeScale.labelSmall,
+    color: colors.contentSecondary,
   },
   attributesContainer: {
     paddingBottom: Spacing.Thick24,
@@ -254,16 +271,16 @@ const styles = StyleSheet.create({
   errorThumbnail: {
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.gray2,
+    backgroundColor: colors.backgroundTertiary,
   },
   errorImageText: {
     marginTop: Spacing.Regular16,
-    ...fontStyles.regular,
-    color: colors.gray3,
+    ...typeScale.bodyMedium,
+    color: colors.contentSecondary,
   },
   explorerLink: {
-    ...fontStyles.small500,
-    color: colors.successDark,
+    ...typeScale.labelSmall,
+    color: colors.successPrimary,
     paddingRight: Spacing.Smallest8,
   },
   explorerLinkContainer: {
@@ -281,7 +298,7 @@ const styles = StyleSheet.create({
   nftImageLoadingErrorContainer: {
     width: '100%',
     height: DEFAULT_HEIGHT,
-    backgroundColor: colors.gray1,
+    backgroundColor: colors.backgroundSecondary,
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 8,
@@ -315,13 +332,13 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.Large32,
   },
   subSectionTitle: {
-    ...fontStyles.large600,
+    ...typeScale.labelSemiBoldLarge,
     marginBottom: Spacing.Regular16,
   },
   text: {
-    ...fontStyles.regular,
+    ...typeScale.bodyMedium,
   },
   title: {
-    ...fontStyles.h1,
+    ...typeScale.titleMedium,
   },
 })

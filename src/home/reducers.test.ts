@@ -1,7 +1,7 @@
+import { DEEP_LINK_URL_SCHEME } from 'src/config'
 import {
   Actions,
   celebratedNftFound,
-  cleverTapInboxMessagesReceived,
   nftCelebrationDisplayed,
   nftRewardDisplayed,
   nftRewardReadyToDisplay,
@@ -15,7 +15,7 @@ import {
   homeReducer as reducer,
 } from 'src/home/reducers'
 import { NetworkId } from 'src/transactions/types'
-import { mockCleverTapInboxMessage, mockContractAddress } from 'test/values'
+import { mockContractAddress } from 'test/values'
 
 const createTestNotification = (body: string) => ({
   ctaUri: 'https://celo.org',
@@ -30,7 +30,7 @@ const createTestNotification = (body: string) => ({
 })
 
 const mockRewardProperties = {
-  deepLink: 'celo://test',
+  deepLink: `${DEEP_LINK_URL_SCHEME}://test`,
   rewardExpirationDate: '3000-12-01T00:00:00.000Z',
   rewardReminderDate: '3000-01-01T00:00:00.000Z',
 }
@@ -64,7 +64,7 @@ describe('home reducer', () => {
       notifications: {
         notification1: {
           ...notification1,
-          ctaUri: 'https://valoraapp.com',
+          ctaUri: 'https://example.com',
           minVersion: '1.8.0',
           priority: 50,
         },
@@ -76,7 +76,7 @@ describe('home reducer', () => {
       notifications: {
         notification1: {
           ...notification1,
-          ctaUri: 'https://valoraapp.com',
+          ctaUri: 'https://example.com',
           minVersion: '1.8.0',
           priority: 50,
         },
@@ -160,14 +160,6 @@ describe('home reducer', () => {
         notification2,
       },
     })
-  })
-
-  it('should update cleverTapInboxMessages', () => {
-    const messages = [mockCleverTapInboxMessage]
-
-    const updatedState = reducer(undefined, cleverTapInboxMessagesReceived(messages))
-
-    expect(updatedState.cleverTapInboxMessages).toEqual(messages)
   })
 
   it('should set nftCelebration', () => {

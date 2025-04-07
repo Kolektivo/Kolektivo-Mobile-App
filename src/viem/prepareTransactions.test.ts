@@ -1,10 +1,11 @@
 import BigNumber from 'bignumber.js'
-import erc20 from 'src/abis/IERC20'
-import stableToken from 'src/abis/StableToken'
+import AppAnalytics from 'src/analytics/AppAnalytics'
+import { TransactionEvents } from 'src/analytics/Events'
+import { createRegistrationTransactionIfNeeded } from 'src/divviProtocol/registerReferral'
 import { TokenBalanceWithAddress } from 'src/tokens/slice'
 import { Network, NetworkId } from 'src/transactions/types'
 import { estimateFeesPerGas } from 'src/viem/estimateFeesPerGas'
-import { publicClient, valoraPublicClient } from 'src/viem/index'
+import { appPublicClient, publicClient } from 'src/viem/index'
 import {
   TransactionRequest,
   getEstimatedGasFee,
@@ -17,7 +18,6 @@ import {
   prepareERC20TransferTransaction,
   prepareSendNativeAssetTransaction,
   prepareTransactions,
-  prepareTransferWithCommentTransaction,
   tryEstimateTransaction,
   tryEstimateTransactions,
 } from 'src/viem/prepareTransactions'
@@ -30,6 +30,7 @@ import {
   InsufficientFundsError,
   InvalidInputRpcError,
   encodeFunctionData,
+  erc20Abi,
 } from 'viem'
 import { estimateGas } from 'viem/actions'
 import mocked = jest.mocked
@@ -49,14 +50,16 @@ jest.mock('src/viem/index', () => ({
     arbitrum: {} as unknown as jest.Mocked<(typeof publicClient)[Network.Arbitrum]>,
     ethereum: {} as unknown as jest.Mocked<(typeof publicClient)[Network.Ethereum]>,
   },
-  valoraPublicClient: {
+  appPublicClient: {
     celo: {} as unknown as jest.Mocked<(typeof publicClient)[Network.Celo]>,
     arbitrum: {} as unknown as jest.Mocked<(typeof publicClient)[Network.Arbitrum]>,
   },
 }))
+jest.mock('src/divviProtocol/registerReferral')
 
 beforeEach(() => {
   jest.clearAllMocks()
+  jest.mocked(createRegistrationTransactionIfNeeded).mockResolvedValue(null)
 })
 
 describe('prepareTransactions module', () => {
@@ -139,6 +142,55 @@ describe('prepareTransactions module', () => {
   }
   const mockPublicClient = {} as unknown as jest.Mocked<(typeof publicClient)[Network.Celo]>
   describe('prepareTransactions function', () => {
+    it('adds divvi registration transactions to the prepared transactions if needed', async () => {
+      mocked(createRegistrationTransactionIfNeeded).mockResolvedValue({
+        data: '0xregistrationData',
+        to: '0xregistrationTarget',
+      })
+      mocked(estimateFeesPerGas).mockResolvedValue({
+        maxFeePerGas: BigInt(1),
+        maxPriorityFeePerGas: BigInt(2),
+        baseFeePerGas: BigInt(1),
+      })
+      mocked(estimateGas).mockResolvedValue(BigInt(500))
+
+      const result = await prepareTransactions({
+        feeCurrencies: mockFeeCurrencies,
+        decreasedAmountGasFeeMultiplier: 1,
+        baseTransactions: [
+          {
+            from: '0xfrom' as Address,
+            to: '0xto' as Address,
+            data: '0xdata',
+          },
+        ],
+        origin: 'send',
+      })
+      expect(result).toStrictEqual({
+        type: 'possible',
+        transactions: [
+          {
+            from: '0xfrom',
+            to: '0xto',
+            data: '0xdata',
+            gas: BigInt(500),
+            maxFeePerGas: BigInt(1),
+            maxPriorityFeePerGas: BigInt(2),
+            _baseFeePerGas: BigInt(1),
+          },
+          {
+            data: '0xregistrationData',
+            to: '0xregistrationTarget',
+            gas: BigInt(500),
+            maxFeePerGas: BigInt(1),
+            maxPriorityFeePerGas: BigInt(2),
+            _baseFeePerGas: BigInt(1),
+          },
+        ],
+        feeCurrency: mockFeeCurrencies[0],
+      })
+    })
+
     it('throws if trying to sendAmount > sendToken balance', async () => {
       await expect(() =>
         prepareTransactions({
@@ -153,6 +205,7 @@ describe('prepareTransactions module', () => {
               data: '0xdata',
             },
           ],
+          origin: 'send',
         })
       ).rejects.toThrowError(/Cannot prepareTransactions for amount greater than balance./)
     })
@@ -178,6 +231,7 @@ describe('prepareTransactions module', () => {
             },
           ],
           throwOnSpendTokenAmountExceedsBalance: false,
+          origin: 'send',
         })
       ).resolves.toEqual(expect.anything())
     })
@@ -203,11 +257,20 @@ describe('prepareTransactions module', () => {
             data: '0xdata',
           },
         ],
+        origin: 'send',
       })
       expect(result).toStrictEqual({
         type: 'not-enough-balance-for-gas',
         feeCurrencies: mockFeeCurrencies,
       })
+      expect(AppAnalytics.track).toHaveBeenCalledTimes(1)
+      expect(AppAnalytics.track).toHaveBeenCalledWith(
+        TransactionEvents.transaction_prepare_insufficient_gas,
+        {
+          origin: 'send',
+          networkId: NetworkId['celo-mainnet'],
+        }
+      )
     })
     it("returns a 'possible' result when the balances for feeCurrencies are too low to cover the fee but isGasSubsidized is true", async () => {
       mocked(estimateFeesPerGas).mockResolvedValue({
@@ -232,6 +295,7 @@ describe('prepareTransactions module', () => {
           },
         ],
         isGasSubsidized: true,
+        origin: 'send',
       })
       expect(result).toStrictEqual({
         type: 'possible',
@@ -249,6 +313,7 @@ describe('prepareTransactions module', () => {
           },
         ],
       })
+      expect(AppAnalytics.track).not.toHaveBeenCalled()
     })
     it("returns a 'not-enough-balance-for-gas' result when gas estimation throws error due to insufficient funds", async () => {
       mocked(estimateFeesPerGas).mockResolvedValue({
@@ -270,11 +335,20 @@ describe('prepareTransactions module', () => {
             data: '0xdata',
           },
         ],
+        origin: 'swap',
       })
       expect(result).toStrictEqual({
         type: 'not-enough-balance-for-gas',
         feeCurrencies: mockFeeCurrencies,
       })
+      expect(AppAnalytics.track).toHaveBeenCalledTimes(1)
+      expect(AppAnalytics.track).toHaveBeenCalledWith(
+        TransactionEvents.transaction_prepare_insufficient_gas,
+        {
+          origin: 'swap',
+          networkId: NetworkId['celo-mainnet'],
+        }
+      )
     })
     it("returns a 'not-enough-balance-for-gas' result when gas estimation throws error due to value exceeded balance", async () => {
       mocked(estimateFeesPerGas).mockResolvedValue({
@@ -296,11 +370,20 @@ describe('prepareTransactions module', () => {
             data: '0xdata',
           },
         ],
+        origin: 'earn-deposit',
       })
       expect(result).toStrictEqual({
         type: 'not-enough-balance-for-gas',
         feeCurrencies: mockFeeCurrencies,
       })
+      expect(AppAnalytics.track).toHaveBeenCalledTimes(1)
+      expect(AppAnalytics.track).toHaveBeenCalledWith(
+        TransactionEvents.transaction_prepare_insufficient_gas,
+        {
+          origin: 'earn-deposit',
+          networkId: NetworkId['celo-mainnet'],
+        }
+      )
     })
     it('throws if gas estimation throws error for some other reason besides insufficient funds', async () => {
       mocked(estimateFeesPerGas).mockResolvedValue({
@@ -323,8 +406,10 @@ describe('prepareTransactions module', () => {
               data: '0xdata',
             },
           ],
+          origin: 'send',
         })
       ).rejects.toThrowError(EstimateGasExecutionError)
+      expect(AppAnalytics.track).not.toHaveBeenCalled()
     })
     it("returns a 'need-decrease-spend-amount-for-gas' result when spending the exact max amount of a feeCurrency, and no other feeCurrency has enough balance to pay for the fee", async () => {
       mocked(estimateFeesPerGas).mockResolvedValue({
@@ -347,6 +432,7 @@ describe('prepareTransactions module', () => {
             gas: BigInt(15_000), // 50k will be added for fee currency 1 since it is non-native
           },
         ],
+        origin: 'earn-withdraw',
       })
       expect(result).toStrictEqual({
         type: 'need-decrease-spend-amount-for-gas',
@@ -355,6 +441,14 @@ describe('prepareTransactions module', () => {
         feeCurrency: mockFeeCurrencies[1],
         decreasedSpendAmount: new BigNumber(4.35), // 70.0 balance minus maxGasFee
       })
+      expect(AppAnalytics.track).toHaveBeenCalledTimes(1)
+      expect(AppAnalytics.track).toHaveBeenCalledWith(
+        TransactionEvents.transaction_prepare_insufficient_gas,
+        {
+          origin: 'earn-withdraw',
+          networkId: NetworkId['celo-mainnet'],
+        }
+      )
     })
     it("returns a 'possible' result when spending the exact max amount of a feeCurrency, and no other feeCurrency has enough balance to pay for the fee and isGasSubsidized is true", async () => {
       mocked(estimateFeesPerGas).mockResolvedValue({
@@ -378,6 +472,7 @@ describe('prepareTransactions module', () => {
             gas: BigInt(15_000),
           },
         ],
+        origin: 'wallet-connect',
       })
       expect(result).toStrictEqual({
         type: 'possible',
@@ -395,6 +490,7 @@ describe('prepareTransactions module', () => {
           },
         ],
       })
+      expect(AppAnalytics.track).not.toHaveBeenCalled()
     })
     it("returns a 'need-decrease-spend-amount-for-gas' result when spending close to the max amount of a feeCurrency, and no other feeCurrency has enough balance to pay for the fee", async () => {
       mocked(estimateFeesPerGas).mockResolvedValue({
@@ -419,6 +515,7 @@ describe('prepareTransactions module', () => {
             gas: BigInt(15_000), // 50k will be added for fee currency 1 since it is non-native
           },
         ],
+        origin: 'wallet-connect',
       })
       expect(result).toStrictEqual({
         type: 'need-decrease-spend-amount-for-gas',
@@ -427,6 +524,14 @@ describe('prepareTransactions module', () => {
         feeCurrency: mockFeeCurrencies[1],
         decreasedSpendAmount: new BigNumber(4.35), // 70.0 balance minus maxGasFee
       })
+      expect(AppAnalytics.track).toHaveBeenCalledTimes(1)
+      expect(AppAnalytics.track).toHaveBeenCalledWith(
+        TransactionEvents.transaction_prepare_insufficient_gas,
+        {
+          origin: 'wallet-connect',
+          networkId: NetworkId['celo-mainnet'],
+        }
+      )
     })
     it("returns a 'possible' result when spending a feeCurrency, when there's enough balance to cover for the fee", async () => {
       mocked(estimateFeesPerGas).mockResolvedValue({
@@ -458,6 +563,7 @@ describe('prepareTransactions module', () => {
             _estimatedGasUse: BigInt(50),
           },
         ],
+        origin: 'send',
       })
       expect(result).toStrictEqual({
         type: 'possible',
@@ -486,6 +592,7 @@ describe('prepareTransactions module', () => {
         ],
         feeCurrency: mockFeeCurrencies[0],
       })
+      expect(AppAnalytics.track).not.toHaveBeenCalled()
     })
     it("returns a 'possible' result when spending the max balance of a feeCurrency when there's another feeCurrency to pay for the fee", async () => {
       mocked(estimateFeesPerGas).mockResolvedValue({
@@ -518,6 +625,7 @@ describe('prepareTransactions module', () => {
             _estimatedGasUse: BigInt(50),
           },
         ],
+        origin: 'send',
       })
       expect(result).toStrictEqual({
         type: 'possible',
@@ -548,6 +656,7 @@ describe('prepareTransactions module', () => {
         ],
         feeCurrency: mockFeeCurrencies[1],
       })
+      expect(AppAnalytics.track).not.toHaveBeenCalled()
     })
     it("returns a 'possible' result when spending the max balance of a token that isn't a feeCurrency when there's another feeCurrency to pay for the fee", async () => {
       mocked(estimateFeesPerGas).mockResolvedValue({
@@ -579,6 +688,7 @@ describe('prepareTransactions module', () => {
             _estimatedGasUse: BigInt(50),
           },
         ],
+        origin: 'send',
       })
       expect(result).toStrictEqual({
         type: 'possible',
@@ -607,6 +717,7 @@ describe('prepareTransactions module', () => {
         ],
         feeCurrency: mockFeeCurrencies[0],
       })
+      expect(AppAnalytics.track).not.toHaveBeenCalled()
     })
     it("returns a 'possible' result when no spendToken and spendAmount are provided but the user has some fee currency balance", async () => {
       mocked(estimateFeesPerGas).mockResolvedValue({
@@ -634,6 +745,7 @@ describe('prepareTransactions module', () => {
             _estimatedGasUse: BigInt(50),
           },
         ],
+        origin: 'send',
       })
       expect(result).toStrictEqual({
         type: 'possible',
@@ -662,6 +774,7 @@ describe('prepareTransactions module', () => {
         ],
         feeCurrency: mockFeeCurrencies[0],
       })
+      expect(AppAnalytics.track).not.toHaveBeenCalled()
     })
     it("returns a 'not-enough-balance-for-gas' result when no spendToken and spendAmount are provided, and the user has no fee currency balance", async () => {
       mocked(estimateFeesPerGas).mockResolvedValue({
@@ -696,11 +809,20 @@ describe('prepareTransactions module', () => {
             gas: BigInt(500),
           },
         ],
+        origin: 'jumpstart-send',
       })
       expect(result).toStrictEqual({
         type: 'not-enough-balance-for-gas',
         feeCurrencies: mockInsufficientFeeCurrencies,
       })
+      expect(AppAnalytics.track).toHaveBeenCalledTimes(1)
+      expect(AppAnalytics.track).toHaveBeenCalledWith(
+        TransactionEvents.transaction_prepare_insufficient_gas,
+        {
+          origin: 'jumpstart-send',
+          networkId: NetworkId['celo-mainnet'],
+        }
+      )
     })
     it('throws if spendAmount is provided and the spendToken is not', async () => {
       await expect(() =>
@@ -715,6 +837,7 @@ describe('prepareTransactions module', () => {
               data: '0xdata',
             },
           ],
+          origin: 'send',
         })
       ).rejects.toThrowError(
         'prepareTransactions requires a spendToken if spendTokenAmount is greater than 0'
@@ -851,7 +974,7 @@ describe('prepareTransactions module', () => {
       ])
     })
     it.each([
-      { client: 'valora public', expectedClient: valoraPublicClient },
+      { client: 'app public', expectedClient: appPublicClient },
       { client: 'public', expectedClient: publicClient },
     ])('uses the $client client for estimating gas', async ({ client, expectedClient }) => {
       mocked(estimateFeesPerGas).mockResolvedValue({
@@ -863,18 +986,18 @@ describe('prepareTransactions module', () => {
       await tryEstimateTransactions(
         [{ from: '0x123' }],
         { ...mockFeeCurrencies[0], networkId: NetworkId['arbitrum-sepolia'] },
-        client === 'valora public'
+        client === 'app public'
       )
       expect(estimateGas).toHaveBeenCalledWith(expectedClient[Network.Arbitrum], expect.anything())
     })
-    it('throws if no valora public client exists', async () => {
+    it('throws if no app public client exists', async () => {
       await expect(
         tryEstimateTransactions(
           [{ from: '0x123' }],
           { ...mockFeeCurrencies[0], networkId: NetworkId['ethereum-sepolia'] },
           true
         )
-      ).rejects.toThrowError('Valora transport not available for network ethereum')
+      ).rejects.toThrowError('App transport not available for network ethereum')
     })
   })
   describe('getMaxGasFee', () => {
@@ -1049,9 +1172,10 @@ describe('prepareTransactions module', () => {
           data: '0xabc',
         },
       ],
+      origin: 'send',
     })
     expect(encodeFunctionData).toHaveBeenCalledWith({
-      abi: erc20.abi,
+      abi: erc20Abi,
       functionName: 'transfer',
       args: ['0x456', BigInt(100)],
     })
@@ -1075,40 +1199,7 @@ describe('prepareTransactions module', () => {
       spendTokenAmount: new BigNumber(100),
       decreasedAmountGasFeeMultiplier: 1,
       baseTransactions: [{ from: '0x123', to: '0x456', value: BigInt(100) }],
-    })
-  })
-
-  it('prepareTransferWithCommentTransaction', async () => {
-    const mockPrepareTransactions = jest.fn()
-    mocked(encodeFunctionData).mockReturnValue('0xabc')
-    await prepareTransferWithCommentTransaction(
-      {
-        fromWalletAddress: '0x123',
-        toWalletAddress: '0x456',
-        sendToken: mockSpendToken,
-        amount: BigInt(100),
-        feeCurrencies: mockFeeCurrencies,
-        comment: 'test comment',
-      },
-      mockPrepareTransactions
-    )
-    expect(mockPrepareTransactions).toHaveBeenCalledWith({
-      feeCurrencies: mockFeeCurrencies,
-      spendToken: mockSpendToken,
-      spendTokenAmount: new BigNumber(100),
-      decreasedAmountGasFeeMultiplier: 1,
-      baseTransactions: [
-        {
-          from: '0x123',
-          to: mockSpendToken.address,
-          data: '0xabc',
-        },
-      ],
-    })
-    expect(encodeFunctionData).toHaveBeenCalledWith({
-      abi: stableToken.abi,
-      functionName: 'transferWithComment',
-      args: ['0x456', BigInt(100), 'test comment'],
+      origin: 'send',
     })
   })
 

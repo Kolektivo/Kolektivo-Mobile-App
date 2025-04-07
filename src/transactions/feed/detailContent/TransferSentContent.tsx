@@ -12,26 +12,27 @@ import Colors from 'src/styles/colors'
 import { typeScale } from 'src/styles/fonts'
 import { Spacing } from 'src/styles/styles'
 import { useTokenInfo } from 'src/tokens/hooks'
-import CommentSection from 'src/transactions/CommentSection'
 import TransferAvatars from 'src/transactions/TransferAvatars'
 import UserSection from 'src/transactions/UserSection'
-import NetworkFeeRowItem from 'src/transactions/feed/detailContent/NetworkFeeRowItem'
-import { TokenTransfer } from 'src/transactions/types'
-import { Currency } from 'src/utils/currencies'
+import FeeRowItem from 'src/transactions/feed/detailContent/FeeRowItem'
+import { FeeType, TokenTransfer } from 'src/transactions/types'
 import networkConfig from 'src/web3/networkConfig'
 
 // Note that this is tested from TransactionDetailsScreen.test.tsx
 function TransferSentContent({ transfer }: { transfer: TokenTransfer }) {
-  const { amount, metadata, address } = transfer
-
   const { t } = useTranslation()
   const info = useSelector(recipientInfoSelector)
 
-  const celoTokenId = useTokenInfo(networkConfig.currencyToTokenId[Currency.Celo])?.tokenId
+  const celoTokenId = networkConfig.celoTokenId
   const transferTokenInfo = useTokenInfo(transfer.amount.tokenId)
 
-  const isCeloWithdrawal = amount.tokenId === celoTokenId
-  const recipient = getRecipientFromAddress(address, info, metadata.title, metadata.image)
+  const isCeloWithdrawal = transfer.amount.tokenId === celoTokenId
+  const recipient = getRecipientFromAddress(
+    transfer.address,
+    info,
+    transfer.metadata.title,
+    transfer.metadata.image
+  )
 
   return (
     <>
@@ -41,9 +42,12 @@ function TransferSentContent({ transfer }: { transfer: TokenTransfer }) {
         avatar={<TransferAvatars type="sent" recipient={recipient} />}
         testID="TransferSent"
       />
-      <CommentSection comment={metadata.comment} isSend={true} />
       <HorizontalLine />
-      <NetworkFeeRowItem fees={transfer.fees} transactionStatus={transfer.status} />
+      <FeeRowItem
+        fees={transfer.fees}
+        feeType={FeeType.SecurityFee}
+        transactionStatus={transfer.status}
+      />
       <LineItemRow
         title={t('amountSent')}
         textStyle={typeScale.labelSemiBoldMedium}
@@ -68,6 +72,14 @@ function TransferSentContent({ transfer }: { transfer: TokenTransfer }) {
               amount={new BigNumber(1)}
               tokenId={transfer.amount.tokenId}
               showLocalAmount={true}
+              localAmount={
+                transfer.amount.localAmount
+                  ? {
+                      ...transfer.amount.localAmount,
+                      value: transfer.amount.localAmount.exchangeRate, // display the historical exchange rate
+                    }
+                  : undefined
+              }
               testID="TransferSent/TransferTokenExchangeRate"
             />
           </Trans>
@@ -76,6 +88,7 @@ function TransferSentContent({ transfer }: { transfer: TokenTransfer }) {
           <TokenDisplay
             amount={transfer.amount.value}
             tokenId={transfer.amount.tokenId}
+            localAmount={transfer.amount.localAmount}
             showLocalAmount={true}
             hideSign={true}
             testID="TransferSent/AmountSentValueFiat"
@@ -97,7 +110,7 @@ const styles = StyleSheet.create({
   },
   tokenFiatValueText: {
     ...typeScale.bodySmall,
-    color: Colors.gray4,
+    color: Colors.contentSecondary,
   },
 })
 

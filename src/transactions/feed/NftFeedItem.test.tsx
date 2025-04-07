@@ -36,7 +36,7 @@ describe('NftFeedItem', () => {
     type = TokenTransactionTypeV2.NftReceived,
     fees = [],
   }: {
-    type?: TokenTransactionTypeV2
+    type?: TokenTransactionTypeV2.NftReceived | TokenTransactionTypeV2.NftSent
     fees?: Fee[]
     storeOverrides?: RecursivePartial<RootState>
   }) {
@@ -50,7 +50,6 @@ describe('NftFeedItem', () => {
       <Provider store={store}>
         <NftFeedItem
           transaction={{
-            __typename: 'NftTransferV3',
             networkId: NetworkId['celo-alfajores'],
             type,
             transactionHash: MOCK_TX_HASH,
@@ -77,7 +76,7 @@ describe('NftFeedItem', () => {
       expect.objectContaining({
         uri: mockNftAllFields.media[0].gateway,
         headers: {
-          origin: networkConfig.nftsValoraAppUrl,
+          origin: networkConfig.nftsAppUrl,
         },
       })
     )

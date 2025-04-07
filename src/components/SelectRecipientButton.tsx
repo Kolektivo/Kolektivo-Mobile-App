@@ -3,6 +3,7 @@ import { StyleSheet, Text, View } from 'react-native'
 import Touchable from 'src/components/Touchable'
 import Checkmark from 'src/icons/Checkmark'
 import CircledIcon from 'src/icons/CircledIcon'
+import GradientIcon from 'src/icons/GradientIcon'
 import colors from 'src/styles/colors'
 import { typeScale } from 'src/styles/fonts'
 import { Spacing } from 'src/styles/styles'
@@ -12,7 +13,7 @@ type Props = {
   subtitle: string
   onPress: () => void
   icon: ReactElement
-  iconBackgroundColor?: colors
+  gradientBackground?: boolean
   testID: string
   showCheckmark?: boolean
 }
@@ -22,19 +23,23 @@ function SelectRecipientButton({
   subtitle,
   onPress,
   icon,
-  iconBackgroundColor = colors.gray1,
+  gradientBackground,
   testID,
   showCheckmark,
 }: Props) {
   return (
     <Touchable testID={testID} onPress={onPress} style={styles.container}>
       <View style={styles.body}>
-        <CircledIcon radius={40} style={styles.icon} backgroundColor={iconBackgroundColor}>
-          {icon}
-        </CircledIcon>
+        {gradientBackground ? (
+          <GradientIcon radius={40}>{icon}</GradientIcon>
+        ) : (
+          <CircledIcon radius={40} style={styles.icon} backgroundColor={colors.backgroundSecondary}>
+            {icon}
+          </CircledIcon>
+        )}
         {showCheckmark && (
           <View style={styles.checkmark} testID={`${testID}/checkmark`}>
-            <Checkmark height={12} width={12} color={colors.black} />
+            <Checkmark height={12} width={12} color={colors.contentPrimary} />
           </View>
         )}
         <View style={styles.textSection}>
@@ -49,19 +54,18 @@ function SelectRecipientButton({
 const styles = StyleSheet.create({
   container: {
     paddingVertical: Spacing.Regular16,
-    paddingHorizontal: Spacing.Thick24,
+    paddingHorizontal: Spacing.Regular16,
   },
   icon: {
     borderWidth: 1,
-    borderColor: colors.gray2,
+    borderColor: colors.borderSecondary,
   },
   subtitle: {
     ...typeScale.bodySmall,
-    color: colors.gray3,
+    color: colors.contentSecondary,
   },
   title: {
     ...typeScale.labelMedium,
-    color: colors.black,
   },
   body: {
     flexDirection: 'row',
@@ -76,7 +80,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: 26,
     top: 26,
-    backgroundColor: colors.gray2,
+    backgroundColor: colors.backgroundTertiary,
     borderRadius: 100,
     padding: 2,
   },

@@ -1,18 +1,24 @@
 import { FetchMock } from 'jest-fetch-mock/types'
 import { expectSaga } from 'redux-saga-test-plan'
 import { select } from 'redux-saga/effects'
+import { DEEP_LINK_URL_SCHEME } from 'src/config'
 import { handleFetchDappsList, handleOpenDapp } from 'src/dapps/saga'
-import { dappsListApiUrlSelector, dappsWebViewEnabledSelector } from 'src/dapps/selectors'
 import { dappSelected, fetchDappsListCompleted, fetchDappsListFailed } from 'src/dapps/slice'
 import { Dapp, DappSection } from 'src/dapps/types'
 import { currentLanguageSelector } from 'src/i18n/selectors'
 import { navigate } from 'src/navigator/NavigationService'
 import { Screens } from 'src/navigator/Screens'
-import { getExperimentParams } from 'src/statsig'
+import { getDynamicConfigParams, getExperimentParams } from 'src/statsig'
 import { walletAddressSelector } from 'src/web3/selectors'
 import { mockAccount } from 'test/values'
 
 jest.mock('src/statsig')
+jest.mocked(getDynamicConfigParams).mockReturnValue({
+  inAppWebviewEnabled: true,
+  links: {
+    dappList: 'http://some.url',
+  },
+})
 
 describe('Dapps saga', () => {
   describe('Handles opening a dapp', () => {
@@ -29,9 +35,7 @@ describe('Dapps saga', () => {
       await expectSaga(
         handleOpenDapp,
         dappSelected({ dapp: { ...baseDapp, openedFrom: DappSection.All } })
-      )
-        .provide([[select(dappsWebViewEnabledSelector), true]])
-        .run()
+      ).run()
 
       expect(navigate).toHaveBeenCalledWith(Screens.WebViewScreen, {
         uri: baseDapp.dappUrl,
@@ -44,15 +48,12 @@ describe('Dapps saga', () => {
         dappSelected({
           dapp: {
             ...baseDapp,
-            dappUrl: 'celo://wallet/bidali',
+            dappUrl: `${DEEP_LINK_URL_SCHEME}://wallet/bidali`,
             openedFrom: DappSection.All,
           },
         })
       )
-        .provide([
-          [select(dappsWebViewEnabledSelector), true],
-          [select(walletAddressSelector), mockAccount],
-        ])
+        .provide([[select(walletAddressSelector), mockAccount]])
         .run()
 
       expect(navigate).toHaveBeenCalledWith(Screens.BidaliScreen, { currency: undefined })
@@ -67,10 +68,7 @@ describe('Dapps saga', () => {
 
     it('does not fetch the dapps list if the wallet is not yet initialized', async () => {
       await expectSaga(handleFetchDappsList)
-        .provide([
-          [select(dappsListApiUrlSelector), 'http://some.url'],
-          [select(walletAddressSelector), null],
-        ])
+        .provide([[select(walletAddressSelector), null]])
         .run()
 
       expect(mockFetch).not.toHaveBeenCalled()
@@ -81,8 +79,7 @@ describe('Dapps saga', () => {
         categories: ['finance-tools'],
         description: 'Staking CELO made easy',
         id: 'churritofi',
-        logoUrl:
-          'https://raw.githubusercontent.com/valora-inc/dapp-list/main/assets/churritofi.png',
+        logoUrl: 'https://raw.githubusercontent.com/dapp-list/main/assets/churritofi.png',
         name: 'ChurritoFi',
         url: 'https://churrito.fi',
       }
@@ -90,7 +87,7 @@ describe('Dapps saga', () => {
         categories: ['spend'],
         description: 'Book flights around the world with cUSD and cEUR',
         id: 'flywallet',
-        logoUrl: 'https://raw.githubusercontent.com/valora-inc/dapp-list/main/assets/flywallet.png',
+        logoUrl: 'https://raw.githubusercontent.com/dapp-list/main/assets/flywallet.png',
         name: 'Flywallet',
         url: 'https://pro.flywallet.io',
       }
@@ -123,7 +120,6 @@ describe('Dapps saga', () => {
 
       await expectSaga(handleFetchDappsList)
         .provide([
-          [select(dappsListApiUrlSelector), 'http://some.url'],
           [select(walletAddressSelector), '0xabc'],
           [select(currentLanguageSelector), 'en'],
         ])
@@ -134,8 +130,7 @@ describe('Dapps saga', () => {
                 categories: ['finance-tools'],
                 description: 'Staking CELO made easy',
                 id: 'churritofi',
-                iconUrl:
-                  'https://raw.githubusercontent.com/valora-inc/dapp-list/main/assets/churritofi.png',
+                iconUrl: 'https://raw.githubusercontent.com/dapp-list/main/assets/churritofi.png',
                 name: 'ChurritoFi',
                 dappUrl: 'https://churrito.fi',
               },
@@ -143,8 +138,7 @@ describe('Dapps saga', () => {
                 categories: ['spend'],
                 description: 'Book flights around the world with cUSD and cEUR',
                 id: 'flywallet',
-                iconUrl:
-                  'https://raw.githubusercontent.com/valora-inc/dapp-list/main/assets/flywallet.png',
+                iconUrl: 'https://raw.githubusercontent.com/dapp-list/main/assets/flywallet.png',
                 name: 'Flywallet',
                 dappUrl: 'https://pro.flywallet.io',
               },
@@ -173,7 +167,6 @@ describe('Dapps saga', () => {
 
       await expectSaga(handleFetchDappsList)
         .provide([
-          [select(dappsListApiUrlSelector), 'http://some.url'],
           [select(walletAddressSelector), '0xabc'],
           [select(currentLanguageSelector), 'en'],
         ])

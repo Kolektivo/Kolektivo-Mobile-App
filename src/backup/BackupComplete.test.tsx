@@ -2,7 +2,7 @@ import { render } from '@testing-library/react-native'
 import * as React from 'react'
 import 'react-native'
 import { Provider } from 'react-redux'
-import ValoraAnalytics from 'src/analytics/ValoraAnalytics'
+import AppAnalytics from 'src/analytics/AppAnalytics'
 import BackupComplete from 'src/backup/BackupComplete'
 import { navigate, navigateHome } from 'src/navigator/NavigationService'
 import { Screens } from 'src/navigator/Screens'
@@ -39,7 +39,9 @@ describe('BackupComplete', () => {
       </Provider>
     )
     jest.advanceTimersByTime(2000)
-    expect(navigate).toHaveBeenCalledWith(Screens.Settings, { promptConfirmRemovalModal: true })
+    expect(navigate).toHaveBeenCalledWith(Screens.SecuritySubmenu, {
+      promptConfirmRemovalModal: true,
+    })
   })
 
   it('navigates home and fires analytics event when not on account removal', () => {
@@ -54,6 +56,6 @@ describe('BackupComplete', () => {
     )
     jest.advanceTimersByTime(2000)
     expect(navigateHome).toHaveBeenCalledWith()
-    expect(ValoraAnalytics.track).toHaveBeenCalledWith('backup_complete')
+    expect(AppAnalytics.track).toHaveBeenCalledWith('backup_complete')
   })
 })

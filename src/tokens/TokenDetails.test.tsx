@@ -1,41 +1,30 @@
 import { fireEvent, render, waitFor } from '@testing-library/react-native'
 import React from 'react'
 import { Provider } from 'react-redux'
-import ValoraAnalytics from 'src/analytics/ValoraAnalytics'
-import { CICOFlow } from 'src/fiatExchanges/utils'
+import AppAnalytics from 'src/analytics/AppAnalytics'
+import { CICOFlow } from 'src/fiatExchanges/types'
 import { navigate } from 'src/navigator/NavigationService'
 import { Screens } from 'src/navigator/Screens'
 import { Price } from 'src/priceHistory/slice'
-import { getFeatureGate } from 'src/statsig'
-import { StatsigFeatureGates } from 'src/statsig/types'
+import { getDynamicConfigParams, getFeatureGate } from 'src/statsig'
 import TokenDetailsScreen from 'src/tokens/TokenDetails'
 import { NetworkId } from 'src/transactions/types'
 import { ONE_DAY_IN_MILLIS } from 'src/utils/time'
-import networkConfig from 'src/web3/networkConfig'
 import MockedNavigator from 'test/MockedNavigator'
 import { createMockStore } from 'test/utils'
 import {
-  mockAaveArbUsdcAddress,
   mockCeloTokenId,
   mockPoofTokenId,
   mockTestTokenTokenId,
   mockTokenBalances,
 } from 'test/values'
 
-jest.mock('src/statsig', () => ({
-  getDynamicConfigParams: jest.fn(() => {
-    return {
-      showCico: ['celo-alfajores', 'ethereum-sepolia'],
-      showSend: ['celo-alfajores', 'ethereum-sepolia'],
-      showSwap: ['celo-alfajores', 'ethereum-sepolia'],
-    }
-  }),
-  getFeatureGate: jest.fn().mockReturnValue(true),
-}))
+jest.mock('src/statsig')
 
 describe('TokenDetails', () => {
   beforeEach(() => {
     jest.clearAllMocks()
+    jest.mocked(getDynamicConfigParams).mockReturnValue({ enabled: true }) // Ennable swap feature by default
   })
   it('renders title, balance and token balance item', () => {
     const store = createMockStore({
@@ -264,38 +253,6 @@ describe('TokenDetails', () => {
     expect(queryByText('celoNews.headerTitle')).toBeTruthy()
   })
 
-  it('renders earn card for Aave Arbitrum Usdc when user has balance', () => {
-    jest
-      .mocked(getFeatureGate)
-      .mockImplementation((featureGate) => featureGate === StatsigFeatureGates.SHOW_STABLECOIN_EARN)
-    const store = createMockStore({
-      tokens: {
-        tokenBalances: {
-          [networkConfig.aaveArbUsdcTokenId]: {
-            networkId: NetworkId['arbitrum-sepolia'],
-            address: mockAaveArbUsdcAddress,
-            tokenId: networkConfig.aaveArbUsdcTokenId,
-            symbol: 'aArbSepUSDC',
-            priceUsd: '1',
-            balance: '10.74',
-            priceFetchedAt: Date.now(),
-          },
-        },
-      },
-    })
-
-    const { getByTestId } = render(
-      <Provider store={store}>
-        <MockedNavigator
-          component={TokenDetailsScreen}
-          params={{ tokenId: networkConfig.aaveArbUsdcTokenId }}
-        />
-      </Provider>
-    )
-
-    expect(getByTestId('EarnActivePool')).toBeTruthy()
-  })
-
   it('does not render chart if no prices are found and error status', () => {
     jest.mocked(getFeatureGate).mockReturnValue(true) // Use new prices from blockchain API
     const store = createMockStore({
@@ -328,9 +285,6 @@ describe('TokenDetails', () => {
           [mockPoofTokenId]: mockTokenBalances[mockPoofTokenId],
         },
       },
-      app: {
-        showSwapMenuInDrawerMenu: true,
-      },
     })
 
     const { getByTestId, queryByTestId } = render(
@@ -352,9 +306,6 @@ describe('TokenDetails', () => {
         tokenBalances: {
           [mockPoofTokenId]: { ...mockTokenBalances[mockPoofTokenId], isSwappable: true },
         },
-      },
-      app: {
-        showSwapMenuInDrawerMenu: true,
       },
     })
 
@@ -382,9 +333,6 @@ describe('TokenDetails', () => {
           },
         },
       },
-      app: {
-        showSwapMenuInDrawerMenu: true,
-      },
     })
 
     const { getByTestId, queryByTestId } = render(
@@ -410,9 +358,6 @@ describe('TokenDetails', () => {
           },
         },
       },
-      app: {
-        showSwapMenuInDrawerMenu: true,
-      },
     })
 
     const { getByTestId, queryByTestId } = render(
@@ -429,6 +374,7 @@ describe('TokenDetails', () => {
   })
 
   it('hides swap action and shows more action if token is swappable, has balance and CICO token but swapfeature gate is false', () => {
+    jest.mocked(getDynamicConfigParams).mockReturnValue({ enabled: false }) // disable swap feature
     const store = createMockStore({
       tokens: {
         tokenBalances: {
@@ -438,9 +384,6 @@ describe('TokenDetails', () => {
             isSwappable: true,
           },
         },
-      },
-      app: {
-        showSwapMenuInDrawerMenu: false,
       },
     })
 
@@ -469,9 +412,6 @@ describe('TokenDetails', () => {
           },
         },
       },
-      app: {
-        showSwapMenuInDrawerMenu: true,
-      },
     })
 
     const { getByTestId } = render(
@@ -498,7 +438,7 @@ describe('TokenDetails', () => {
     })
     fireEvent.press(getByTestId('TokenDetailsMoreActions/Withdraw'))
     expect(navigate).toHaveBeenCalledWith(Screens.WithdrawSpend)
-    expect(ValoraAnalytics.track).toHaveBeenCalledTimes(6) // 4 actions + 1 more action + 1 celo news
+    expect(AppAnalytics.track).toHaveBeenCalledTimes(6) // 4 actions + 1 more action + 1 celo news
   })
 
   it('renders the send and swap actions for the imported tokens with balance', () => {
@@ -513,9 +453,6 @@ describe('TokenDetails', () => {
             symbol: 'TT',
           },
         },
-      },
-      app: {
-        showSwapMenuInDrawerMenu: true,
       },
     })
 

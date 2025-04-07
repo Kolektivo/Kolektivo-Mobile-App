@@ -1,9 +1,9 @@
 import { useIsFocused } from '@react-navigation/native'
 import { NativeStackScreenProps } from '@react-navigation/native-stack'
 import _ from 'lodash'
-import React, { useEffect } from 'react'
+import { default as React, default as React, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
-import { RefreshControl, RefreshControlProps, SectionList, StyleSheet } from 'react-native'
+import { RefreshControl, RefreshControlProps, StyleSheet } from 'react-native'
 import Animated, { useAnimatedScrollHandler, useSharedValue } from 'react-native-reanimated'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { showMessage } from 'src/alert/actions'
@@ -19,7 +19,11 @@ import NotificationBox from 'src/home/NotificationBox'
 import { refreshAllBalances, visitHome } from 'src/home/actions'
 import NftCelebration from 'src/home/celebration/NftCelebration'
 import NftReward from 'src/home/celebration/NftReward'
-import { showNftCelebrationSelector, showNftRewardSelector } from 'src/home/selectors'
+import {
+  balancesLoadingSelector,
+  showNftCelebrationSelector,
+  showNftRewardSelector,
+} from 'src/home/selectors'
 import { importContacts } from 'src/identity/actions'
 import MyCommunity from 'src/kolektivo/components/MyCommunity'
 import SpendPoints from 'src/kolektivo/components/SpendPoints'
@@ -28,22 +32,23 @@ import UserBadgesCarousel from 'src/kolektivo/components/UserBadgesCarousel'
 import UserWalletInfoSection from 'src/kolektivo/components/UserWalletInfoSection'
 import { Screens } from 'src/navigator/Screens'
 import { StackParamList } from 'src/navigator/types'
-import { trackPointsEvent } from 'src/points/slice'
 import { phoneRecipientCacheSelector } from 'src/recipients/reducer'
 import { useDispatch, useSelector } from 'src/redux/hooks'
 import { initializeSentryUserContext } from 'src/sentry/actions'
+import { getFeatureGate } from 'src/statsig'
+import { StatsigFeatureGates } from 'src/statsig/types'
 import colors from 'src/styles/colors'
 import { hasGrantedContactsPermission } from 'src/utils/contacts'
 
-const AnimatedSectionList = Animated.createAnimatedComponent(SectionList)
+const AnimatedFlatList = Animated.createAnimatedComponent(FlatList)
 
 type Props = NativeStackScreenProps<StackParamList, Screens.TabHome>
 
-function TabHome({ navigation }: Props) {
+function TabHome(_props: Props) {
   const { t } = useTranslation()
 
   const appState = useSelector(appStateSelector)
-  const isLoading = useSelector((state) => state.home.loading)
+  const isLoading = useSelector(balancesLoadingSelector)
   const recipientCache = useSelector(phoneRecipientCacheSelector)
   const isNumberVerified = useSelector(phoneNumberVerifiedSelector)
   const showNotificationSpotlight = useSelector(showNotificationSpotlightSelector)
@@ -57,6 +62,8 @@ function TabHome({ navigation }: Props) {
   const showNftCelebration = canShowNftCelebration && isFocused && !showNotificationSpotlight
   const canShowNftReward = useSelector(showNftRewardSelector)
   const showNftReward = canShowNftReward && isFocused && !showNotificationSpotlight
+
+  const showZerionTransactionFeed = getFeatureGate(StatsigFeatureGates.SHOW_ZERION_TRANSACTION_FEED)
 
   useEffect(() => {
     dispatch(visitHome())
@@ -103,8 +110,6 @@ function TabHome({ navigation }: Props) {
     // Waiting 1/2 sec before triggering to allow
     // rest of feed to load unencumbered
     setTimeout(tryImportContacts, 500)
-
-    dispatch(trackPointsEvent({ activityId: 'create-wallet' }))
   }, [])
 
   useEffect(() => {
@@ -122,7 +127,12 @@ function TabHome({ navigation }: Props) {
   }
 
   const refresh: React.ReactElement<RefreshControlProps> = (
-    <RefreshControl refreshing={isLoading} onRefresh={onRefresh} colors={[colors.primary]} />
+    <RefreshControl
+      refreshing={isLoading}
+      onRefresh={onRefresh}
+      colors={[colors.loadingIndicator]}
+      tintColor={colors.loadingIndicator}
+    />
   ) as React.ReactElement<RefreshControlProps>
 
   const notificationBoxSection = {
@@ -178,20 +188,27 @@ function TabHome({ navigation }: Props) {
 
   return (
     <SafeAreaView testID="WalletHome" style={styles.container} edges={[]}>
-      <AnimatedSectionList
-        // Workaround iOS setting an incorrect automatic inset at the top
-        scrollIndicatorInsets={{ top: 0.01 }}
-        scrollEventThrottle={16}
-        onScroll={handleScroll}
-        refreshControl={refresh}
-        onRefresh={onRefresh}
-        refreshing={isLoading}
-        style={styles.container}
-        contentContainerStyle={{ paddingBottom: insets.bottom }}
-        sections={sections}
-        keyExtractor={keyExtractor}
-        testID="WalletHome/SectionList"
-      />
+      {showZerionTransactionFeed ? (
+        <TransactionFeedV2 />
+      ) : (
+        <AnimatedFlatList
+          // Workaround iOS setting an incorrect automatic inset at the top
+          scrollIndicatorInsets={{ top: 0.01 }}
+          scrollEventThrottle={16}
+          refreshControl={refresh}
+          onRefresh={onRefresh}
+          refreshing={isLoading}
+          style={styles.container}
+          contentContainerStyle={{ paddingBottom: insets.bottom }}
+          data={flatListSections}
+          renderItem={renderItem}
+          keyExtractor={keyExtractor}
+          testID="WalletHome/FlatList"
+          // To remove the sticky header entirely remove stickyHeaderIndices & stickyHeaderHiddenOnScroll
+          stickyHeaderIndices={[0]}
+          stickyHeaderHiddenOnScroll={true}
+        />
+      )}
       {showNftCelebration && <NftCelebration />}
       {showNftReward && <NftReward />}
     </SafeAreaView>

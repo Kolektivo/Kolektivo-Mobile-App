@@ -1,16 +1,7 @@
-import { getAddressChunks } from '@celo/utils/lib/address'
-import { EXAMPLE_NAME } from '../utils/consts'
+import { sleep } from '../../../src/utils/sleep'
 import { launchApp } from '../utils/retries'
-import {
-  completeProtectWalletScreen,
-  enterPinUi,
-  quickOnboarding,
-  scrollIntoView,
-  sleep,
-  waitForElementId,
-  waitForElementByIdAndTap,
-  navigateToSettings,
-} from '../utils/utils'
+import { navigateToSecurity } from '../utils/navigation'
+import { enterPinUi, quickOnboarding, waitForElementById } from '../utils/utils'
 
 import jestExpect from 'expect'
 
@@ -18,8 +9,8 @@ const startBackupFromNotifications = async () => {
   await element(by.id('WalletHome/NotificationBell')).tap()
   await element(by.text('Back up now')).tap()
   await enterPinUi()
-  await waitForElementByIdAndTap('WalletSecurityPrimer/GetStarted')
-  await waitForElementByIdAndTap('keylessBackupIntro/RecoveryPhrase')
+  await waitForElementById('WalletSecurityPrimer/GetStarted', { tap: true })
+  await waitForElementById('keylessBackupIntro/RecoveryPhrase', { tap: true })
   await element(by.id('SetUpAccountKey')).tap()
 
   // Go through education
@@ -32,7 +23,15 @@ const startBackupFromNotifications = async () => {
 
 const arriveAtHomeScreen = async () => {
   // Arrived to Home screen
-  await expect(element(by.id('HomeAction-Send'))).toBeVisible()
+  await waitForElementById('HomeAction-Send')
+}
+
+const completeProtectWalletScreen = async () => {
+  await expect(element(by.id('recoveryPhraseCard'))).toBeVisible()
+  await element(by.id('recoveryPhraseCard')).tap()
+  await enterPinUi()
+  await expect(element(by.id('protectWalletBottomSheetContinue'))).toBeVisible()
+  await element(by.id('protectWalletBottomSheetContinue')).tap()
 }
 
 export default NewAccountOnboarding = () => {
@@ -42,9 +41,8 @@ export default NewAccountOnboarding = () => {
     await sleep(5000)
     await launchApp({
       delete: true,
-      permissions: { notifications: 'YES', contacts: 'YES' },
       launchArgs: {
-        statsigGateOverrides: `show_cloud_account_backup_setup=true,show_cloud_account_backup_restore=true`,
+        onboardingOverrides: 'EnableBiometry,ProtectWallet,PhoneVerification,CloudBackup',
       },
     })
     await sleep(5000)
@@ -68,15 +66,11 @@ export default NewAccountOnboarding = () => {
     // Skip Phone Number verification
     await element(by.id('PhoneVerificationSkipHeader')).tap()
 
-    // Choose your own adventure (CYA screen)
-    await waitForElementByIdAndTap('ChooseYourAdventure/Later')
-
     // Arrived to Home screen
     await arriveAtHomeScreen()
 
-    // Able to open the profile / menu
-    await waitForElementByIdAndTap('WalletHome/AccountCircle')
-    await waitForElementId('ProfileMenu/Settings')
+    // Able to open settings
+    await waitForElementById('WalletHome/SettingsGearButton', { tap: true })
     await element(by.id('Times')).tap()
   })
 
@@ -122,13 +116,15 @@ export default NewAccountOnboarding = () => {
   })
 
   it('Account Address shown in profile / menu', async () => {
-    await waitForElementByIdAndTap('WalletHome/AccountCircle')
-    await scrollIntoView('Account Address', 'SettingsScrollView')
-    const accountAddressElement = await element(by.id('AccountNumber')).getAttributes()
+    await waitForElementById('WalletHome/SettingsGearButton', { tap: true })
+    await waitForElementById('SettingsMenu/Address', { tap: true })
+
+    const accountAddressElement = await element(by.id('address')).getAttributes()
     const accountAddressText = accountAddressElement.text.replace(/\s/g, '')
     testAccountAddress = accountAddressText
     jestExpect(testAccountAddress).toMatch(/0x[0-9a-fA-F]{40}/)
-    await element(by.id('Times')).tap()
+    await element(by.id('BackChevron')).tap()
+    await waitForElementById('Times', { tap: true })
   })
 
   // After quiz completion recovery phrase should only be shown in settings and
@@ -137,11 +133,11 @@ export default NewAccountOnboarding = () => {
     await element(by.id('WalletHome/NotificationBell')).tap()
     await expect(element(by.text('Back up now'))).not.toExist()
     await element(by.id('BackChevron')).tap()
-    await navigateToSettings()
-    await waitForElementId('RecoveryPhrase')
+    await navigateToSecurity()
+    await waitForElementById('RecoveryPhrase')
     await element(by.id('RecoveryPhrase')).tap()
     await enterPinUi()
-    await waitForElementId('AccountKeyWordsContainer')
+    await waitForElementById('AccountKeyWordsContainer')
   })
 
   // Based off the flag set in src/firebase/remoteConfigValuesDefaults.e2e.ts
@@ -154,18 +150,16 @@ export default NewAccountOnboarding = () => {
   })
 
   it('Should be able to restore newly created account', async () => {
-    await device.uninstallApp()
-    await device.installApp()
     await launchApp({
-      newInstance: true,
+      delete: true,
       launchArgs: {
-        statsigGateOverrides: `show_cloud_account_backup_setup=true,show_cloud_account_backup_restore=true`,
+        onboardingOverrides: 'EnableBiometry,ProtectWallet,PhoneVerification,CloudBackup',
       },
     })
     await quickOnboarding({ mnemonic: testRecoveryPhrase, cloudBackupEnabled: true })
-    await waitForElementByIdAndTap('WalletHome/AccountCircle')
-    await scrollIntoView('Account Address', 'SettingsScrollView')
-    const addressString = '0x ' + getAddressChunks(testAccountAddress).join(' ')
-    await expect(element(by.text(addressString))).toBeVisible()
+    await waitForElementById('WalletHome/SettingsGearButton', { tap: true })
+    await waitForElementById('SettingsMenu/Address', { tap: true })
+
+    await expect(element(by.text(testAccountAddress))).toBeVisible()
   })
 }

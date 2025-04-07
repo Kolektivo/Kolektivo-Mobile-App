@@ -1,19 +1,20 @@
 import { NativeStackScreenProps } from '@react-navigation/native-stack'
 import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Platform, StyleSheet, Text, View } from 'react-native'
+import { StyleSheet, Text, View } from 'react-native'
 import { getFontScaleSync } from 'react-native-device-info'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { isAddressFormat } from 'src/account/utils'
+import AppAnalytics from 'src/analytics/AppAnalytics'
 import { SendEvents } from 'src/analytics/Events'
-import ValoraAnalytics from 'src/analytics/ValoraAnalytics'
 import { SendOrigin } from 'src/analytics/types'
+import BackButton from 'src/components/BackButton'
 import Button, { BtnSizes } from 'src/components/Button'
 import InLineNotification, { NotificationVariant } from 'src/components/InLineNotification'
 import InviteOptionsModal from 'src/components/InviteOptionsModal'
 import KeyboardAwareScrollView from 'src/components/KeyboardAwareScrollView'
+import CustomHeader from 'src/components/header/CustomHeader'
 import CircledIcon from 'src/icons/CircledIcon'
-import Times from 'src/icons/Times'
 import { importContacts } from 'src/identity/actions'
 import { getAddressFromPhoneNumber } from 'src/identity/contactMapping'
 import { AddressValidationType } from 'src/identity/reducer'
@@ -23,10 +24,10 @@ import {
   secureSendPhoneNumberMappingSelector,
 } from 'src/identity/selectors'
 import { RecipientVerificationStatus } from 'src/identity/types'
+import { useInviteReward } from 'src/invite/hooks'
 import { noHeader } from 'src/navigator/Headers'
-import { navigate, navigateBack } from 'src/navigator/NavigationService'
+import { navigate } from 'src/navigator/NavigationService'
 import { Screens } from 'src/navigator/Screens'
-import { TopBarIconButton } from 'src/navigator/TopBarButton'
 import { StackParamList } from 'src/navigator/types'
 import RecipientPicker from 'src/recipients/RecipientPickerV2'
 import { Recipient, RecipientType, recipientHasNumber } from 'src/recipients/recipient'
@@ -36,10 +37,9 @@ import PasteAddressButton from 'src/send/PasteAddressButton'
 import SelectRecipientButtons from 'src/send/SelectRecipientButtons'
 import { SendSelectRecipientSearchInput } from 'src/send/SendSelectRecipientSearchInput'
 import { useMergedSearchRecipients, useSendRecipients } from 'src/send/hooks'
-import { inviteRewardsActiveSelector } from 'src/send/selectors'
 import useFetchRecipientVerificationStatus from 'src/send/useFetchRecipientVerificationStatus'
 import colors from 'src/styles/colors'
-import { fontStyles, typeScale } from 'src/styles/fonts'
+import { typeScale } from 'src/styles/fonts'
 import { Spacing } from 'src/styles/styles'
 import variables from 'src/styles/variables'
 
@@ -62,7 +62,7 @@ function GetStartedSection() {
         <CircledIcon
           radius={Math.min(24 * getFontScaleSync(), 50)}
           style={getStartedStyles.optionNum}
-          backgroundColor={colors.white}
+          backgroundColor={colors.backgroundPrimary}
         >
           <Text adjustsFontSizeToFit={true} style={getStartedStyles.optionNumText}>
             {optionNum}
@@ -104,31 +104,29 @@ function GetStartedSection() {
 
 const getStartedStyles = StyleSheet.create({
   container: {
-    backgroundColor: colors.gray1,
+    backgroundColor: colors.backgroundSecondary,
     padding: Spacing.Thick24,
-    margin: Spacing.Thick24,
-    marginTop: 44,
+    margin: Spacing.Regular16,
+    marginTop: Spacing.Large32,
     borderRadius: 10,
     gap: Spacing.Regular16,
   },
   subtitle: {
     ...typeScale.labelXXSmall,
-    color: colors.gray3,
+    color: colors.contentSecondary,
   },
   title: {
     ...typeScale.labelMedium,
-    color: colors.gray5,
   },
   optionWrapper: {
     flexDirection: 'row',
   },
   optionNum: {
     borderWidth: 1,
-    borderColor: colors.gray2,
+    borderColor: colors.borderSecondary,
   },
   optionNumText: {
     ...typeScale.labelXSmall,
-    color: colors.black,
   },
   optionText: {
     paddingLeft: Spacing.Smallest8,
@@ -136,12 +134,11 @@ const getStartedStyles = StyleSheet.create({
   },
   optionTitle: {
     ...typeScale.labelSmall,
-    color: colors.gray5,
     paddingBottom: Spacing.Tiny4,
   },
   optionSubtitle: {
     ...typeScale.bodyXSmall,
-    color: colors.gray3,
+    color: colors.contentSecondary,
   },
 })
 
@@ -184,7 +181,7 @@ enum SelectRecipientView {
 function SendSelectRecipient({ route }: Props) {
   const { t } = useTranslation()
   const dispatch = useDispatch()
-  const inviteRewardsActive = useSelector(inviteRewardsActiveSelector)
+  const inviteReward = useInviteReward()
   const secureSendPhoneNumberMapping = useSelector(secureSendPhoneNumberMappingSelector)
   const e164NumberToAddress = useSelector(e164NumberToAddressSelector)
 
@@ -236,7 +233,7 @@ function SendSelectRecipient({ route }: Props) {
   }
 
   const onSelectRecentRecipient = (recentRecipient: Recipient) => {
-    ValoraAnalytics.track(SendEvents.send_select_recipient_recent_press, {
+    AppAnalytics.track(SendEvents.send_select_recipient_recent_press, {
       recipientType: recentRecipient.recipientType,
     })
     setSelectedRecipient(recentRecipient)
@@ -295,13 +292,13 @@ function SendSelectRecipient({ route }: Props) {
       return
     }
     if (shouldInviteRecipient) {
-      ValoraAnalytics.track(SendEvents.send_select_recipient_invite_press, {
+      AppAnalytics.track(SendEvents.send_select_recipient_invite_press, {
         recipientType: recipient.recipientType,
       })
       setShowSendOrInviteButton(false)
       setShowInviteModal(true)
     } else {
-      ValoraAnalytics.track(SendEvents.send_select_recipient_send_press, {
+      AppAnalytics.track(SendEvents.send_select_recipient_send_press, {
         recipientType: recipient.recipientType,
       })
       nextScreen(recipient)
@@ -343,13 +340,16 @@ function SendSelectRecipient({ route }: Props) {
 
   return (
     <SafeAreaView style={styles.body} edges={['top']}>
-      <View style={styles.header}>
-        <TopBarIconButton
-          icon={<Times />}
-          onPress={navigateBack}
-          eventName={SendEvents.send_cancel}
-          style={styles.buttonContainer}
-        />
+      <CustomHeader
+        style={{ paddingHorizontal: variables.contentPadding }}
+        left={<BackButton />}
+        title={
+          activeView === SelectRecipientView.Contacts
+            ? t('sendSelectRecipient.contactsHeader')
+            : t('sendSelectRecipient.header')
+        }
+      />
+      <View style={styles.inputContainer}>
         <SendSelectRecipientSearchInput input={searchQuery} onChangeText={setSearchQuery} />
       </View>
       <KeyboardAwareScrollView keyboardDismissMode="on-drag">
@@ -361,23 +361,22 @@ function SendSelectRecipient({ route }: Props) {
         {showSearchResults ? (
           renderSearchResults()
         ) : activeView === SelectRecipientView.Contacts ? (
-          <>
-            <Text style={styles.title}>{t('sendSelectRecipient.contactsTitle')}</Text>
-            <RecipientPicker
-              testID={'SelectRecipient/ContactRecipientPicker'}
-              recipients={contactRecipients}
-              onSelectRecipient={setSelectedRecipientWrapper}
-              selectedRecipient={recipient}
-              isSelectedRecipientLoading={
-                !!recipient && recipientVerificationStatus === RecipientVerificationStatus.UNKNOWN
-              }
-            />
-          </>
+          <RecipientPicker
+            testID={'SelectRecipient/ContactRecipientPicker'}
+            recipients={contactRecipients}
+            onSelectRecipient={setSelectedRecipientWrapper}
+            selectedRecipient={recipient}
+            isSelectedRecipientLoading={
+              !!recipient && recipientVerificationStatus === RecipientVerificationStatus.UNKNOWN
+            }
+          />
         ) : (
           <>
-            <Text style={styles.title}>{t('sendSelectRecipient.title')}</Text>
-            {inviteRewardsActive && <InviteRewardsCard />}
-            <SelectRecipientButtons onContactsPermissionGranted={onContactsPermissionGranted} />
+            {inviteReward.active && <InviteRewardsCard />}
+            <SelectRecipientButtons
+              defaultTokenIdOverride={defaultTokenIdOverride}
+              onContactsPermissionGranted={onContactsPermissionGranted}
+            />
             {activeView === SelectRecipientView.Recent && recentRecipients.length ? (
               <RecipientPicker
                 testID={'SelectRecipient/RecentRecipientPicker'}
@@ -418,65 +417,49 @@ function SendSelectRecipient({ route }: Props) {
   )
 }
 
-SendSelectRecipient.navigationOptions = {
-  ...noHeader,
-  ...Platform.select({
-    ios: { animation: 'slide_from_bottom' },
-  }),
-}
+SendSelectRecipient.navigationOptions = noHeader
 
 const styles = StyleSheet.create({
-  title: {
-    ...typeScale.titleSmall,
-    padding: Spacing.Thick24,
-    paddingBottom: Spacing.Regular16,
-    color: colors.black,
-  },
-  header: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    paddingVertical: 10,
+  inputContainer: {
+    padding: Spacing.Regular16,
+    paddingTop: Spacing.Smallest8,
   },
   body: {
     flex: 1,
     paddingBottom: variables.contentPadding,
   },
   recentRecipientPicker: {
-    paddingTop: Spacing.Large32,
-  },
-  buttonContainer: {
-    padding: variables.contentPadding,
-    paddingLeft: Spacing.Thick24,
+    paddingTop: Spacing.Regular16,
   },
   searchResultsHeader: {
     ...typeScale.labelXSmall,
-    color: colors.gray4,
-    padding: Spacing.Thick24,
-    paddingBottom: Spacing.Small12,
+    color: colors.contentSecondary,
+    paddingHorizontal: Spacing.Regular16,
+    paddingVertical: Spacing.Smallest8,
   },
   noResultsWrapper: {
     textAlign: 'center',
     marginTop: Spacing.Small12,
-    padding: Spacing.Thick24,
+    padding: Spacing.Regular16,
   },
   noResultsTitle: {
-    ...fontStyles.regular,
-    color: colors.gray3,
+    ...typeScale.bodyMedium,
+    color: colors.contentSecondary,
     textAlign: 'center',
   },
   noResultsSubtitle: {
     ...typeScale.labelXSmall,
-    color: colors.gray3,
+    color: colors.contentSecondary,
     justifyContent: 'center',
-    padding: Spacing.Thick24,
+    padding: Spacing.Regular16,
     textAlign: 'center',
   },
   unknownAddressInfo: {
-    margin: Spacing.Thick24,
+    margin: Spacing.Regular16,
     marginBottom: variables.contentPadding,
   },
   sendOrInviteButton: {
-    margin: Spacing.Thick24,
+    margin: Spacing.Regular16,
     marginTop: variables.contentPadding,
   },
 })

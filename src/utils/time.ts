@@ -1,3 +1,4 @@
+import { Duration } from 'date-fns'
 import { differenceInYears } from 'date-fns/differenceInYears'
 import { format } from 'date-fns/format'
 import { formatDistanceToNow as dateFnsFormatDistanceToNow } from 'date-fns/formatDistanceToNow'
@@ -37,7 +38,7 @@ export const formatDistanceToNow = (
 }
 
 const ONE_SECOND_IN_MILLIS = 1000
-const ONE_MINUTE_IN_MILLIS = 60 * ONE_SECOND_IN_MILLIS
+export const ONE_MINUTE_IN_MILLIS = 60 * ONE_SECOND_IN_MILLIS
 export const ONE_HOUR_IN_MILLIS = 60 * ONE_MINUTE_IN_MILLIS
 export const ONE_DAY_IN_MILLIS = 24 * ONE_HOUR_IN_MILLIS
 
@@ -69,4 +70,29 @@ function quickFormat(timestamp: number, i18next: i18nType, formatRule: string) {
 
 function locale(i18next: i18nType) {
   return locales[i18next?.language]?.dateFns ?? locales['en-US']?.dateFns
+}
+
+export function formattedDuration(interval: Duration) {
+  const years = interval.years ?? 0
+  const months = interval.months ?? 0
+  const days = interval.days ?? 0
+  let tParams
+
+  if (years === 0 && months === 0) {
+    if (days === 0) {
+      tParams = { context: 'lessThanADay' }
+    } else {
+      tParams = { context: 'day', count: days }
+    }
+  } else if (years === 0) {
+    tParams = { context: 'month', count: months }
+  } else {
+    if (months === 0) {
+      tParams = { context: 'year', count: years }
+    } else {
+      tParams = { context: 'yearMonth', count: years, count2: months }
+    }
+  }
+
+  return i18n.t('duration', tParams)
 }

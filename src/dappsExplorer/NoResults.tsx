@@ -8,7 +8,7 @@ import { currentLanguageSelector } from 'src/i18n/selectors'
 import InfoIcon from 'src/icons/InfoIcon'
 import { useSelector } from 'src/redux/hooks'
 import Colors from 'src/styles/colors'
-import fontStyles from 'src/styles/fonts'
+import { typeScale } from 'src/styles/fonts'
 import { Spacing } from 'src/styles/styles'
 import { iconHitslop } from 'src/styles/variables'
 
@@ -34,7 +34,7 @@ function NoResults({ selectedFilter, removeFilter, testID, searchTerm }: Props) 
       {searchTerm !== '' && (
         <View style={styles.searchContainer}>
           <View style={styles.iconContainer}>
-            <InfoIcon color={Colors.infoDark} />
+            <InfoIcon color={Colors.warningPrimary} />
           </View>
           <View style={styles.searchTextContainer}>
             <Text style={styles.text}>
@@ -75,11 +75,10 @@ function NoResults({ selectedFilter, removeFilter, testID, searchTerm }: Props) 
 
 const styles = StyleSheet.create({
   searchedText: {
-    color: Colors.black,
     fontWeight: 'bold',
   },
   text: {
-    ...fontStyles.xsmall,
+    ...typeScale.bodyXSmall,
     textAlignVertical: 'center',
     flexWrap: 'wrap',
   },
@@ -101,12 +100,12 @@ const styles = StyleSheet.create({
     marginTop: Spacing.Regular16,
   },
   filterText: {
-    ...fontStyles.small500,
-    color: Colors.infoDark,
+    ...typeScale.labelSmall,
+    color: Colors.contentSecondary,
   },
   filterAppliedText: {
-    ...fontStyles.small500,
-    color: Colors.gray5,
+    ...typeScale.labelSmall,
+    color: Colors.contentSecondary,
     paddingRight: 4,
   },
   removeFilterTouchableContainer: {
@@ -116,12 +115,11 @@ const styles = StyleSheet.create({
   removeFilterTouchable: {
     paddingVertical: 0,
     paddingHorizontal: Spacing.Smallest8,
-    backgroundColor: Colors.gray2,
+    backgroundColor: Colors.buttonSecondaryBackground,
     borderRadius: 16,
   },
   removeFilterText: {
-    ...fontStyles.small500,
-    color: Colors.infoDark,
+    ...typeScale.labelSmall,
   },
 })
 

@@ -7,8 +7,7 @@ export enum Actions {
   CANCEL_CREATE_OR_RESTORE_ACCOUNT = 'ACCOUNT/CANCEL_CREATE_OR_RESTORE_ACCOUNT',
   SET_NAME = 'ACCOUNT/SET_NAME',
   SET_PHONE_NUMBER = 'ACCOUNT/SET_PHONE_NUMBER',
-  SET_PICTURE = 'ACCOUNT/SET_PICTURE',
-  SAVE_NAME_AND_PICTURE = 'ACCOUNT/SAVE_NAME_AND_PICTURE',
+  SAVE_NAME = 'ACCOUNT/SAVE_NAME',
   DEV_MODE_TRIGGER_CLICKED = 'ACCOUNT/NAME_CLICKED',
   PHOTOSNUX_CLICKED = 'ACCOUNT/PHOTOSNUX_CLICKED',
   SET_PINCODE_SUCCESS = 'ACCOUNT/SET_PINCODE_SUCCESS',
@@ -18,16 +17,12 @@ export enum Actions {
   INITIALIZE_ACCOUNT_SUCCESS = 'ACCOUNT/INITIALIZE_ACCOUNT_SUCCESS',
   INITIALIZE_ACCOUNT_FAILURE = 'ACCOUNT/INITIALIZE_ACCOUNT_FAILURE',
   SET_BACKUP_COMPLETED = 'ACCOUNT/SET_BACKUP_COMPLETED',
-  TOGGLE_BACKUP_STATE = 'ACCOUNT/TOGGLE_BACKUP_STATE',
   DISMISS_GET_VERIFIED = 'ACCOUNT/DISMISS_GET_VERIFIED',
   DISMISS_GOLD_EDUCATION = 'ACCOUNT/DISMISS_GOLD_EDUCATION',
   SET_USER_CONTACT_DETAILS = 'ACCOUNT/SET_USER_CONTACT_DETAILS',
   ACCEPT_TERMS = 'ACCOUNT/ACCEPT_TERMS',
   CLEAR_STORED_ACCOUNT = 'ACCOUNT/CLEAR_STORED_ACCOUNT',
   PROFILE_UPLOADED = 'ACCOUNT/PROFILE_UPLOADED',
-  SET_REWARDS_ENABLED = 'ACCOUNT/SET_REWARDS_ENABLED',
-  DISMISS_KEEP_SUPERCHARGING = 'ACCOUNT/DISMISS_KEEP_SUPERCHARGING',
-  DISMISS_START_SUPERCHARGING = 'ACCOUNT/DISMISS_START_SUPERCHARGING',
   SAVE_SIGNED_MESSAGE = 'ACCOUNT/SAVE_SIGNED_MESSAGE',
   SET_CELO_EDUCATION_COMPLETED = 'ACCOUNT/SET_CELO_EDUCATION_COMPLETED',
   RECOVERY_PHRASE_IN_ONBOARDING_STARTED = 'ACCOUNT/RECOVERY_PHRASE_IN_ONBOARDING_STARTED',
@@ -62,15 +57,9 @@ interface SetPhoneNumberAction {
   countryCode: string
 }
 
-interface SetPictureAction {
-  type: Actions.SET_PICTURE
-  pictureUri: string | null
-}
-
-interface SaveNameAndPictureAction {
-  type: Actions.SAVE_NAME_AND_PICTURE
+interface SaveNameAction {
+  type: Actions.SAVE_NAME
   name: string
-  pictureUri: string | null
 }
 interface DevModeTriggerClickedAction {
   type: Actions.DEV_MODE_TRIGGER_CLICKED
@@ -110,10 +99,6 @@ interface SetBackupCompletedAction {
   type: Actions.SET_BACKUP_COMPLETED
 }
 
-interface ToggleBackupState {
-  type: Actions.TOGGLE_BACKUP_STATE
-}
-
 interface DismissGetVerifiedAction {
   type: Actions.DISMISS_GET_VERIFIED
 }
@@ -131,19 +116,10 @@ interface SetContactDetailsAction {
 export interface ClearStoredAccountAction {
   type: Actions.CLEAR_STORED_ACCOUNT
   account: string
-  onlyReduxState: boolean
 }
 
 interface ProfileUploadedAction {
   type: Actions.PROFILE_UPLOADED
-}
-
-interface DismissKeepSuperchargingAction {
-  type: Actions.DISMISS_KEEP_SUPERCHARGING
-}
-
-interface DismissStartSuperchargingAction {
-  type: Actions.DISMISS_START_SUPERCHARGING
 }
 
 interface SaveSignedMessage {
@@ -170,8 +146,7 @@ export type ActionTypes =
   | CancelCreateOrRestoreAccountAction
   | SetNameAction
   | SetPhoneNumberAction
-  | SetPictureAction
-  | SaveNameAndPictureAction
+  | SaveNameAction
   | DevModeTriggerClickedAction
   | PhotosNUXClickedAction
   | SetPincodeSuccessAction
@@ -180,15 +155,12 @@ export type ActionTypes =
   | InitializeAccountSuccessAction
   | SetAccountCreationAction
   | SetBackupCompletedAction
-  | ToggleBackupState
   | DismissGetVerifiedAction
   | DismissGoldEducationAction
   | SetContactDetailsAction
   | AcceptTermsAction
   | ClearStoredAccountAction
   | ProfileUploadedAction
-  | DismissKeepSuperchargingAction
-  | DismissStartSuperchargingAction
   | SaveSignedMessage
   | SetCeloEducationCompletedAction
   | RecoveryPhraseInOnboardingStarted
@@ -226,17 +198,12 @@ export function acceptTerms(): AcceptTermsAction {
   }
 }
 
-export function saveNameAndPicture(
-  name: string,
-  pictureUri: string | null
-): SaveNameAndPictureAction {
+export function saveName(name: string): SaveNameAction {
   return {
-    type: Actions.SAVE_NAME_AND_PICTURE,
+    type: Actions.SAVE_NAME,
     name,
-    pictureUri,
   }
 }
-
 export const devModeTriggerClicked = (): DevModeTriggerClickedAction => ({
   type: Actions.DEV_MODE_TRIGGER_CLICKED,
 })
@@ -263,10 +230,6 @@ export const setBackupCompleted = (): SetBackupCompletedAction => ({
   type: Actions.SET_BACKUP_COMPLETED,
 })
 
-export const toggleBackupState = (): ToggleBackupState => ({
-  type: Actions.TOGGLE_BACKUP_STATE,
-})
-
 export const dismissGetVerified = (): DismissGetVerifiedAction => ({
   type: Actions.DISMISS_GET_VERIFIED,
 })
@@ -284,21 +247,9 @@ export const setUserContactDetails = (
   thumbnailPath,
 })
 
-export const clearStoredAccount = (
-  account: string,
-  onlyReduxState: boolean = false
-): ClearStoredAccountAction => ({
+export const clearStoredAccount = (account: string): ClearStoredAccountAction => ({
   type: Actions.CLEAR_STORED_ACCOUNT,
   account,
-  onlyReduxState,
-})
-
-export const dismissKeepSupercharging = (): DismissKeepSuperchargingAction => ({
-  type: Actions.DISMISS_KEEP_SUPERCHARGING,
-})
-
-export const dismissStartSupercharging = (): DismissStartSuperchargingAction => ({
-  type: Actions.DISMISS_START_SUPERCHARGING,
 })
 
 export const saveSignedMessage = (): SaveSignedMessage => ({

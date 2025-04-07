@@ -1,21 +1,12 @@
-import {
-  invalidMnemonicWords,
-  normalizeMnemonic,
-  suggestMnemonicCorrections,
-  validateMnemonic,
-} from '@celo/cryptographic-utils'
-import { privateKeyToAddress } from '@celo/utils/lib/address'
 import { Task } from '@redux-saga/types'
-import * as bip39 from 'react-native-bip39'
 import { setBackupCompleted } from 'src/account/actions'
 import { initializeAccountSaga } from 'src/account/saga'
 import { recoveringFromStoreWipeSelector } from 'src/account/selectors'
 import { showError } from 'src/alert/actions'
+import AppAnalytics from 'src/analytics/AppAnalytics'
 import { AppEvents, OnboardingEvents } from 'src/analytics/Events'
-import ValoraAnalytics from 'src/analytics/ValoraAnalytics'
 import { ErrorMessages } from 'src/app/ErrorMessages'
 import { countMnemonicWords, generateKeysFromMnemonic, storeMnemonic } from 'src/backup/utils'
-import { refreshAllBalances } from 'src/home/actions'
 import {
   Actions,
   ImportBackupPhraseAction,
@@ -26,8 +17,15 @@ import { navigate } from 'src/navigator/NavigationService'
 import { Screens } from 'src/navigator/Screens'
 import { goToNextOnboardingScreen, onboardingPropsSelector } from 'src/onboarding/steps'
 import { FetchedTokenBalance, fetchTokenBalancesForAddress } from 'src/tokens/saga'
-import { ensureError } from 'src/utils/ensureError'
 import Logger from 'src/utils/Logger'
+import {
+  invalidMnemonicWords,
+  normalizeMnemonic,
+  suggestMnemonicCorrections,
+  validateMnemonic,
+} from 'src/utils/account'
+import { privateKeyToAddress } from 'src/utils/address'
+import { ensureError } from 'src/utils/ensureError'
 import { safely } from 'src/utils/safely'
 import { assignAccountFromPrivateKey } from 'src/web3/saga'
 import {
@@ -52,11 +50,11 @@ export function* importBackupPhraseSaga({ phrase, useEmptyWallet }: ImportBackup
   Logger.debug(TAG + '@importBackupPhraseSaga', 'Importing backup phrase')
   try {
     const normalizedPhrase = normalizeMnemonic(phrase)
-    const phraseIsValid = validateMnemonic(normalizedPhrase, bip39)
+    const phraseIsValid = validateMnemonic(normalizedPhrase)
     const invalidWords = phraseIsValid ? [] : invalidMnemonicWords(normalizedPhrase)
 
     if (!phraseIsValid) {
-      ValoraAnalytics.track(OnboardingEvents.wallet_import_phrase_invalid, {
+      AppAnalytics.track(OnboardingEvents.wallet_import_phrase_invalid, {
         wordCount: countMnemonicWords(normalizedPhrase),
         invalidWordCount: invalidWords?.length,
       })
@@ -85,7 +83,7 @@ export function* importBackupPhraseSaga({ phrase, useEmptyWallet }: ImportBackup
             TAG + '@importBackupPhraseSaga',
             `Backup phrase autocorrection ${timeout ? 'timed out' : 'failed'}`
           )
-          ValoraAnalytics.track(OnboardingEvents.wallet_import_phrase_correction_failed, {
+          AppAnalytics.track(OnboardingEvents.wallet_import_phrase_correction_failed, {
             timeout: timeout !== undefined,
           })
         }
@@ -96,7 +94,7 @@ export function* importBackupPhraseSaga({ phrase, useEmptyWallet }: ImportBackup
           `Encountered an error trying to correct a phrase`,
           error
         )
-        ValoraAnalytics.track(OnboardingEvents.wallet_import_phrase_correction_failed, {
+        AppAnalytics.track(OnboardingEvents.wallet_import_phrase_correction_failed, {
           timeout: false,
           error: error.message,
         })
@@ -131,7 +129,7 @@ export function* importBackupPhraseSaga({ phrase, useEmptyWallet }: ImportBackup
       const backupAccount = privateKeyToAddress(privateKey)
       if (!(yield* call(walletHasBalance, backupAccount))) {
         yield* put(importBackupPhraseSuccess())
-        ValoraAnalytics.track(OnboardingEvents.wallet_import_zero_balance, {
+        AppAnalytics.track(OnboardingEvents.wallet_import_zero_balance, {
           account: backupAccount,
         })
         navigate(Screens.ImportWallet, { clean: false, showZeroBalanceModal: true })
@@ -148,13 +146,12 @@ export function* importBackupPhraseSaga({ phrase, useEmptyWallet }: ImportBackup
     yield* call(storeMnemonic, mnemonic, account)
     // Set backup complete so user isn't prompted to do backup flow
     yield* put(setBackupCompleted())
-    yield* put(refreshAllBalances())
 
     const recoveringFromStoreWipe = yield* select(recoveringFromStoreWipeSelector)
     if (recoveringFromStoreWipe) {
-      ValoraAnalytics.track(AppEvents.redux_store_recovery_success, { account })
+      AppAnalytics.track(AppEvents.redux_store_recovery_success, { account })
     }
-    ValoraAnalytics.track(OnboardingEvents.wallet_import_success)
+    AppAnalytics.track(OnboardingEvents.wallet_import_success)
     yield* call(initializeAccountSaga)
 
     const onboardingProps = yield* select(onboardingPropsSelector)
@@ -169,7 +166,7 @@ export function* importBackupPhraseSaga({ phrase, useEmptyWallet }: ImportBackup
     Logger.error(TAG + '@importBackupPhraseSaga', 'Error importing backup phrase', error)
     yield* put(showError(ErrorMessages.IMPORT_BACKUP_FAILED))
     yield* put(importBackupPhraseFailure())
-    ValoraAnalytics.track(OnboardingEvents.wallet_import_error, { error: error.message })
+    AppAnalytics.track(OnboardingEvents.wallet_import_error, { error: error.message })
   }
 }
 
@@ -183,7 +180,7 @@ function* attemptBackupPhraseCorrection(mnemonic: string) {
   let counter = 0
   let tasks: { index: number; suggestion: string; task: Task; done: boolean }[] = []
   for (const suggestion of suggestMnemonicCorrections(mnemonic)) {
-    ValoraAnalytics.track(OnboardingEvents.wallet_import_phrase_correction_attempt)
+    AppAnalytics.track(OnboardingEvents.wallet_import_phrase_correction_attempt)
 
     Logger.info(
       TAG + '@attemptBackupPhraseCorrection',
@@ -222,7 +219,7 @@ function* attemptBackupPhraseCorrection(mnemonic: string) {
           TAG + '@attemptBackupPhraseCorrection',
           `Found correction phrase with balance in attempt ${task.index}`
         )
-        ValoraAnalytics.track(OnboardingEvents.wallet_import_phrase_correction_success, {
+        AppAnalytics.track(OnboardingEvents.wallet_import_phrase_correction_success, {
           attemptNumber: task.index,
         })
         // Cancel any remaining tasks.

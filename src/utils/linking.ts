@@ -1,6 +1,6 @@
 import { Linking, Platform } from 'react-native'
 import DeviceInfo from 'react-native-device-info'
-import { APP_STORE_ID } from 'src/config'
+import { APP_STORE_ID, DEEP_LINK_URL_SCHEME } from 'src/config'
 import Logger from 'src/utils/Logger'
 
 const TAG = 'utils/linking'
@@ -14,7 +14,7 @@ export function navigateToWalletStorePage() {
 }
 
 export function isDeepLink(url: string): boolean {
-  return url.startsWith('celo:')
+  return url.startsWith(`${DEEP_LINK_URL_SCHEME}:`)
 }
 
 export function navigateToURI(uri: string, backupUri?: string) {
@@ -22,7 +22,7 @@ export function navigateToURI(uri: string, backupUri?: string) {
 
   // We're NOT using `Linking.canOpenURL` here because we would need
   // the scheme to be added to LSApplicationQueriesSchemes on iOS
-  // which is not possible for DappKit callbacks
+  // which is not possible for arbitrary callbacks from other apps (DAppKit used to do this)
   Linking.openURL(uri).catch((reason) => {
     Logger.debug(TAG, 'URI not supported', uri)
     if (backupUri) {

@@ -1,4 +1,3 @@
-import { DappKitRequestTypes } from '@celo/utils'
 import {
   FiatAccountSchema,
   FiatConnectError,
@@ -17,10 +16,8 @@ import {
   CoinbasePayEvents,
   ContractKitEvents,
   DappExplorerEvents,
-  DappKitEvents,
   DappShortcutsEvents,
   EarnEvents,
-  EscrowEvents,
   FeeEvents,
   FiatExchangeEvents,
   HomeEvents,
@@ -35,7 +32,6 @@ import {
   PhoneVerificationEvents,
   PointsEvents,
   QrScreenEvents,
-  RewardsEvents,
   SendEvents,
   SettingsEvents,
   SwapEvents,
@@ -51,18 +47,21 @@ import {
   HooksEnablePreviewOrigin,
   ScrollDirection,
   SendOrigin,
+  TransactionOrigin,
   WalletConnectPairingOrigin,
 } from 'src/analytics/types'
 import { ErrorMessages } from 'src/app/ErrorMessages'
+import { AddAssetsActionType } from 'src/components/AddAssetsBottomSheet'
+import { GasFeeWarningFlow } from 'src/components/GasFeeWarning'
 import { TokenPickerOrigin } from 'src/components/TokenBottomSheet'
-import {
-  RewardsScreenCta,
-  RewardsScreenOrigin,
-} from 'src/consumerIncentives/analyticsEventsTracker'
 import { DappSection } from 'src/dapps/types'
-import { SerializableRewardsInfo } from 'src/earn/types'
-import { ProviderSelectionAnalyticsData } from 'src/fiatExchanges/types'
-import { CICOFlow, FiatExchangeFlow, PaymentMethod } from 'src/fiatExchanges/utils'
+import { BeforeDepositActionName, EarnActiveMode, SerializableRewardsInfo } from 'src/earn/types'
+import {
+  CICOFlow,
+  FiatExchangeFlow,
+  PaymentMethod,
+  ProviderSelectionAnalyticsData,
+} from 'src/fiatExchanges/types'
 import { HomeActionName, NotificationBannerCTATypes, NotificationType } from 'src/home/types'
 import {
   KeylessBackupFlow,
@@ -70,13 +69,13 @@ import {
   KeylessBackupStatus,
 } from 'src/keylessBackup/types'
 import { LocalCurrencyCode } from 'src/localCurrency/consts'
+import { Screens } from 'src/navigator/Screens'
 import { NftOrigin } from 'src/nfts/types'
 import { NotificationReceiveState } from 'src/notifications/types'
-import { AdventureCardName } from 'src/onboarding/types'
 import { PointsActivityId } from 'src/points/types'
 import { RecipientType } from 'src/recipients/recipient'
 import { AmountEnteredIn, QrCode } from 'src/send/types'
-import { Field } from 'src/swap/types'
+import { Field, SwapType } from 'src/swap/types'
 import { TokenActionName } from 'src/tokens/types'
 import { NetworkId, TokenTransactionTypeV2, TransactionStatus } from 'src/transactions/types'
 
@@ -148,10 +147,6 @@ interface AppEventsProperties {
   [AppEvents.in_app_review_error]: {
     error: string
   }
-  [AppEvents.multichain_beta_opt_in]: undefined
-  [AppEvents.multichain_beta_opt_out]: undefined
-  [AppEvents.multichain_beta_contact_support]: undefined
-
   [AppEvents.handle_deeplink]: {
     pathStartsWith: string
     fullPath: string | null
@@ -179,7 +174,7 @@ interface HomeEventsProperties {
     notificationPositionInList?: number
   }
   [HomeEvents.notification_center_spotlight_dismiss]: undefined
-  [HomeEvents.transaction_feed_item_select]: undefined
+  [HomeEvents.transaction_feed_item_select]: { itemType: TokenTransactionTypeV2 }
   [HomeEvents.transaction_feed_address_copy]: undefined
   [HomeEvents.view_token_balances]: { totalBalance?: string }
   [HomeEvents.home_action_pressed]: { action: HomeActionName }
@@ -248,25 +243,35 @@ interface SettingsEventsProperties {
 
 interface CommonKeylessBackupProps {
   keylessBackupFlow: KeylessBackupFlow
+  origin: KeylessBackupOrigin
 }
 
 interface KeylessBackupEventsProperties {
   [KeylessBackupEvents.wallet_security_primer_get_started]: undefined
   [KeylessBackupEvents.cab_setup_recovery_phrase]: undefined
-  [KeylessBackupEvents.cab_sign_in_with_google]: CommonKeylessBackupProps
-  [KeylessBackupEvents.cab_sign_in_with_google_success]: CommonKeylessBackupProps
+  [KeylessBackupEvents.cab_sign_in_another_way]: CommonKeylessBackupProps
+  [KeylessBackupEvents.cab_sign_in_start]: CommonKeylessBackupProps & {
+    provider: string
+  }
+  [KeylessBackupEvents.cab_sign_in_success]: CommonKeylessBackupProps & {
+    provider: string
+  }
+  [KeylessBackupEvents.cab_sign_in_with_email_screen_back]: CommonKeylessBackupProps
   [KeylessBackupEvents.cab_sign_in_with_email_screen_cancel]: CommonKeylessBackupProps
-  [KeylessBackupEvents.cab_enter_phone_number_continue]: CommonKeylessBackupProps
+  [KeylessBackupEvents.cab_sign_in_with_email_screen_skip]: CommonKeylessBackupProps
+  [KeylessBackupEvents.cab_enter_phone_number_back]: CommonKeylessBackupProps
   [KeylessBackupEvents.cab_enter_phone_number_cancel]: CommonKeylessBackupProps
+  [KeylessBackupEvents.cab_enter_phone_number_continue]: CommonKeylessBackupProps
   [KeylessBackupEvents.cab_intro_continue]: CommonKeylessBackupProps
   [KeylessBackupEvents.cab_issue_sms_code_start]: CommonKeylessBackupProps
   [KeylessBackupEvents.cab_issue_sms_code_success]: CommonKeylessBackupProps
   [KeylessBackupEvents.cab_issue_sms_code_error]: CommonKeylessBackupProps
+  [KeylessBackupEvents.cab_enter_phone_code_back]: CommonKeylessBackupProps
   [KeylessBackupEvents.cab_enter_phone_code_cancel]: CommonKeylessBackupProps
-  [KeylessBackupEvents.cab_issue_valora_keyshare_start]: CommonKeylessBackupProps
-  [KeylessBackupEvents.cab_issue_valora_keyshare_success]: CommonKeylessBackupProps
-  [KeylessBackupEvents.cab_issue_valora_keyshare_error]: CommonKeylessBackupProps
-  [KeylessBackupEvents.cab_progress_completed_continue]: undefined
+  [KeylessBackupEvents.cab_issue_app_keyshare_start]: CommonKeylessBackupProps
+  [KeylessBackupEvents.cab_issue_app_keyshare_success]: CommonKeylessBackupProps
+  [KeylessBackupEvents.cab_issue_app_keyshare_error]: CommonKeylessBackupProps
+  [KeylessBackupEvents.cab_progress_completed_continue]: { origin: KeylessBackupOrigin }
   [KeylessBackupEvents.cab_progress_failed_later]: undefined
   [KeylessBackupEvents.cab_progress_failed_manual]: { origin: KeylessBackupOrigin }
   [KeylessBackupEvents.cab_progress_failed_skip_onboarding]: undefined
@@ -289,6 +294,7 @@ interface KeylessBackupEventsProperties {
   [KeylessBackupEvents.cab_phone_verification_help]: CommonKeylessBackupProps
   [KeylessBackupEvents.cab_phone_verification_help_skip]: CommonKeylessBackupProps
   [KeylessBackupEvents.cab_phone_verification_help_go_back]: CommonKeylessBackupProps
+  [KeylessBackupEvents.cab_phone_verification_help_use_phrase]: CommonKeylessBackupProps
   [KeylessBackupEvents.cab_setup_hashed_keyshares]: {
     hashedKeysharePhone: string
     hashedKeyshareEmail: string
@@ -393,26 +399,6 @@ interface OnboardingEventsProperties {
   [OnboardingEvents.initialize_account_error]: {
     error: string
   }
-
-  [OnboardingEvents.account_dek_register_start]:
-    | {
-        feeless?: boolean
-      }
-    | undefined
-  [OnboardingEvents.account_dek_register_account_unlocked]:
-    | {
-        feeless?: boolean
-      }
-    | undefined
-  [OnboardingEvents.account_dek_register_account_checked]:
-    | {
-        feeless?: boolean
-      }
-    | undefined
-  [OnboardingEvents.account_dek_register_complete]: {
-    newRegistration: boolean
-    feeless?: boolean
-  }
   [OnboardingEvents.protect_wallet_use_recovery]:
     | {
         position?: number
@@ -422,14 +408,6 @@ interface OnboardingEventsProperties {
   [OnboardingEvents.protect_wallet_help_dismiss]: undefined
   [OnboardingEvents.protect_wallet_copy_phrase]: undefined
   [OnboardingEvents.protect_wallet_complete]: undefined
-  [OnboardingEvents.cya_button_press]: {
-    cardName: AdventureCardName
-    position: number
-    cardOrder: AdventureCardName[]
-  }
-  [OnboardingEvents.cya_later]: {
-    cardOrder: AdventureCardName[]
-  }
   [OnboardingEvents.link_phone_number]: undefined
   [OnboardingEvents.link_phone_number_later]: undefined
 }
@@ -507,22 +485,6 @@ interface InviteEventsProperties {
   [InviteEvents.invite_help_link]: undefined
 }
 
-interface EscrowEventsProperties {
-  [EscrowEvents.escrow_fetch_start]: undefined
-  [EscrowEvents.escrow_fetch_complete]: undefined
-  [EscrowEvents.escrow_fetch_error]: {
-    error: string
-  }
-
-  [EscrowEvents.escrow_reclaim_confirm]: undefined
-  [EscrowEvents.escrow_reclaim_cancel]: undefined
-  [EscrowEvents.escrow_reclaim_start]: undefined
-  [EscrowEvents.escrow_reclaim_complete]: undefined
-  [EscrowEvents.escrow_reclaim_error]: {
-    error: string
-  }
-}
-
 interface SendEventsProperties {
   [SendEvents.send_scan]: undefined
   [SendEvents.send_select_recipient]: {
@@ -556,7 +518,6 @@ interface SendEventsProperties {
         localCurrency: LocalCurrencyCode
         dollarAmount: string | null
         localCurrencyAmount: string | null
-        commentLength: number
       }
     | {
         origin: SendOrigin
@@ -570,7 +531,6 @@ interface SendEventsProperties {
         tokenAddress: string | null
         networkId: NetworkId | null
         tokenId: string
-        commentLength: number
         isTokenManuallyImported: boolean
       }
 
@@ -618,10 +578,13 @@ interface SendEventsProperties {
     currentTokenAddress: string | null
     currentNetworkId: NetworkId | null
   }
-  [SendEvents.max_pressed]: {
+  [SendEvents.send_percentage_selected]: {
     tokenId: string
     tokenAddress: string | null
     networkId: NetworkId | null
+    percentage: number // 0 to 100
+    flow: 'send' | 'earn' | 'swap'
+    mode?: EarnActiveMode
   }
   [SendEvents.swap_input_pressed]: {
     swapToLocalAmount: boolean
@@ -658,15 +621,17 @@ interface SendEventsProperties {
 }
 
 interface FeeEventsProperties {
-  [FeeEvents.estimate_fee_failed]: {
-    feeType: string
-    tokenAddress: string
-    error: string
+  [FeeEvents.gas_fee_warning_impression]: {
+    flow: GasFeeWarningFlow
+    errorType: 'need-decrease-spend-amount-for-gas' | 'not-enough-balance-for-gas'
+    tokenId: string
+    networkId: NetworkId
   }
-  [FeeEvents.estimate_fee_success]: {
-    feeType: string
-    tokenAddress: string
-    usdFee: string
+  [FeeEvents.gas_fee_warning_cta_press]: {
+    flow: GasFeeWarningFlow
+    errorType: 'need-decrease-spend-amount-for-gas' | 'not-enough-balance-for-gas'
+    tokenId: string
+    networkId: NetworkId
   }
 }
 
@@ -701,6 +666,10 @@ interface TransactionEventsProperties {
     error: string
     feeCurrencyAddress?: string
   } & Web3LibraryProps
+  [TransactionEvents.transaction_prepare_insufficient_gas]: {
+    networkId: NetworkId
+    origin: TransactionOrigin
+  }
 }
 
 interface CeloExchangeEventsProperties {
@@ -710,7 +679,6 @@ interface CeloExchangeEventsProperties {
 }
 
 interface FiatExchangeEventsProperties {
-  [FiatExchangeEvents.cico_cash_out_info_support]: undefined
   [FiatExchangeEvents.external_exchange_link]: {
     name: string
     link: string
@@ -731,7 +699,6 @@ interface FiatExchangeEventsProperties {
   [FiatExchangeEvents.cico_add_bottom_sheet_ramp_available]: undefined
   [FiatExchangeEvents.cico_add_get_started_impression]: undefined
   [FiatExchangeEvents.cico_add_get_started_selected]: undefined
-  [FiatExchangeEvents.cico_add_funds_info_support]: undefined
   [FiatExchangeEvents.cico_external_exchanges_back]: undefined
   [FiatExchangeEvents.cico_cash_out_copy_address]: undefined
   [FiatExchangeEvents.cico_spend_select_provider_back]: undefined
@@ -980,21 +947,6 @@ interface NavigationProperties {
   [NavigationEvents.navigator_not_ready]: undefined
 }
 
-interface RewardsProperties {
-  [RewardsEvents.rewards_screen_opened]: {
-    origin: RewardsScreenOrigin
-  }
-  [RewardsEvents.rewards_screen_cta_pressed]: {
-    buttonPressed: RewardsScreenCta
-  }
-  [RewardsEvents.learn_more_pressed]: undefined
-  [RewardsEvents.claimed_reward]: {
-    amount: string
-    token: string
-    version?: number
-  }
-}
-
 export interface WalletConnect1Properties {
   version: 1
   dappRequestOrigin: DappRequestOrigin
@@ -1079,31 +1031,6 @@ interface WalletConnectProperties {
   [WalletConnectEvents.wc_copy_request_payload]: WalletConnectRequestDefaultProperties
 }
 
-interface DappKitRequestDefaultProperties {
-  dappRequestOrigin: DappRequestOrigin
-  dappName: string
-  dappUrl: string
-  requestType: DappKitRequestTypes
-  requestCallback: string
-  requestId: string
-}
-
-interface DappKitProperties {
-  [DappKitEvents.dappkit_parse_deeplink_error]: {
-    dappRequestOrigin: DappRequestOrigin
-    deeplink: string
-    error: string
-  }
-  [DappKitEvents.dappkit_request_propose]: DappKitRequestDefaultProperties
-  [DappKitEvents.dappkit_request_cancel]: DappKitRequestDefaultProperties
-  [DappKitEvents.dappkit_copy_request_details]: DappKitRequestDefaultProperties
-  [DappKitEvents.dappkit_request_accept_start]: DappKitRequestDefaultProperties
-  [DappKitEvents.dappkit_request_accept_success]: DappKitRequestDefaultProperties
-  [DappKitEvents.dappkit_request_accept_error]: DappKitRequestDefaultProperties & {
-    error: string
-  }
-}
-
 interface CICOEventsProperties {
   [CICOEvents.persona_kyc_start]: undefined
   [CICOEvents.persona_kyc_success]: undefined
@@ -1129,6 +1056,7 @@ interface DappExplorerEventsProperties {
     activeFilter?: string
     activeSearchTerm?: string
     position?: number
+    fromScreen?: Screens
   }
   [DappExplorerEvents.dapp_close]: DappEventProperties
   [DappExplorerEvents.dapp_screen_open]: undefined
@@ -1139,7 +1067,7 @@ interface DappExplorerEventsProperties {
     filterId: string
     remove: boolean
   }
-  [DappExplorerEvents.dapp_rankings_open]: undefined
+  [DappExplorerEvents.dapp_explore_all]: undefined
 }
 
 interface WebViewEventsProperties {
@@ -1192,6 +1120,8 @@ type SwapQuoteEvent = SwapEvent & {
   price: string
   appFeePercentageIncludedInPrice: string | null | undefined
   provider: string
+  swapType: SwapType
+  swapId: string
 }
 
 export interface SwapTimeMetrics {
@@ -1254,11 +1184,10 @@ export type SwapTxsReceiptProperties = Partial<ApproveTxReceiptProperties> &
   }>
 
 export enum SwapShowInfoType {
-  MAX_NETWORK_FEE,
-  ESTIMATED_NETWORK_FEE,
+  FEES,
   SLIPPAGE,
   EXCHANGE_RATE,
-  APP_FEE,
+  ESTIMATED_DURATION,
 }
 interface SwapEventsProperties {
   [SwapEvents.swap_screen_open]: undefined
@@ -1280,18 +1209,54 @@ interface SwapEventsProperties {
     areSwapTokensShuffled: boolean
     tokenPositionInList: number
   }
-  [SwapEvents.swap_screen_max_swap_amount]: {
+  [SwapEvents.swap_screen_percentage_selected]: {
     tokenSymbol?: string
     tokenId: string
     tokenNetworkId: string
+    percentage: number // 0 to 100
   }
   [SwapEvents.swap_gas_fees_learn_more]: undefined
   [SwapEvents.swap_review_submit]: SwapQuoteEvent & Web3LibraryProps & Partial<SwapTxsProperties>
-  [SwapEvents.swap_execute_success]: SwapQuoteEvent &
+  [SwapEvents.swap_execute_success]:
+    | ({ swapType: 'same-chain' } & SwapQuoteEvent &
+        SwapTimeMetrics &
+        Web3LibraryProps &
+        Partial<SwapTxsProperties> &
+        SwapTxsReceiptProperties & {
+          fromTokenBalance: string
+          swapExecuteTxId: string
+          swapApproveTxId: string
+          estimatedSellTokenUsdValue?: number
+          estimatedBuyTokenUsdValue?: number
+          estimatedAppFeeUsdValue: number | undefined
+          areSwapTokensShuffled: boolean
+        })
+    | ({ swapType: 'cross-chain' } & {
+        swapExecuteTxId: string
+        toTokenId: string
+        toTokenAmount: string
+        toTokenAmountUsd?: number
+        toTokenBalance?: string
+        fromTokenId: string
+        fromTokenAmount: string
+        fromTokenAmountUsd?: number
+        fromTokenBalance?: string
+        networkFeeTokenId?: string
+        networkFeeAmount?: string
+        networkFeeAmountUsd?: number
+        appFeeTokenId?: string
+        appFeeAmount?: string
+        appFeeAmountUsd?: number
+        crossChainFeeTokenId?: string
+        crossChainFeeAmount?: string
+        crossChainFeeAmountUsd?: number
+      })
+  [SwapEvents.swap_execute_error]: SwapQuoteEvent &
     SwapTimeMetrics &
     Web3LibraryProps &
     Partial<SwapTxsProperties> &
     SwapTxsReceiptProperties & {
+      error: string
       fromTokenBalance: string
       swapExecuteTxId: string
       swapApproveTxId: string
@@ -1300,12 +1265,11 @@ interface SwapEventsProperties {
       estimatedAppFeeUsdValue: number | undefined
       areSwapTokensShuffled: boolean
     }
-  [SwapEvents.swap_execute_error]: SwapQuoteEvent &
+  [SwapEvents.swap_cancel]: SwapQuoteEvent &
     SwapTimeMetrics &
     Web3LibraryProps &
     Partial<SwapTxsProperties> &
     SwapTxsReceiptProperties & {
-      error: string
       fromTokenBalance: string
       swapExecuteTxId: string
       swapApproveTxId: string
@@ -1566,6 +1530,11 @@ interface JumpstartEventsProperties {
     claimed: boolean
   }
   [JumpstartEvents.jumpstart_claim_status_fetch_error]: JumpstartReclaimProperties
+  [JumpstartEvents.jumpstart_add_assets_show_actions]: undefined
+  [JumpstartEvents.jumpstart_add_assets_action_press]: {
+    action: AddAssetsActionType
+  }
+  [JumpstartEvents.jumpstart_intro_seen]: undefined
 }
 
 interface PointsEventsProperties {
@@ -1585,21 +1554,31 @@ interface PointsEventsProperties {
   }
   [PointsEvents.points_screen_activity_fetch_more]: undefined
   [PointsEvents.points_screen_activity_learn_more_press]: undefined
+  [PointsEvents.points_screen_disclaimer_press]: undefined
 }
 
-interface EarnCommonProperties {
-  providerId: 'aave-v3'
-  networkId: NetworkId
+export interface EarnCommonProperties {
+  providerId: string
+  poolId: string
+  networkId: NetworkId // this is always the pool's networkId
   depositTokenId: string
 }
 
 interface EarnDepositProperties extends EarnCommonProperties {
-  tokenAmount: string
+  depositTokenAmount: string
+  mode: EarnActiveMode
+  // the below are mainly for swap-deposit. For deposit, this would just be
+  // same as the depositTokenAmount and depositTokenId
+  fromTokenAmount: string
+  fromTokenId: string
+  fromNetworkId: NetworkId
+  swapType?: SwapType
 }
 
 interface EarnWithdrawProperties extends EarnCommonProperties {
-  tokenAmount: string
+  tokenAmount?: string
   rewards: SerializableRewardsInfo[]
+  mode: Extract<EarnActiveMode, 'withdraw' | 'claim-rewards' | 'exit'>
 }
 
 // Adds `deposit` prefix to all properties of TxReceiptProperties
@@ -1614,40 +1593,55 @@ export type EarnDepositTxsReceiptProperties = Partial<ApproveTxReceiptProperties
   }>
 
 interface EarnEventsProperties {
-  [EarnEvents.earn_cta_press]: EarnCommonProperties
-  [EarnEvents.earn_add_crypto_action_press]: {
-    action: TokenActionName
-  } & TokenProperties
+  [EarnEvents.earn_entrypoint_press]: { hasSuppliedPools: boolean }
+  [EarnEvents.earn_before_deposit_action_press]: {
+    action: BeforeDepositActionName
+  } & TokenProperties &
+    EarnCommonProperties
   [EarnEvents.earn_deposit_provider_info_press]: EarnDepositProperties
-  [EarnEvents.earn_deposit_terms_and_conditions_press]: EarnDepositProperties
+  [EarnEvents.earn_deposit_terms_and_conditions_press]: {
+    type: 'providerTermsAndConditions' | 'providerDocuments' | 'appTermsAndConditions'
+  } & EarnDepositProperties
   [EarnEvents.earn_deposit_complete]: EarnDepositProperties
   [EarnEvents.earn_deposit_cancel]: EarnDepositProperties
   [EarnEvents.earn_deposit_submit_start]: EarnDepositProperties
   [EarnEvents.earn_deposit_submit_success]: EarnDepositProperties & EarnDepositTxsReceiptProperties
+  [EarnEvents.earn_deposit_execute_success]: Partial<EarnDepositProperties> & {
+    // only relevant for cross chain swap and deposit
+    networkFeeTokenId?: string
+    networkFeeAmount?: string
+    networkFeeAmountUsd?: number
+    appFeeTokenId?: string
+    appFeeAmount?: string
+    appFeeAmountUsd?: number
+    crossChainFeeTokenId?: string
+    crossChainFeeAmount?: string
+    crossChainFeeAmountUsd?: number
+  }
   [EarnEvents.earn_deposit_submit_error]: EarnDepositProperties &
     EarnDepositTxsReceiptProperties & {
       error: string
     }
   [EarnEvents.earn_deposit_submit_cancel]: EarnDepositProperties
-  [EarnEvents.earn_view_pools_press]: {
-    poolTokenId: string
-    networkId: string
-    providerId: 'aave-v3'
-  }
-  [EarnEvents.earn_enter_amount_info_press]: undefined
   [EarnEvents.earn_enter_amount_continue_press]: {
-    userHasFunds: boolean
     amountInUsd: string
     amountEnteredIn: AmountEnteredIn
-  } & EarnDepositProperties
-  [EarnEvents.earn_enter_amount_info_more_pools]: undefined
-  [EarnEvents.earn_exit_pool_press]: {
-    tokenAmount: string
+    mode: EarnActiveMode
+    // For deposits these will be the same as the depositTokenId and depositTokenAmount
+    // For swaps these will be the swapFromTokenId and swapFromTokenAmount
+    // For withdrawals this will be in units of the depositToken
+    fromTokenAmount: string
+    fromTokenId: string
+    fromNetworkId: NetworkId
+    depositTokenAmount?: string
+    swapType?: SwapType // only for swap-deposit
   } & EarnCommonProperties
-  [EarnEvents.earn_deposit_more_press]: EarnCommonProperties
-  [EarnEvents.earn_deposit_add_gas_press]: { gasTokenId: string }
   [EarnEvents.earn_feed_item_select]: {
-    origin: 'EarnDeposit' | 'EarnWithdraw' | 'EarnClaimReward'
+    origin:
+      | TokenTransactionTypeV2.EarnDeposit
+      | TokenTransactionTypeV2.EarnWithdraw
+      | TokenTransactionTypeV2.EarnClaimReward
+      | TokenTransactionTypeV2.EarnSwapDeposit
   }
   [EarnEvents.earn_collect_earnings_press]: EarnWithdrawProperties
   [EarnEvents.earn_withdraw_submit_start]: EarnWithdrawProperties
@@ -1656,11 +1650,30 @@ interface EarnEventsProperties {
     error: string
   }
   [EarnEvents.earn_withdraw_submit_cancel]: EarnWithdrawProperties
-  [EarnEvents.earn_withdraw_add_gas_press]: { gasTokenId: string }
+  [EarnEvents.earn_withdraw_add_gas_press]: EarnCommonProperties & { gasTokenId: string }
   [EarnEvents.earn_info_learn_press]: undefined
-  [EarnEvents.earn_info_earn_press]: {
-    tokenId: string
+  [EarnEvents.earn_info_earn_press]: undefined
+  [EarnEvents.earn_home_learn_more_press]: undefined
+  [EarnEvents.earn_pool_card_press]: {
+    poolAmount: string
+  } & EarnCommonProperties
+  [EarnEvents.earn_home_error_try_again]: undefined
+  [EarnEvents.earn_pool_info_view_pool]: EarnCommonProperties
+  [EarnEvents.earn_pool_info_tap_info_icon]: {
+    type: 'tvl' | 'age' | 'yieldRate' | 'deposit' | 'dailyYieldRate' | 'safetyScore'
+  } & EarnCommonProperties
+  [EarnEvents.earn_pool_info_tap_withdraw]: {
+    poolAmount: string
+  } & EarnCommonProperties
+  [EarnEvents.earn_pool_info_tap_deposit]: EarnCommonProperties & {
+    hasDepositToken: boolean
+    hasTokensOnSameNetwork: boolean
+    hasTokensOnOtherNetworks: boolean
   }
+  [EarnEvents.earn_pool_info_tap_safety_details]: EarnCommonProperties & {
+    action: 'expand' | 'collapse'
+  }
+  [EarnEvents.earn_select_withdraw_type]: EarnCommonProperties & { type: EarnActiveMode }
 }
 
 export type AnalyticsPropertiesList = AppEventsProperties &
@@ -1674,7 +1687,6 @@ export type AnalyticsPropertiesList = AppEventsProperties &
   InviteEventsProperties &
   SendEventsProperties &
   JumpstartEventsProperties &
-  EscrowEventsProperties &
   FeeEventsProperties &
   TransactionEventsProperties &
   CeloExchangeEventsProperties &
@@ -1682,9 +1694,7 @@ export type AnalyticsPropertiesList = AppEventsProperties &
   ContractKitEventsProperties &
   PerformanceProperties &
   NavigationProperties &
-  RewardsProperties &
   WalletConnectProperties &
-  DappKitProperties &
   CICOEventsProperties &
   DappExplorerEventsProperties &
   WebViewEventsProperties &

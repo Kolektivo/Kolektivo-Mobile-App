@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { LayoutAnimation, StyleSheet, Text, View } from 'react-native'
 import colors from 'src/styles/colors'
-import fontStyles from 'src/styles/fonts'
+import { typeScale } from 'src/styles/fonts'
 
 // How long the last entered digit is visible
 const LAST_DIGIT_VISIBLE_INTERVAL = 2000 // 2secs
@@ -72,21 +72,21 @@ const styles = StyleSheet.create({
   },
   inputContainer: {
     flex: 1,
-    height: fontStyles.h1.lineHeight,
+    height: typeScale.titleMedium.lineHeight,
     alignItems: 'center',
     justifyContent: 'center',
   },
   char: {
-    ...fontStyles.h1,
+    ...typeScale.titleMedium,
   },
   dot: {
     width: DOT_SIZE,
     height: DOT_SIZE,
     borderRadius: DOT_SIZE / 2,
     borderWidth: 1,
-    borderColor: colors.black,
+    borderColor: colors.contentPrimary,
   },
   dotFilled: {
-    backgroundColor: colors.black,
+    backgroundColor: colors.contentPrimary,
   },
 })

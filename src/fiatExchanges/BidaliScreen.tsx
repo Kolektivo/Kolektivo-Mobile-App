@@ -1,8 +1,8 @@
+import { WebViewMessageEvent } from '@interaxyz/react-native-webview'
 import { NativeStackScreenProps } from '@react-navigation/native-stack'
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { ActivityIndicator, StyleSheet } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { WebViewMessageEvent } from 'react-native-webview'
 import { createSelector } from 'reselect'
 import { e164NumberSelector } from 'src/account/selectors'
 import { openUrl } from 'src/app/actions'
@@ -40,6 +40,7 @@ function useInitialJavaScript(
     // When a payment request is needed, Bidali calls the provided `onPaymentRequest` method.
     // When a new url needs to be open (currently for FAQ, Terms of Service), `openUrl` is called by Bidali.
     // See also the comment in the `onMessage` handler
+    // IMPORTANT: DO NOT RENAME window.valora to anything else, it is used by Bidali for the custom integration.
     setInitialJavaScript(`
       window.valora = {
         paymentCurrency: "${currency.toUpperCase()}",
@@ -135,7 +136,7 @@ function BidaliScreen({ route, navigation }: Props) {
   // Update balances when they change
   useEffect(() => {
     webViewRef.current?.injectJavaScript(`
-      window.valora.balances = ${jsonBalances}
+      window.valora.balances = ${jsonBalances};
     `)
   }, [jsonBalances])
 
@@ -163,7 +164,7 @@ BidaliScreen.navigationOptions = () => {
       <ActivityIndicator
         style={styles.headerActivityIndicator}
         size="small"
-        color={colors.primary}
+        color={colors.loadingIndicator}
       />
     ),
   }

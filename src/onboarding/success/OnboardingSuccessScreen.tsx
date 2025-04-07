@@ -1,27 +1,19 @@
 import React, { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Image, StyleSheet, Text, View } from 'react-native'
-import Logo from 'src/icons/Logo'
 import { background } from 'src/images/Images'
+import Logo from 'src/images/Logo'
 import { nuxNavigationOptionsNoBackButton } from 'src/navigator/Headers'
-import { Screens } from 'src/navigator/Screens'
-import { goToNextOnboardingScreen, onboardingPropsSelector } from 'src/onboarding/steps'
-import { useSelector } from 'src/redux/hooks'
+import { navigateHome } from 'src/navigator/NavigationService'
 import colors from 'src/styles/colors'
-import fontStyles from 'src/styles/fonts'
+import { typeScale } from 'src/styles/fonts'
 import { Spacing } from 'src/styles/styles'
 
 function OnboardingSuccessScreen() {
-  const onboardingProps = useSelector(onboardingPropsSelector)
   useEffect(() => {
-    const timeout = setTimeout(
-      () =>
-        goToNextOnboardingScreen({
-          firstScreenInCurrentStep: Screens.VerificationStartScreen,
-          onboardingProps,
-        }),
-      3000
-    )
+    const timeout = setTimeout(() => {
+      navigateHome()
+    }, 3000)
 
     return () => clearTimeout(timeout)
   }, [])
@@ -31,7 +23,7 @@ function OnboardingSuccessScreen() {
   return (
     <View style={styles.container}>
       <Image source={background} style={styles.backgroundImage} />
-      <Logo color={colors.white} size={70} />
+      <Logo color={colors.contentOnboardingComplete} size={70} />
       <Text style={styles.text}>{t('success.message')}</Text>
     </View>
   )
@@ -52,16 +44,16 @@ const styles = StyleSheet.create({
     height: undefined,
   },
   text: {
-    ...fontStyles.h2,
+    ...typeScale.titleSmall,
     fontSize: 30,
     lineHeight: 36,
-    color: colors.white,
+    color: colors.contentOnboardingComplete,
     marginTop: Spacing.Regular16,
     marginBottom: 30,
     shadowOffset: { width: 0, height: 1 },
     shadowRadius: 2,
     shadowOpacity: 1,
-    shadowColor: 'rgba(46, 51, 56, 0.15)',
+    shadowColor: colors.softShadow,
   },
 })
 

@@ -1,5 +1,5 @@
+import AppAnalytics from 'src/analytics/AppAnalytics'
 import { AppEvents } from 'src/analytics/Events'
-import ValoraAnalytics from 'src/analytics/ValoraAnalytics'
 import { currentLanguageSelector } from 'src/i18n/selectors'
 import { navigateClearingStack } from 'src/navigator/NavigationService'
 import { Screens } from 'src/navigator/Screens'
@@ -8,23 +8,21 @@ import { RootState } from 'src/redux/reducers'
 import { retrieveStoredItem } from 'src/storage/keychain'
 import Logger from 'src/utils/Logger'
 import { ensureError } from 'src/utils/ensureError'
-import { clearStoredAccounts } from 'src/web3/KeychainLock'
-import { getWallet } from 'src/web3/contracts'
+import { clearStoredAccounts } from 'src/web3/KeychainAccounts'
+import { getKeychainAccounts } from 'src/web3/contracts'
 import { walletAddressSelector } from 'src/web3/selectors'
 import { call, select } from 'typed-redux-saga'
 
 const TAG = 'utils/accountChecker'
 
 export function* checkAccountExistenceSaga() {
-  const wallet = yield* call(getWallet)
-  if (!wallet) {
-    return
-  }
-  const keychainAccounts: string[] = yield wallet.getAccounts()
+  const accounts = yield* call(getKeychainAccounts)
+
+  const keychainAccounts = accounts.getAccounts()
   const walletAddress = yield* select(walletAddressSelector)
   if (!walletAddress && keychainAccounts.length > 0) {
     const account = keychainAccounts[0]
-    ValoraAnalytics.track(AppEvents.redux_keychain_mismatch, {
+    AppAnalytics.track(AppEvents.redux_keychain_mismatch, {
       account,
     })
     const language = yield* select(currentLanguageSelector)
@@ -62,7 +60,7 @@ export async function resetStateOnInvalidStoredAccount(state: RootState | undefi
       if (!passwordHash) {
         // No password hash present, we need to reset the redux state and remove existing accounts from the keychain
         // which we can't unlock without the password hash
-        ValoraAnalytics.track(AppEvents.redux_no_matching_keychain_account, {
+        AppAnalytics.track(AppEvents.redux_no_matching_keychain_account, {
           walletAddress,
           keychainError,
         })

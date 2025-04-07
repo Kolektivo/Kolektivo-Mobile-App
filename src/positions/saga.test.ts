@@ -1,20 +1,23 @@
 import { FetchMock } from 'jest-fetch-mock/types'
 import { Platform } from 'react-native'
 import { expectSaga } from 'redux-saga-test-plan'
-import { EffectProviders, StaticProvider } from 'redux-saga-test-plan/providers'
-import { call, select } from 'redux-saga/effects'
+import { call } from 'redux-saga-test-plan/matchers'
+import { EffectProviders, StaticProvider, throwError } from 'redux-saga-test-plan/providers'
+import { select } from 'redux-saga/effects'
 import { showError } from 'src/alert/actions'
 import { HooksEnablePreviewOrigin } from 'src/analytics/types'
 import { ErrorMessages } from 'src/app/ErrorMessages'
+import { DEEP_LINK_URL_SCHEME } from 'src/config'
+import { currentLanguageSelector } from 'src/i18n/selectors'
 import { isBottomSheetVisible, navigateBack } from 'src/navigator/NavigationService'
 import { Screens } from 'src/navigator/Screens'
 import {
+  _confirmEnableHooksPreview,
   executeShortcutSaga,
   fetchPositionsSaga,
   fetchShortcutsSaga,
   handleEnableHooksPreviewDeepLink,
   triggerShortcutSaga,
-  _confirmEnableHooksPreview,
 } from 'src/positions/saga'
 import {
   hooksApiUrlSelector,
@@ -36,14 +39,14 @@ import {
   triggerShortcutFailure,
   triggerShortcutSuccess,
 } from 'src/positions/slice'
-import { getFeatureGate, getDynamicConfigParams } from 'src/statsig'
+import { Position } from 'src/positions/types'
+import { getDynamicConfigParams, getFeatureGate } from 'src/statsig'
+import { NetworkId } from 'src/transactions/types'
 import Logger from 'src/utils/Logger'
-import { getContractKit } from 'src/web3/contracts'
+import { sendPreparedTransactions } from 'src/viem/saga'
 import networkConfig from 'src/web3/networkConfig'
-import { getConnectedUnlockedAccount } from 'src/web3/saga'
 import { walletAddressSelector } from 'src/web3/selectors'
 import { mockAccount, mockPositions, mockShortcuts } from 'test/values'
-import { NetworkId } from 'src/transactions/types'
 
 jest.mock('src/sentry/SentryTransactionHub')
 jest.mock('src/statsig')
@@ -55,9 +58,65 @@ jest.mock('src/transactions/send', () => ({
 }))
 jest.mock('react-native-simple-toast')
 
+jest.mock('src/config', () => ({
+  ...jest.requireActual('src/config'),
+  ENABLED_NETWORK_IDS: ['celo-mainnet'],
+}))
+
 const MOCK_RESPONSE = {
   message: 'OK',
   data: mockPositions,
+}
+
+const MOCK_EARN_POSITIONS_RESPONSE = {
+  message: 'OK',
+  data: [
+    {
+      type: 'app-token',
+      networkId: NetworkId['arbitrum-sepolia'],
+      address: '0x460b97bd498e1157530aeb3086301d5225b91216',
+      tokenId: 'arbitrum-sepolia:0x460b97bd498e1157530aeb3086301d5225b91216',
+      positionId: 'arbitrum-sepolia:0x460b97bd498e1157530aeb3086301d5225b91216',
+      appId: 'aave',
+      appName: 'Aave',
+      symbol: 'aArbSepUSDC',
+      decimals: 6,
+      displayProps: {
+        title: 'USDC',
+        description: 'Supplied (APY: 1.92%)',
+        imageUrl: 'https://raw.githubusercontent.com/valora-inc/dapp-list/main/assets/aave.png',
+      },
+      dataProps: {
+        yieldRates: [
+          {
+            percentage: 1.9194202601763743,
+            label: 'Earnings APY',
+            tokenId: 'arbitrum-sepolia:0x75faf114eafb1bdbe2f0316df893fd58ce46aa4d',
+          },
+        ],
+        earningItems: [],
+        depositTokenId: 'arbitrum-sepolia:0x75faf114eafb1bdbe2f0316df893fd58ce46aa4d',
+        withdrawTokenId: 'arbitrum-sepolia:0x460b97bd498e1157530aeb3086301d5225b91216',
+      },
+      tokens: [
+        {
+          tokenId: 'arbitrum-sepolia:0x75faf114eafb1bdbe2f0316df893fd58ce46aa4d',
+          networkId: NetworkId['arbitrum-sepolia'],
+          address: '0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d',
+          symbol: 'USDC',
+          decimals: 6,
+          priceUsd: '0',
+          type: 'base-token',
+          balance: '0',
+        },
+      ],
+      pricePerShare: ['1'],
+      priceUsd: '0',
+      balance: '0',
+      supply: '190288.768509',
+      availableShortcutIds: ['deposit', 'withdraw'],
+    },
+  ] satisfies Position[],
 }
 
 const MOCK_SHORTCUTS_RESPONSE = {
@@ -69,17 +128,6 @@ const mockFetch = fetch as FetchMock
 
 const originalPlatform = Platform.OS
 
-const contractKit = {
-  getWallet: jest.fn(),
-  getAccounts: jest.fn(),
-  connection: {
-    chainId: jest.fn(() => '42220'),
-    nonce: jest.fn(),
-    gasPrice: jest.fn(),
-    estimateGas: jest.fn(() => '1234'),
-  },
-}
-
 beforeEach(() => {
   jest.clearAllMocks()
   mockFetch.resetMocks()
@@ -88,17 +136,52 @@ beforeEach(() => {
 
 describe(fetchPositionsSaga, () => {
   it('fetches positions successfully', async () => {
-    mockFetch.mockResponse(JSON.stringify(MOCK_RESPONSE))
+    mockFetch.mockResponseOnce(JSON.stringify(MOCK_RESPONSE))
+    mockFetch.mockResponseOnce(JSON.stringify(MOCK_EARN_POSITIONS_RESPONSE))
     jest.mocked(getFeatureGate).mockReturnValue(true)
-    jest.mocked(getDynamicConfigParams).mockReturnValue({ showPositions: ['celo-mainnet'] })
-
+    jest.mocked(getDynamicConfigParams).mockReturnValue({
+      supportedPools: ['arbitrum-sepolia:0x460b97bd498e1157530aeb3086301d5225b91216'],
+      supportedAppIds: ['aave'],
+    })
     await expectSaga(fetchPositionsSaga)
       .provide([
         [select(walletAddressSelector), mockAccount],
         [select(hooksApiUrlSelector), networkConfig.hooksApiUrl],
+        [select(currentLanguageSelector), 'en'],
       ])
       .put(fetchPositionsStart())
-      .put(fetchPositionsSuccess(MOCK_RESPONSE.data))
+      .put(
+        fetchPositionsSuccess({
+          positions: [...MOCK_RESPONSE.data, ...MOCK_EARN_POSITIONS_RESPONSE.data],
+          earnPositionIds: MOCK_EARN_POSITIONS_RESPONSE.data.map((position) => position.positionId),
+          fetchedAt: Date.now(),
+        })
+      )
+      .run()
+  })
+
+  it("should return unique positions when there's an overlap between positions and earn positions", async () => {
+    mockFetch.mockResponseOnce(JSON.stringify(MOCK_RESPONSE))
+    mockFetch.mockResponseOnce(JSON.stringify(MOCK_RESPONSE)) // return the same response for earn positions
+    jest.mocked(getFeatureGate).mockReturnValue(true)
+    jest.mocked(getDynamicConfigParams).mockReturnValue({
+      supportedPools: ['arbitrum-sepolia:0x460b97bd498e1157530aeb3086301d5225b91216'],
+      supportedAppIds: ['aave'],
+    })
+    await expectSaga(fetchPositionsSaga)
+      .provide([
+        [select(walletAddressSelector), mockAccount],
+        [select(hooksApiUrlSelector), networkConfig.hooksApiUrl],
+        [select(currentLanguageSelector), 'en'],
+      ])
+      .put(fetchPositionsStart())
+      .put(
+        fetchPositionsSuccess({
+          positions: MOCK_RESPONSE.data,
+          earnPositionIds: MOCK_RESPONSE.data.map((position) => position.positionId),
+          fetchedAt: Date.now(),
+        })
+      )
       .run()
   })
 
@@ -143,9 +226,6 @@ describe(fetchShortcutsSaga, () => {
   it('fetches shortcuts successfully', async () => {
     mockFetch.mockResponse(JSON.stringify(MOCK_SHORTCUTS_RESPONSE))
     jest.mocked(getFeatureGate).mockReturnValue(true)
-    jest.mocked(getDynamicConfigParams).mockReturnValue({
-      showShortcuts: ['celo-mainnet'],
-    })
 
     await expectSaga(fetchShortcutsSaga)
       .provide([
@@ -161,8 +241,6 @@ describe(fetchShortcutsSaga, () => {
   it('fetches shortcuts if the previous fetch attempt failed', async () => {
     mockFetch.mockResponse(JSON.stringify(MOCK_SHORTCUTS_RESPONSE))
     jest.mocked(getFeatureGate).mockReturnValue(true)
-    jest.mocked(getDynamicConfigParams).mockReturnValue({ showShortcuts: ['celo-mainnet'] })
-
     await expectSaga(fetchShortcutsSaga)
       .provide([
         [select(shortcutsStatusSelector), 'error'],
@@ -211,8 +289,6 @@ describe(fetchShortcutsSaga, () => {
   it('updates the shortcuts status there is an error', async () => {
     mockFetch.mockResponse(JSON.stringify({ message: 'something went wrong' }), { status: 500 })
     jest.mocked(getFeatureGate).mockReturnValue(true)
-    jest.mocked(getDynamicConfigParams).mockReturnValue({ showShortcuts: ['celo-mainnet'] })
-
     await expectSaga(fetchShortcutsSaga)
       .provide([
         [select(shortcutsStatusSelector), 'idle'],
@@ -230,7 +306,7 @@ describe(fetchShortcutsSaga, () => {
 })
 
 describe(handleEnableHooksPreviewDeepLink, () => {
-  const deepLink = 'celo://wallet/hooks/enablePreview?hooksApiUrl=http%3A%2F%2F192.168.0.42%3A18000'
+  const deepLink = `${DEEP_LINK_URL_SCHEME}://wallet/hooks/enablePreview?hooksApiUrl=http%3A%2F%2F192.168.0.42%3A18000`
 
   it('enables hooks preview if the deep link is valid and the user confirms', async () => {
     Platform.OS = 'android'
@@ -276,18 +352,19 @@ describe(triggerShortcutSaga, () => {
       address: mockAccount,
       appId: 'gooddollar',
       networkId: NetworkId['celo-mainnet'],
-      positionAddress: '0x43d72Ff17701B2DA814620735C39C620Ce0ea4A1',
+      positionId: `${NetworkId['celo-mainnet']}:0x43d72ff17701b2da814620735c39c620ce0ea4a1`,
+      positionAddress: '0x43d72ff17701b2da814620735c39c620ce0ea4a1',
       shortcutId: 'claim-reward',
     },
   }
 
   it('should successfully trigger a shortcut and send the transaction', async () => {
     const mockTransaction = {
-      network: 'celo',
+      networkId: NetworkId['celo-mainnet'],
       from: mockAccount,
       to: '0x43d72ff17701b2da814620735c39c620ce0ea4a1',
       data: '0x4e71d92d',
-    }
+    } as const
     mockFetch.mockResponse(
       JSON.stringify({
         message: 'OK',
@@ -341,14 +418,14 @@ describe(triggerShortcutSaga, () => {
 
 describe(executeShortcutSaga, () => {
   const mockTransaction = {
-    network: 'celo',
+    networkId: NetworkId['celo-mainnet'],
     from: mockAccount,
     to: '0x43d72ff17701b2da814620735c39c620ce0ea4a1',
     data: '0x4e71d92d',
-  }
+  } as const
+  // Just use the same transaction for simplicity
+  const preparedTransactions = [mockTransaction]
   const defaultProviders: (EffectProviders | StaticProvider)[] = [
-    [call(getContractKit), contractKit],
-    [call(getConnectedUnlockedAccount), mockAccount],
     [
       select(triggeredShortcutsStatusSelector),
       {
@@ -364,8 +441,8 @@ describe(executeShortcutSaga, () => {
   it('should successfully trigger a shortcut and send the transaction', async () => {
     mockSendTransaction.mockResolvedValueOnce({ transactionHash: '0x1234' })
 
-    await expectSaga(executeShortcutSaga, executeShortcut('someId'))
-      .provide(defaultProviders)
+    await expectSaga(executeShortcutSaga, executeShortcut({ id: 'someId', preparedTransactions }))
+      .provide([...defaultProviders, [call.fn(sendPreparedTransactions), ['0x1']]])
       .put(executeShortcutSuccess('someId'))
       .not.put(executeShortcutFailure(expect.anything()))
       .run()
@@ -376,8 +453,11 @@ describe(executeShortcutSaga, () => {
   it('should handle shortcut trigger failure', async () => {
     mockSendTransaction.mockRejectedValueOnce('some error')
 
-    await expectSaga(executeShortcutSaga, executeShortcut('someId'))
-      .provide(defaultProviders)
+    await expectSaga(executeShortcutSaga, executeShortcut({ id: 'someId', preparedTransactions }))
+      .provide([
+        ...defaultProviders,
+        [call.fn(sendPreparedTransactions), throwError(new Error('some error'))],
+      ])
       .not.put(executeShortcutSuccess(expect.anything()))
       .put(executeShortcutFailure('someId'))
       .put(showError(ErrorMessages.SHORTCUT_CLAIM_REWARD_FAILED))

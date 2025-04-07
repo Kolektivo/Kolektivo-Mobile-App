@@ -1,20 +1,27 @@
-import * as DEK from '@celo/cryptographic-utils/lib/dataEncryptionKey'
-import { sleep } from '@celo/utils/lib/async'
+import * as Keychain from '@divvi/react-native-keychain'
 import { act, fireEvent, render, waitFor, within } from '@testing-library/react-native'
 import { FetchMock } from 'jest-fetch-mock/types'
 import MockDate from 'mockdate'
 import React from 'react'
-import * as Keychain from 'react-native-keychain'
 import SmsRetriever from 'react-native-sms-retriever'
 import { Provider } from 'react-redux'
 import { showError } from 'src/alert/actions'
 import { ErrorMessages } from 'src/app/ErrorMessages'
-import { navigate } from 'src/navigator/NavigationService'
+import { navigate, popToScreen } from 'src/navigator/NavigationService'
 import { Screens } from 'src/navigator/Screens'
+import { goToNextOnboardingScreen } from 'src/onboarding/steps'
+import { sleep } from 'src/utils/sleep'
 import VerificationCodeInputScreen from 'src/verify/VerificationCodeInputScreen'
 import networkConfig from 'src/web3/networkConfig'
 import MockedNavigator from 'test/MockedNavigator'
-import { createMockStore } from 'test/utils'
+import { createMockStore, getMockStackScreenProps } from 'test/utils'
+import { mockOnboardingProps } from 'test/values'
+
+const mockOnboardingPropsSelector = jest.fn(() => mockOnboardingProps)
+jest.mock('src/onboarding/steps', () => ({
+  goToNextOnboardingScreen: jest.fn(),
+  onboardingPropsSelector: () => mockOnboardingPropsSelector(),
+}))
 
 const mockFetch = fetch as FetchMock
 
@@ -23,11 +30,8 @@ mockedKeychain.getGenericPassword.mockResolvedValue({
   username: 'some username',
   password: 'someSignedMessage',
   service: 'some service',
-  storage: 'some string',
+  storage: Keychain.STORAGE_TYPE.RSA,
 })
-
-const mockedDEK = jest.mocked(DEK)
-mockedDEK.compressedPubKey = jest.fn().mockReturnValue('somePublicKey')
 
 const mockedSmsRetriever = jest.mocked(SmsRetriever)
 
@@ -35,21 +39,25 @@ const e164Number = '+31619123456'
 const store = createMockStore({
   web3: {
     account: '0xabc',
-    dataEncryptionKey: 'someDEK',
   },
   app: {
     inviterAddress: '0xabc',
   },
 })
 
-const renderComponent = () =>
+const renderComponent = ({
+  hasOnboarded = false,
+}: {
+  hasOnboarded?: boolean
+} = {}) =>
   render(
     <Provider store={store}>
       <MockedNavigator
         component={VerificationCodeInputScreen}
         params={{
-          countryCode: '+31',
+          countryCallingCode: '+31',
           e164Number,
+          hasOnboarded,
         }}
       />
     </Provider>
@@ -82,9 +90,9 @@ describe('VerificationCodeInputScreen', () => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        authorization: 'Valora 0xabc:someSignedMessage',
+        authorization: `${networkConfig.authHeaderIssuer} 0xabc:someSignedMessage`,
       },
-      body: '{"phoneNumber":"+31619123456","clientPlatform":"android","clientVersion":"0.0.1","clientBundleId":"org.celo.mobile.debug","publicDataEncryptionKey":"somePublicKey","inviterAddress":"0xabc"}',
+      body: '{"phoneNumber":"+31619123456","clientPlatform":"android","clientVersion":"0.0.1","clientBundleId":"org.celo.mobile.debug","inviterAddress":"0xabc"}',
     })
   })
 
@@ -98,7 +106,7 @@ describe('VerificationCodeInputScreen', () => {
     )
   })
 
-  it('verifies the sms code', async () => {
+  it('verifies the sms code and navigates to next onboarding screen', async () => {
     mockFetch.mockResponseOnce(JSON.stringify({ data: { verificationId: 'someId' } }), {
       status: 200,
     })
@@ -117,7 +125,7 @@ describe('VerificationCodeInputScreen', () => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        authorization: 'Valora 0xabc:someSignedMessage',
+        authorization: `${networkConfig.authHeaderIssuer} 0xabc:someSignedMessage`,
       },
       body: '{"phoneNumber":"+31619123456","verificationId":"someId","smsCode":"123456","clientPlatform":"android","clientVersion":"0.0.1"}',
     })
@@ -126,7 +134,99 @@ describe('VerificationCodeInputScreen', () => {
     await act(() => {
       jest.runOnlyPendingTimers()
     })
-    expect(navigate).toHaveBeenCalledWith(Screens.OnboardingSuccessScreen)
+    expect(goToNextOnboardingScreen).toHaveBeenCalledWith({
+      firstScreenInCurrentStep: Screens.VerificationStartScreen,
+      onboardingProps: mockOnboardingProps,
+    })
+    expect(navigate).not.toHaveBeenCalled()
+    expect(popToScreen).not.toHaveBeenCalled()
+  })
+
+  it('verifies the sms code and navigates to home if not in onboarding and no previous routes found', async () => {
+    mockFetch.mockResponseOnce(JSON.stringify({ data: { verificationId: 'someId' } }), {
+      status: 200,
+    })
+    mockFetch.mockResponseOnce(JSON.stringify({ message: 'OK' }), {
+      status: 200,
+    })
+
+    const { getByTestId } = renderComponent({ hasOnboarded: true })
+
+    await act(() => {
+      fireEvent.changeText(getByTestId('PhoneVerificationCode'), '123456')
+    })
+
+    await waitFor(() => expect(mockFetch).toHaveBeenCalledTimes(2))
+    expect(mockFetch).toHaveBeenNthCalledWith(2, `${networkConfig.verifySmsCodeUrl}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        authorization: `${networkConfig.authHeaderIssuer} 0xabc:someSignedMessage`,
+      },
+      body: '{"phoneNumber":"+31619123456","verificationId":"someId","smsCode":"123456","clientPlatform":"android","clientVersion":"0.0.1"}',
+    })
+    expect(getByTestId('PhoneVerificationCode/CheckIcon')).toBeTruthy()
+
+    await act(() => {
+      jest.runOnlyPendingTimers()
+    })
+    expect(navigate).toHaveBeenCalledWith(Screens.TabHome)
+    expect(popToScreen).not.toHaveBeenCalled()
+    expect(goToNextOnboardingScreen).not.toHaveBeenCalled()
+  })
+
+  it('verifies the sms code and navigates to previous route if not in onboarding', async () => {
+    mockFetch.mockResponseOnce(JSON.stringify({ data: { verificationId: 'someId' } }), {
+      status: 200,
+    })
+    mockFetch.mockResponseOnce(JSON.stringify({ message: 'OK' }), {
+      status: 200,
+    })
+
+    const screenProps = getMockStackScreenProps(Screens.VerificationCodeInputScreen, {
+      countryCallingCode: '+31',
+      e164Number,
+      hasOnboarded: true,
+    })
+
+    jest.mocked(screenProps.navigation).getState = jest.fn(
+      () =>
+        ({
+          routes: [
+            { name: Screens.ProfileSubmenu },
+            { name: Screens.VerificationStartScreen },
+            { name: Screens.VerificationCodeInputScreen },
+          ],
+        }) as any
+    )
+
+    const { getByTestId } = render(
+      <Provider store={store}>
+        <VerificationCodeInputScreen {...screenProps} />
+      </Provider>
+    )
+
+    await act(() => {
+      fireEvent.changeText(getByTestId('PhoneVerificationCode'), '123456')
+    })
+
+    await waitFor(() => expect(mockFetch).toHaveBeenCalledTimes(2))
+    expect(mockFetch).toHaveBeenNthCalledWith(2, `${networkConfig.verifySmsCodeUrl}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        authorization: `${networkConfig.authHeaderIssuer} 0xabc:someSignedMessage`,
+      },
+      body: '{"phoneNumber":"+31619123456","verificationId":"someId","smsCode":"123456","clientPlatform":"android","clientVersion":"0.0.1"}',
+    })
+    expect(getByTestId('PhoneVerificationCode/CheckIcon')).toBeTruthy()
+
+    await act(() => {
+      jest.runOnlyPendingTimers()
+    })
+    expect(popToScreen).toHaveBeenCalledWith(Screens.ProfileSubmenu)
+    expect(navigate).not.toHaveBeenCalled()
+    expect(goToNextOnboardingScreen).not.toHaveBeenCalled()
   })
 
   it('waits for the verificationId to be captured before verifying sms', async () => {
@@ -156,7 +256,7 @@ describe('VerificationCodeInputScreen', () => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        authorization: 'Valora 0xabc:someSignedMessage',
+        authorization: `${networkConfig.authHeaderIssuer} 0xabc:someSignedMessage`,
       },
       body: '{"phoneNumber":"+31619123456","verificationId":"someId","smsCode":"123456","clientPlatform":"android","clientVersion":"0.0.1"}',
     })
@@ -181,7 +281,7 @@ describe('VerificationCodeInputScreen', () => {
 
     await act(() => {
       // Simulate the SMS code being received
-      smsListener({ message: 'Your verification code for Valora is: 123456 5yaJvJcZt2P' })
+      smsListener({ message: 'Your verification code for App is: 123456 5yaJvJcZt2P' })
     })
 
     await waitFor(() => expect(mockFetch).toHaveBeenCalledTimes(2))
@@ -189,7 +289,7 @@ describe('VerificationCodeInputScreen', () => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        authorization: 'Valora 0xabc:someSignedMessage',
+        authorization: `${networkConfig.authHeaderIssuer} 0xabc:someSignedMessage`,
       },
       body: '{"phoneNumber":"+31619123456","verificationId":"someId","smsCode":"123456","clientPlatform":"android","clientVersion":"0.0.1"}',
     })
@@ -199,7 +299,10 @@ describe('VerificationCodeInputScreen', () => {
     await act(() => {
       jest.runOnlyPendingTimers()
     })
-    expect(navigate).toHaveBeenCalledWith(Screens.OnboardingSuccessScreen)
+    expect(goToNextOnboardingScreen).toHaveBeenCalledWith({
+      firstScreenInCurrentStep: Screens.VerificationStartScreen,
+      onboardingProps: mockOnboardingProps,
+    })
   })
 
   it('handles when phone number already verified', async () => {
@@ -214,15 +317,20 @@ describe('VerificationCodeInputScreen', () => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        authorization: 'Valora 0xabc:someSignedMessage',
+        authorization: `${networkConfig.authHeaderIssuer} 0xabc:someSignedMessage`,
       },
-      body: '{"phoneNumber":"+31619123456","clientPlatform":"android","clientVersion":"0.0.1","clientBundleId":"org.celo.mobile.debug","publicDataEncryptionKey":"somePublicKey","inviterAddress":"0xabc"}',
+      body: '{"phoneNumber":"+31619123456","clientPlatform":"android","clientVersion":"0.0.1","clientBundleId":"org.celo.mobile.debug","inviterAddress":"0xabc"}',
     })
 
     await act(() => {
       jest.runOnlyPendingTimers()
     })
-    await waitFor(() => expect(navigate).toHaveBeenCalledWith(Screens.OnboardingSuccessScreen))
+    await waitFor(() =>
+      expect(goToNextOnboardingScreen).toHaveBeenCalledWith({
+        firstScreenInCurrentStep: Screens.VerificationStartScreen,
+        onboardingProps: mockOnboardingProps,
+      })
+    )
   })
 
   it('shows error in verifying sms code', async () => {
@@ -242,7 +350,7 @@ describe('VerificationCodeInputScreen', () => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        authorization: 'Valora 0xabc:someSignedMessage',
+        authorization: `${networkConfig.authHeaderIssuer} 0xabc:someSignedMessage`,
       },
       body: '{"phoneNumber":"+31619123456","verificationId":"someId","smsCode":"123456","clientPlatform":"android","clientVersion":"0.0.1"}',
     })
@@ -278,9 +386,9 @@ describe('VerificationCodeInputScreen', () => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        authorization: 'Valora 0xabc:someSignedMessage',
+        authorization: `${networkConfig.authHeaderIssuer} 0xabc:someSignedMessage`,
       },
-      body: `{"phoneNumber":"${e164Number}","clientPlatform":"android","clientVersion":"0.0.1","clientBundleId":"org.celo.mobile.debug","publicDataEncryptionKey":"somePublicKey","inviterAddress":"0xabc"}`,
+      body: `{"phoneNumber":"${e164Number}","clientPlatform":"android","clientVersion":"0.0.1","clientBundleId":"org.celo.mobile.debug","inviterAddress":"0xabc"}`,
     })
     expect(getByTestId('PhoneVerificationResendSmsBtn')).toBeDisabled()
   })

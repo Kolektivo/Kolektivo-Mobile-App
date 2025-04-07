@@ -4,15 +4,16 @@ import { fireEvent, render } from '@testing-library/react-native'
 import _ from 'lodash'
 import * as React from 'react'
 import { Provider } from 'react-redux'
+import AppAnalytics from 'src/analytics/AppAnalytics'
 import { FiatExchangeEvents } from 'src/analytics/Events'
-import ValoraAnalytics from 'src/analytics/ValoraAnalytics'
 import FiatConnectQuote from 'src/fiatExchanges/quotes/FiatConnectQuote'
-import { CICOFlow } from 'src/fiatExchanges/utils'
+import { CICOFlow } from 'src/fiatExchanges/types'
 import { FiatConnectQuoteSuccess } from 'src/fiatconnect'
 import { SendingFiatAccountStatus, submitFiatAccount } from 'src/fiatconnect/slice'
-import { FiatAccountSchemaCountryOverrides } from 'src/fiatconnect/types'
 import { navigateBack, navigateHome } from 'src/navigator/NavigationService'
 import { Screens } from 'src/navigator/Screens'
+import { getDynamicConfigParams } from 'src/statsig'
+import { StatsigDynamicConfigs } from 'src/statsig/types'
 import { createMockStore, getMockStackScreenProps } from 'test/utils'
 import {
   mockCusdTokenId,
@@ -23,7 +24,7 @@ import {
 import FiatDetailsScreen from './FiatDetailsScreen'
 
 jest.mock('src/alert/actions')
-jest.mock('src/analytics/ValoraAnalytics')
+jest.mock('src/analytics/AppAnalytics')
 
 jest.mock('src/utils/Logger', () => ({
   __esModule: true,
@@ -49,18 +50,9 @@ jest.mock('@fiatconnect/fiatconnect-sdk', () => ({
   })),
 }))
 jest.mock('src/fiatconnect/clients')
+jest.mock('src/statsig')
 
-const schemaCountryOverrides: FiatAccountSchemaCountryOverrides = {
-  NG: {
-    [FiatAccountSchema.AccountNumber]: {
-      accountNumber: {
-        regex: '^[0-9]{10}$',
-        errorString: 'errorMessageDigitLength',
-      },
-    },
-  },
-}
-const store = createMockStore({ fiatConnect: { schemaCountryOverrides } })
+const store = createMockStore()
 const quoteWithAllowedValues = new FiatConnectQuote({
   quote: mockFiatConnectQuotes[1] as FiatConnectQuoteSuccess,
   fiatAccountType: FiatAccountType.BankAccount,
@@ -103,6 +95,23 @@ const mmQuote = new FiatConnectQuote({
 })
 
 describe('FiatDetailsScreen', () => {
+  jest.mocked(getDynamicConfigParams).mockImplementation(({ configName }) => {
+    if (configName === StatsigDynamicConfigs.FIAT_CONNECT_CONFIG) {
+      return {
+        fiatAccountSchemaCountryOverrides: {
+          NG: {
+            [FiatAccountSchema.AccountNumber]: {
+              accountNumber: {
+                regex: '^[0-9]{10}$',
+                errorString: 'errorMessageDigitLength',
+              },
+            },
+          },
+        },
+      }
+    }
+    return {} as any
+  })
   beforeEach(() => {
     mockResult = Result.ok({
       fiatAccountId: '1234',
@@ -182,14 +191,11 @@ describe('FiatDetailsScreen', () => {
 
     fireEvent.press(getByText('cancel'))
     expect(navigateHome).toHaveBeenCalled()
-    expect(ValoraAnalytics.track).toHaveBeenCalledWith(
-      FiatExchangeEvents.cico_fiat_details_cancel,
-      {
-        flow: mockScreenPropsWithAllowedValues.route.params.flow,
-        provider: quoteWithAllowedValues.getProviderId(),
-        fiatAccountSchema: quoteWithAllowedValues.getFiatAccountSchema(),
-      }
-    )
+    expect(AppAnalytics.track).toHaveBeenCalledWith(FiatExchangeEvents.cico_fiat_details_cancel, {
+      flow: mockScreenPropsWithAllowedValues.route.params.flow,
+      provider: quoteWithAllowedValues.getProviderId(),
+      fiatAccountSchema: quoteWithAllowedValues.getFiatAccountSchema(),
+    })
   })
   it('back button navigates back and fires analytics event', () => {
     let headerLeft: React.ReactNode
@@ -208,7 +214,7 @@ describe('FiatDetailsScreen', () => {
     expect(getByTestId('backButton')).toBeTruthy()
     fireEvent.press(getByTestId('backButton'))
     expect(navigateBack).toHaveBeenCalledWith()
-    expect(ValoraAnalytics.track).toHaveBeenCalledWith(FiatExchangeEvents.cico_fiat_details_back, {
+    expect(AppAnalytics.track).toHaveBeenCalledWith(FiatExchangeEvents.cico_fiat_details_back, {
       flow: mockScreenPropsWithAllowedValues.route.params.flow,
       provider: quoteWithAllowedValues.getProviderId(),
       fiatAccountSchema: quoteWithAllowedValues.getFiatAccountSchema(),
@@ -272,7 +278,6 @@ describe('FiatDetailsScreen', () => {
   })
   it('shows country specific validation error using overrides', () => {
     const mockStore = createMockStore({
-      fiatConnect: { schemaCountryOverrides },
       networkInfo: { userLocationData: { countryCodeAlpha2: 'NG' } },
     })
     const { getByText, getByTestId, queryByTestId } = render(
@@ -324,10 +329,7 @@ describe('FiatDetailsScreen', () => {
   })
   it('shows spinner while fiat account is sending', () => {
     const mockStore = createMockStore({
-      fiatConnect: {
-        sendingFiatAccountStatus: SendingFiatAccountStatus.Sending,
-        schemaCountryOverrides,
-      },
+      fiatConnect: { sendingFiatAccountStatus: SendingFiatAccountStatus.Sending },
     })
     const { getByTestId } = render(
       <Provider store={mockStore}>
@@ -338,10 +340,7 @@ describe('FiatDetailsScreen', () => {
   })
   it('shows checkmark if fiat account and KYC have been approved', () => {
     const mockStore = createMockStore({
-      fiatConnect: {
-        sendingFiatAccountStatus: SendingFiatAccountStatus.KycApproved,
-        schemaCountryOverrides,
-      },
+      fiatConnect: { sendingFiatAccountStatus: SendingFiatAccountStatus.KycApproved },
     })
     const { getByTestId } = render(
       <Provider store={mockStore}>

@@ -4,7 +4,8 @@ import React from 'react'
 import { Provider } from 'react-redux'
 import { ReactTestInstance } from 'react-test-renderer'
 import { RootState } from 'src/redux/reducers'
-import { getFeatureGate } from 'src/statsig'
+import { getDynamicConfigParams, getFeatureGate } from 'src/statsig'
+import { StatsigFeatureGates } from 'src/statsig/types'
 import { QueryResponse } from 'src/transactions/feed/queryHelper'
 import TransactionFeed from 'src/transactions/feed/TransactionFeed'
 import {
@@ -18,17 +19,10 @@ import networkConfig from 'src/web3/networkConfig'
 import { createMockStore, RecursivePartial } from 'test/utils'
 import { mockApprovalTransaction, mockCusdAddress, mockCusdTokenId } from 'test/values'
 
-jest.mock('src/statsig', () => ({
-  getFeatureGate: jest.fn(),
-  getDynamicConfigParams: jest.fn(() => ({
-    showCico: ['celo-alfajores'],
-    showBalances: ['celo-alfajores'],
-    showTransfers: ['celo-alfajores'],
-    showApprovalTxsInHomefeed: ['celo-alfajores'],
-    jumpstartContracts: {
-      ['celo-alfajores']: { contractAddress: '0x7bf3fefe9881127553d23a8cd225a2c2442c438c' },
-    },
-  })),
+jest.mock('src/statsig')
+jest.mock('src/config', () => ({
+  ...jest.requireActual('src/config'),
+  ENABLED_NETWORK_IDS: ['celo-alfajores'],
 }))
 
 const mockTransaction = (
@@ -36,7 +30,6 @@ const mockTransaction = (
   status = TransactionStatus.Complete
 ): TokenTransaction => {
   return {
-    __typename: 'TokenTransferV3',
     networkId: NetworkId['celo-alfajores'],
     address: '0xd68360cce1f1ff696d898f58f03e0f1252f2ea33',
     amount: {
@@ -57,7 +50,6 @@ const mockTransaction = (
 const STAND_BY_TRANSACTION_SUBTITLE_KEY = 'confirmingTransaction'
 
 const MOCK_STANDBY_TRANSACTION: StandbyTransaction = {
-  __typename: 'TokenTransferV3',
   context: { id: 'test' },
   networkId: NetworkId['celo-alfajores'],
   type: TokenTransactionTypeV2.Sent,
@@ -67,9 +59,7 @@ const MOCK_STANDBY_TRANSACTION: StandbyTransaction = {
     tokenAddress: mockCusdAddress,
     tokenId: mockCusdTokenId,
   },
-  metadata: {
-    comment: '',
-  },
+  metadata: {},
   timestamp: 1542300000,
   address: '0xd68360cce1f1ff696d898f58f03e0f1252f2ea33',
 }
@@ -172,8 +162,12 @@ const MOCK_RESPONSE_FAILED_TRANSACTION: QueryResponse = {
 describe('TransactionFeed', () => {
   const mockFetch = fetch as FetchMock
   beforeEach(() => {
-    jest.useRealTimers()
     jest.clearAllMocks()
+    jest.mocked(getDynamicConfigParams).mockReturnValue({
+      jumpstartContracts: {
+        ['celo-alfajores']: { contractAddress: '0x7bf3fefe9881127553d23a8cd225a2c2442c438c' },
+      },
+    })
     mockFetch.resetMocks()
   })
 
@@ -275,22 +269,6 @@ describe('TransactionFeed', () => {
     expect(items.length).toBe(1)
   })
 
-  it('renders the loading indicator while it loads', async () => {
-    const { getByTestId, queryByTestId } = renderScreen({})
-    expect(getByTestId('NoActivity/loading')).toBeDefined()
-    expect(queryByTestId('NoActivity/error')).toBeNull()
-    expect(queryByTestId('TransactionList')).toBeNull()
-  })
-
-  it("renders an error screen if there's no cache and the query fails", async () => {
-    mockFetch.mockReject(new Error('Test error'))
-
-    const { getByTestId, queryByTestId } = renderScreen({})
-    await waitFor(() => getByTestId('NoActivity/error'))
-    expect(queryByTestId('NoActivity/loading')).toBeNull()
-    expect(queryByTestId('TransactionList')).toBeNull()
-  })
-
   it('renders the cache if there is one', async () => {
     mockFetch.mockReject(new Error('Test error'))
 
@@ -330,7 +308,7 @@ describe('TransactionFeed', () => {
   })
 
   it('renders correct status for a complete transaction', async () => {
-    mockFetch.mockResponse(JSON.stringify(MOCK_RESPONSE))
+    mockFetch.mockResponse(JSON.stringify(MOCK_RESPONSE_NO_NEXT_PAGE))
 
     const { getByTestId, getByText } = renderScreen({})
 
@@ -437,20 +415,29 @@ describe('TransactionFeed', () => {
     expect(getNumTransactionItems(tree.getByTestId('TransactionList'))).toBe(11)
   })
 
-  it('renders GetStarted if SHOW_GET_STARTED is enabled and transaction feed is empty', async () => {
-    jest.mocked(getFeatureGate).mockReturnValue(true)
-    const { getByTestId } = renderScreen({
-      app: {
-        superchargeApy: 12,
-      },
+  it('renders GetStarted if transaction feed is empty', async () => {
+    jest.mocked(getFeatureGate).mockImplementation((gate) => {
+      if (gate === StatsigFeatureGates.SHOW_UK_COMPLIANT_VARIANT) {
+        return false
+      }
+      throw new Error('Unexpected gate')
     })
+
+    const { getByTestId } = renderScreen({})
     expect(getByTestId('GetStarted')).toBeDefined()
   })
 
-  it('renders NoActivity by default if transaction feed is empty', async () => {
-    jest.mocked(getFeatureGate).mockReturnValue(false)
+  it('renders NoActivity for UK compliance', () => {
+    jest.mocked(getFeatureGate).mockImplementation((gate) => {
+      if (gate === StatsigFeatureGates.SHOW_UK_COMPLIANT_VARIANT) {
+        return true
+      }
+      throw new Error('Unexpected gate')
+    })
+
     const { getByTestId, getByText } = renderScreen({})
-    expect(getByTestId('NoActivity/loading')).toBeDefined()
-    expect(getByText('noTransactionActivity')).toBeTruthy()
+
+    expect(getByTestId('NoActivity/loading')).toBeTruthy()
+    expect(getByText('transactionFeed.noTransactions')).toBeTruthy()
   })
 })

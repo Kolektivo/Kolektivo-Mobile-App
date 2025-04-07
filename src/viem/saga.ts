@@ -1,8 +1,15 @@
+import {
+  isRegistrationTransaction,
+  sendPreparedRegistrationTransaction,
+} from 'src/divviProtocol/registerReferral'
+import { navigate } from 'src/navigator/NavigationService'
+import { Screens } from 'src/navigator/Screens'
+import { CANCELLED_PIN_INPUT } from 'src/pincode/authentication'
 import { tokensByIdSelector } from 'src/tokens/selectors'
-import { BaseStandbyTransaction, addStandbyTransaction } from 'src/transactions/actions'
+import { BaseStandbyTransaction, addStandbyTransaction } from 'src/transactions/slice'
 import { NetworkId } from 'src/transactions/types'
 import Logger from 'src/utils/Logger'
-import { getFeeCurrencyToken } from 'src/viem/prepareTransactions'
+import { TransactionRequest, getFeeCurrencyToken } from 'src/viem/prepareTransactions'
 import {
   SerializableTransactionRequest,
   getPreparedTransactions,
@@ -10,6 +17,7 @@ import {
 import { getViemWallet } from 'src/web3/contracts'
 import networkConfig from 'src/web3/networkConfig'
 import { getConnectedUnlockedAccount } from 'src/web3/saga'
+import { demoModeEnabledSelector } from 'src/web3/selectors'
 import { getNetworkFromNetworkId } from 'src/web3/utils'
 import { call, put, select } from 'typed-redux-saga'
 import { Hash } from 'viem'
@@ -27,9 +35,9 @@ const TAG = 'viem/saga'
  * being sent on
  * @param {number} createBaseStandbyTransactions - functions that create the
  * standby transactions, each element corresponding to the prepared transaction
- * of the matching index
+ * of the matching index. It can return null if no standby transaction is needed.
  * @param {boolean} isGasSubsidized - an optional boolean that indicates whether
- * gas is subsidized for the transaction, which means a valora rpc node will be
+ * gas is subsidized for the transaction, which means an internal rpc node will be
  * used instead of the default alchemy rpc node
  */
 export function* sendPreparedTransactions(
@@ -38,10 +46,26 @@ export function* sendPreparedTransactions(
   createBaseStandbyTransactions: ((
     transactionHash: string,
     feeCurrencyId?: string
-  ) => BaseStandbyTransaction)[],
+  ) => BaseStandbyTransaction | null)[],
   isGasSubsidized: boolean = false
 ) {
-  if (serializablePreparedTransactions.length !== createBaseStandbyTransactions.length) {
+  const demoModeEnabled = yield* select(demoModeEnabledSelector)
+  if (demoModeEnabled) {
+    navigate(Screens.DemoModeAuthBlock)
+    throw CANCELLED_PIN_INPUT
+  }
+
+  const preparedTransactions: TransactionRequest[] = []
+  let preparedRegistrationTransaction: TransactionRequest | null = null
+  getPreparedTransactions(serializablePreparedTransactions).forEach((tx) => {
+    if (isRegistrationTransaction(tx)) {
+      preparedRegistrationTransaction = tx
+    } else {
+      preparedTransactions.push(tx)
+    }
+  })
+
+  if (preparedTransactions.length !== createBaseStandbyTransactions.length) {
     throw new Error('Mismatch in number of prepared transactions and standby transaction creators')
   }
 
@@ -65,7 +89,18 @@ export function* sendPreparedTransactions(
     blockTag: 'pending',
   })
 
-  const preparedTransactions = getPreparedTransactions(serializablePreparedTransactions)
+  // if there is a registration transaction, send it first so that the
+  // subsequent transactions can have the referral attribution
+  if (preparedRegistrationTransaction) {
+    yield* call(
+      sendPreparedRegistrationTransaction,
+      preparedRegistrationTransaction,
+      networkId,
+      wallet,
+      nonce++
+    )
+  }
+
   const txHashes: Hash[] = []
   for (let i = 0; i < preparedTransactions.length; i++) {
     const preparedTransaction = preparedTransactions[i]
@@ -88,7 +123,10 @@ export function* sendPreparedTransactions(
     const tokensById = yield* select((state) => tokensByIdSelector(state, [networkId]))
     const feeCurrencyId = getFeeCurrencyToken([preparedTransaction], networkId, tokensById)?.tokenId
 
-    yield* put(addStandbyTransaction(createBaseStandbyTransaction(hash, feeCurrencyId)))
+    const standByTx = createBaseStandbyTransaction(hash, feeCurrencyId)
+    if (standByTx) {
+      yield* put(addStandbyTransaction(standByTx))
+    }
     txHashes.push(hash)
   }
 

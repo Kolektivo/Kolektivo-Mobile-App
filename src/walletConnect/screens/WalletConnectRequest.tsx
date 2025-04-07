@@ -1,4 +1,4 @@
-import { BottomSheetScreenProps } from '@th3rdwave/react-navigation-bottom-sheet'
+import { BottomSheetScreenProps } from '@interaxyz/react-navigation-bottom-sheet'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
 import { ActivityIndicator, StyleSheet, Text } from 'react-native'
@@ -7,7 +7,7 @@ import BottomSheetScrollView from 'src/components/BottomSheetScrollView'
 import { Screens } from 'src/navigator/Screens'
 import { StackParamList } from 'src/navigator/types'
 import colors from 'src/styles/colors'
-import fontStyles from 'src/styles/fonts'
+import { typeScale } from 'src/styles/fonts'
 import { Spacing } from 'src/styles/styles'
 import ActionRequest from 'src/walletConnect/screens/ActionRequest'
 import ConnectionTimedOut from 'src/walletConnect/screens/ConnectionTimedOut'
@@ -21,7 +21,6 @@ function WalletConnectRequest({ route: { params } }: Props) {
 
   return (
     <BottomSheetScrollView
-      isScreen
       containerStyle={
         params.type === WalletConnectRequestType.Loading ||
         params.type === WalletConnectRequestType.TimeOut
@@ -31,7 +30,7 @@ function WalletConnectRequest({ route: { params } }: Props) {
     >
       {params.type === WalletConnectRequestType.Loading && (
         <>
-          <ActivityIndicator color={colors.primary} />
+          <ActivityIndicator color={colors.loadingIndicator} />
           <Text style={styles.connecting}>
             {params.origin === WalletConnectPairingOrigin.Scan
               ? t('loadingFromScan')
@@ -55,8 +54,8 @@ const styles = StyleSheet.create({
     minHeight: 370,
   },
   connecting: {
-    ...fontStyles.label,
-    color: colors.gray4,
+    ...typeScale.labelSemiBoldSmall,
+    color: colors.contentSecondary,
     marginTop: Spacing.Thick24,
   },
 })

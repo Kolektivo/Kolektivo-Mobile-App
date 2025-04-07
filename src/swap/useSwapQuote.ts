@@ -1,8 +1,13 @@
 import BigNumber from 'bignumber.js'
 import { useAsyncCallback } from 'react-async-hook'
-import erc20 from 'src/abis/IERC20'
 import { useSelector } from 'src/redux/hooks'
-import { FetchQuoteResponse, Field, ParsedSwapAmount, SwapTransaction } from 'src/swap/types'
+import {
+  FetchQuoteResponse,
+  Field,
+  ParsedSwapAmount,
+  SwapTransaction,
+  SwapType,
+} from 'src/swap/types'
 import { feeCurrenciesSelector } from 'src/tokens/selectors'
 import { TokenBalance } from 'src/tokens/slice'
 import { NetworkId } from 'src/transactions/types'
@@ -15,7 +20,7 @@ import {
 } from 'src/viem/prepareTransactions'
 import networkConfig, { networkIdToNetwork } from 'src/web3/networkConfig'
 import { walletAddressSelector } from 'src/web3/selectors'
-import { Address, Hex, encodeFunctionData, zeroAddress } from 'viem'
+import { Address, Hex, encodeFunctionData, erc20Abi, zeroAddress } from 'viem'
 
 // Apply a multiplier for the decreased swap amount to account for the
 // varying gas fees of different swap providers (or even the same swap)
@@ -23,18 +28,33 @@ const DECREASED_SWAP_AMOUNT_GAS_FEE_MULTIPLIER = 1.2
 
 export const NO_QUOTE_ERROR_MESSAGE = 'No quote available'
 
-export interface QuoteResult {
+interface BaseQuoteResult {
+  swapType: SwapType
   toTokenId: string
   fromTokenId: string
   swapAmount: BigNumber
   price: string
-  appFeePercentageIncludedInPrice: string | undefined
   provider: string
   estimatedPriceImpact: string | null
-  allowanceTarget: string
   preparedTransactions: PreparedTransactionsResult
   receivedAt: number
+  allowanceTarget: string
+  appFeePercentageIncludedInPrice: string | undefined
+  sellAmount: string
 }
+
+interface SameChainQuoteResult extends BaseQuoteResult {
+  swapType: 'same-chain'
+}
+
+interface CrossChainQuoteResult extends BaseQuoteResult {
+  swapType: 'cross-chain'
+  estimatedDurationInSeconds: number
+  maxCrossChainFee: string
+  estimatedCrossChainFee: string
+}
+
+export type QuoteResult = SameChainQuoteResult | CrossChainQuoteResult
 
 async function createBaseSwapTransactions(
   fromToken: TokenBalance,
@@ -71,14 +91,14 @@ async function createBaseSwapTransactions(
       networkIdToNetwork[fromToken.networkId]
     ].readContract({
       address: fromToken.address as Address,
-      abi: erc20.abi,
+      abi: erc20Abi,
       functionName: 'allowance',
       args: [walletAddress as Address, allowanceTarget as Address],
     })
 
     if (approvedAllowanceForSpender < amountToApprove) {
       const data = encodeFunctionData({
-        abi: erc20.abi,
+        abi: erc20Abi,
         functionName: 'approve',
         args: [allowanceTarget as Address, amountToApprove],
       })
@@ -134,6 +154,7 @@ async function prepareSwapTransactions(
     baseTransactions,
     // We still want to prepare the transactions even if the user doesn't have enough balance
     throwOnSpendTokenAmountExceedsBalance: false,
+    origin: 'swap',
   })
 }
 
@@ -141,10 +162,14 @@ function useSwapQuote({
   networkId,
   slippagePercentage,
   enableAppFee,
+  onSuccess,
+  onError,
 }: {
   networkId: NetworkId
   slippagePercentage: string
   enableAppFee: boolean
+  onSuccess?(result: QuoteResult | null): void
+  onError?(error: Error): void
 }) {
   const walletAddress = useSelector(walletAddressSelector)
   const feeCurrencies = useSelector((state) => feeCurrenciesSelector(state, networkId))
@@ -162,7 +187,7 @@ function useSwapQuote({
         return null
       }
 
-      if (!swapAmount[updatedField].gt(0)) {
+      if (!swapAmount[updatedField]) {
         return null
       }
 
@@ -212,26 +237,40 @@ function useSwapQuote({
         feeCurrencies,
         walletAddress
       )
-      const quoteResult: QuoteResult = {
+
+      const baseQuoteResult: BaseQuoteResult = {
+        swapType: quote.unvalidatedSwapTransaction.swapType,
         toTokenId: toToken.tokenId,
         fromTokenId: fromToken.tokenId,
         swapAmount: swapAmount[updatedField],
         price,
-        appFeePercentageIncludedInPrice:
-          quote.unvalidatedSwapTransaction.appFeePercentageIncludedInPrice,
         provider: quote.details.swapProvider,
         estimatedPriceImpact,
-        allowanceTarget: quote.unvalidatedSwapTransaction.allowanceTarget,
         preparedTransactions,
         receivedAt: Date.now(),
+        appFeePercentageIncludedInPrice:
+          quote.unvalidatedSwapTransaction.appFeePercentageIncludedInPrice,
+        allowanceTarget: quote.unvalidatedSwapTransaction.allowanceTarget,
+        sellAmount: quote.unvalidatedSwapTransaction.sellAmount,
       }
 
-      return quoteResult
+      if (quote.unvalidatedSwapTransaction.swapType === 'cross-chain') {
+        return {
+          ...baseQuoteResult,
+          estimatedDurationInSeconds: quote.unvalidatedSwapTransaction.estimatedDuration,
+          maxCrossChainFee: quote.unvalidatedSwapTransaction.maxCrossChainFee,
+          estimatedCrossChainFee: quote.unvalidatedSwapTransaction.estimatedCrossChainFee,
+        }
+      } else {
+        return baseQuoteResult as SameChainQuoteResult
+      }
     },
     {
       // Keep last result when refreshing
       setLoading: (state) => ({ ...state, loading: true }),
+      onSuccess: (result) => onSuccess?.(result),
       onError: (error: Error) => {
+        onError?.(error)
         Logger.warn('SwapScreen@useSwapQuote', 'error from approve swap url', error)
       },
     }

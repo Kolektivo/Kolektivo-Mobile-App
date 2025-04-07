@@ -1,36 +1,22 @@
-import { fetchSentEscrowPayments } from 'src/escrow/actions'
+import { Actions as AccountActions } from 'src/account/actions'
+import { depositSuccess, withdrawSuccess } from 'src/earn/slice'
+import { createFiatConnectTransferCompleted } from 'src/fiatconnect/slice'
 import { notificationsChannel } from 'src/firebase/firebase'
-import {
-  Actions,
-  cleverTapInboxMessagesReceived,
-  refreshAllBalances,
-  setLoading,
-  updateNotifications,
-} from 'src/home/actions'
-import { CleverTapInboxMessage, cleverTapInboxMessagesChannel } from 'src/home/cleverTapInbox'
+import { Actions, setLoading, updateNotifications } from 'src/home/actions'
 import { IdToNotification } from 'src/home/reducers'
-import { fetchCurrentRate } from 'src/localCurrency/actions'
-import { shouldFetchCurrentRate } from 'src/localCurrency/selectors'
+import { depositTransactionSucceeded } from 'src/jumpstart/slice'
+import { fetchLocalCurrencyRateSaga } from 'src/localCurrency/saga'
+import { fetchPositionsSaga, fetchShortcutsSaga } from 'src/positions/saga'
 import { executeShortcutSuccess } from 'src/positions/slice'
 import { withTimeout } from 'src/redux/sagas-helpers'
-import { shouldUpdateBalance } from 'src/redux/selectors'
-import { fetchTokenBalances } from 'src/tokens/slice'
-import { Actions as TransactionActions } from 'src/transactions/actions'
+import { Actions as SendActions } from 'src/send/actions'
+import { swapSuccess } from 'src/swap/slice'
+import { fetchTokenBalancesSaga } from 'src/tokens/saga'
+import { updateFeedFirstPage, updateTransactions } from 'src/transactions/slice'
 import Logger from 'src/utils/Logger'
 import { safely } from 'src/utils/safely'
-import { getConnectedAccount } from 'src/web3/saga'
-import {
-  call,
-  cancel,
-  cancelled,
-  delay,
-  fork,
-  put,
-  select,
-  spawn,
-  take,
-  takeLeading,
-} from 'typed-redux-saga'
+import { Actions as Web3Actions } from 'src/web3/actions'
+import { all, call, cancelled, put, spawn, take, takeLeading } from 'typed-redux-saga'
 
 const REFRESH_TIMEOUT = 15000
 const TAG = 'home/saga'
@@ -47,44 +33,34 @@ export function withLoading<Fn extends (...args: any[]) => any>(fn: Fn, ...args:
   }
 }
 
-export function* refreshBalances() {
-  Logger.debug(TAG, 'Fetching all balances')
-  yield* call(getConnectedAccount)
-  yield* put(fetchTokenBalances({ showLoading: false }))
-  yield* put(fetchCurrentRate())
-  yield* put(fetchSentEscrowPayments())
-}
-
-export function* autoRefreshSaga() {
-  while (true) {
-    if (yield* select(shouldUpdateBalance)) {
-      yield* put(refreshAllBalances())
-    }
-    if (yield* select(shouldFetchCurrentRate)) {
-      yield* put(fetchCurrentRate())
-    }
-    yield* delay(10 * 1000) // sleep 10 seconds
-  }
-}
-
-export function* autoRefreshWatcher() {
-  while (yield* take(Actions.START_BALANCE_AUTOREFRESH)) {
-    // starts the task in the background
-    const autoRefresh = yield* fork(autoRefreshSaga)
-    yield* take(Actions.STOP_BALANCE_AUTOREFRESH)
-    yield* cancel(autoRefresh)
-  }
+export function* refreshAllBalances() {
+  yield* all([
+    call(fetchTokenBalancesSaga),
+    call(fetchLocalCurrencyRateSaga),
+    call(fetchPositionsSaga),
+    call(fetchShortcutsSaga),
+  ])
 }
 
 export function* watchRefreshBalances() {
-  yield* call(refreshBalances)
   yield* takeLeading(
-    [Actions.REFRESH_BALANCES, executeShortcutSuccess.type],
-    safely(withLoading(withTimeout(REFRESH_TIMEOUT, refreshBalances)))
-  )
-  yield* takeLeading(
-    TransactionActions.UPDATE_TRANSACTIONS,
-    safely(withTimeout(REFRESH_TIMEOUT, refreshBalances))
+    [
+      updateTransactions.type, // emitted on recieve new transactions from graphql endpoint
+      updateFeedFirstPage.type, // emitted on recieve new transactions from zerion endpoint
+      Actions.REFRESH_BALANCES, // emitted on manual pull to refresh and app foregrounded
+      AccountActions.INITIALIZE_ACCOUNT_SUCCESS, // emitted after onboarding
+      // the below actions are emitted after a successful transaction that is
+      // initiated from the wallet.
+      executeShortcutSuccess.type,
+      depositSuccess.type,
+      withdrawSuccess.type,
+      SendActions.SEND_PAYMENT_SUCCESS,
+      createFiatConnectTransferCompleted.type,
+      depositTransactionSucceeded.type,
+      swapSuccess.type,
+      Web3Actions.DEMO_MODE_TOGGLED,
+    ],
+    safely(withLoading(withTimeout(REFRESH_TIMEOUT, refreshAllBalances)))
   )
 }
 
@@ -107,30 +83,7 @@ function* fetchNotifications() {
   }
 }
 
-function* fetchCleverTapInboxMessages() {
-  const channel = yield* call(cleverTapInboxMessagesChannel)
-
-  try {
-    while (true) {
-      const notifications = (yield* take(channel)) as CleverTapInboxMessage[]
-      yield* put(cleverTapInboxMessagesReceived(notifications))
-    }
-  } catch (error) {
-    Logger.error(
-      `${TAG}@updateCleverTapInboxMessages`,
-      'Failed to update CleverTap Inbox messages',
-      error
-    )
-  } finally {
-    if (yield* cancelled()) {
-      channel.close()
-    }
-  }
-}
-
 export function* homeSaga() {
   yield* spawn(watchRefreshBalances)
-  yield* spawn(autoRefreshWatcher)
   yield* spawn(fetchNotifications)
-  yield* spawn(fetchCleverTapInboxMessages)
 }

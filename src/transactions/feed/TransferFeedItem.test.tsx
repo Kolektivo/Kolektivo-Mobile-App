@@ -3,9 +3,9 @@ import { render } from '@testing-library/react-native'
 import React from 'react'
 import { Provider } from 'react-redux'
 import { ReactTestInstance } from 'react-test-renderer'
-import { formatShortenedAddress } from 'src/components/ShortenedAddress'
+import { formatShortenedAddress } from 'src/account/utils'
 import FiatConnectQuote from 'src/fiatExchanges/quotes/FiatConnectQuote'
-import { CICOFlow } from 'src/fiatExchanges/utils'
+import { CICOFlow } from 'src/fiatExchanges/types'
 import { FiatConnectQuoteSuccess } from 'src/fiatconnect'
 import { LocalCurrencyCode } from 'src/localCurrency/consts'
 import { RootState } from 'src/redux/reducers'
@@ -88,7 +88,7 @@ describe('TransferFeedItem', () => {
     status = TransactionStatus.Complete,
     address = MOCK_ADDRESS,
   }: {
-    type?: TokenTransactionTypeV2
+    type?: TokenTransactionTypeV2.Sent | TokenTransactionTypeV2.Received
     amount?: TokenAmount
     metadata?: TokenTransferMetadata
     fees?: Fee[]
@@ -104,7 +104,6 @@ describe('TransferFeedItem', () => {
       <Provider store={store}>
         <TransferFeedItem
           transfer={{
-            __typename: 'TokenTransferV3',
             networkId: NetworkId['celo-alfajores'],
             type,
             status,
@@ -242,26 +241,6 @@ describe('TransferFeedItem', () => {
     })
   })
 
-  it('renders correctly for transfers to recent contact', async () => {
-    const { getByTestId } = renderScreen({
-      storeOverrides: {
-        identity: { addressToE164Number: { [MOCK_ADDRESS]: MOCK_E164_NUMBER } },
-        transactions: {
-          recentTxRecipientsCache: {
-            [MOCK_E164_NUMBER]: MOCK_CONTACT,
-          },
-        },
-      },
-    })
-    expectDisplay({
-      getByTestId,
-      expectedTitleSections: ['feedItemSentTitle', mockName],
-      expectedSubtitleSections: ['feedItemSentInfo', 'noComment'],
-      expectedAmount: '+₱13.30',
-      expectedTokenAmount: '10.00 cUSD',
-    })
-  })
-
   it('renders correctly for transfers to phone number', async () => {
     const { getByTestId } = renderScreen({
       storeOverrides: {
@@ -277,11 +256,11 @@ describe('TransferFeedItem', () => {
     })
   })
 
-  it('renders correctly for transfers to Valora recipient', async () => {
+  it('renders correctly for transfers to App recipient', async () => {
     const { getByTestId } = renderScreen({
       storeOverrides: {
         recipients: {
-          valoraRecipientCache: {
+          appRecipientCache: {
             [MOCK_ADDRESS]: { address: MOCK_ADDRESS, name: mockName },
           },
         },
@@ -290,7 +269,7 @@ describe('TransferFeedItem', () => {
     expectDisplay({
       getByTestId,
       expectedTitleSections: ['feedItemSentTitle', mockName],
-      expectedSubtitleSections: ['feedItemSentInfo', 'noComment'],
+      expectedSubtitleSections: ['feedItemSentInfo'],
       expectedAmount: '+₱13.30',
       expectedTokenAmount: '10.00 cUSD',
     })
@@ -307,24 +286,6 @@ describe('TransferFeedItem', () => {
       getByTestId,
       expectedTitleSections: ['feedItemSentTitle', 'a title'],
       expectedSubtitleSections: ['feedItemSentInfo', 'a subtitle'],
-      expectedAmount: '+₱13.30',
-      expectedTokenAmount: '10.00 cUSD',
-    })
-  })
-
-  // TODO: Also test with encrypted comment.
-  it('renders correctly for transfers with comments', async () => {
-    const { getByTestId } = renderScreen({
-      metadata: {
-        title: 'a title',
-        subtitle: 'a subtitle',
-        comment: 'Hello World',
-      },
-    })
-    expectDisplay({
-      getByTestId,
-      expectedTitleSections: ['feedItemSentTitle', 'a title'],
-      expectedSubtitleSections: ['feedItemSentInfo', 'Hello World'],
       expectedAmount: '+₱13.30',
       expectedTokenAmount: '10.00 cUSD',
     })
@@ -412,47 +373,6 @@ describe('TransferFeedItem', () => {
     })
   })
 
-  it('renders correctly for sent invites', async () => {
-    const contactPhoneNumber = '+14155553695'
-    const { getByTestId } = renderScreen({
-      type: TokenTransactionTypeV2.InviteSent,
-      storeOverrides: {
-        transactions: {
-          inviteTransactions: {
-            [MOCK_TX_HASH]: {
-              recipientIdentifier:
-                '0xd2c326a68d07b060be189bbe05a9abee8f10573a23cd448122d2efd122b4e05a',
-              paymentId: '0x72a8898b40bD3CAf7e63664b61dBBa2E98fC123D',
-            },
-          },
-        },
-        recipients: {
-          phoneRecipientCache: {
-            [contactPhoneNumber]: {
-              e164PhoneNumber: contactPhoneNumber,
-              name: 'Kate Bell',
-            },
-          },
-        },
-        identity: {
-          e164NumberToSalt: {
-            [contactPhoneNumber]: 'hmq1hMZ08BYOg',
-          },
-        },
-      },
-    })
-
-    expectDisplay({
-      getByTestId,
-      expectedTitleSections: [
-        'feedItemEscrowSentTitle, {"context":null,"nameOrNumber":"Kate Bell"}',
-      ],
-      expectedSubtitleSections: ['feedItemEscrowSentInfo, {"context":"noComment"}'],
-      expectedAmount: '+₱13.30',
-      expectedTokenAmount: '10.00 cUSD',
-    })
-  })
-
   it('renders correctly for transfers from a known provider', async () => {
     const { getByTestId } = renderScreen({
       type: TokenTransactionTypeV2.Received,
@@ -471,25 +391,6 @@ describe('TransferFeedItem', () => {
       getByTestId,
       expectedTitleSections: ['feedItemReceivedTitle', 'Simplex'],
       expectedSubtitleSections: ['tokenDeposit', 'cUSD'],
-      expectedAmount: '+₱13.30',
-      expectedTokenAmount: '10.00 cUSD',
-    })
-  })
-
-  // TODO: Also test with encrypted comment.
-  it('renders correctly for transfers received with comments', async () => {
-    const { getByTestId } = renderScreen({
-      type: TokenTransactionTypeV2.Received,
-      metadata: {
-        title: 'a title',
-        subtitle: 'a subtitle',
-        comment: 'Hello World',
-      },
-    })
-    expectDisplay({
-      getByTestId,
-      expectedTitleSections: ['feedItemReceivedTitle', 'a title'],
-      expectedSubtitleSections: ['feedItemReceivedInfo', 'Hello World'],
       expectedAmount: '+₱13.30',
       expectedTokenAmount: '10.00 cUSD',
     })

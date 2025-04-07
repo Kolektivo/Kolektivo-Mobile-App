@@ -1,22 +1,21 @@
 import { NativeStackNavigationOptions } from '@react-navigation/native-stack'
 import * as React from 'react'
 import { Trans } from 'react-i18next'
-import { Dimensions, PixelRatio, Platform, Pressable, StyleSheet, Text, View } from 'react-native'
-import AccountCircleButton from 'src/components/AccountCircleButton'
+import { Dimensions, PixelRatio, StyleSheet, Text, View } from 'react-native'
 import BackButton from 'src/components/BackButton'
 import CancelButton from 'src/components/CancelButton'
 import CloseButton from 'src/components/CloseButton'
 import CurrencyDisplay from 'src/components/CurrencyDisplay'
 import LegacyTokenDisplay from 'src/components/LegacyTokenDisplay'
 import QrScanButton from 'src/components/QrScanButton'
+import SettingsGearButton from 'src/components/SettingsGearButton'
 import TokenDisplay from 'src/components/TokenDisplay'
 import NotificationBell from 'src/home/NotificationBell'
 import i18n from 'src/i18n'
-import BackChevronCentered from 'src/icons/BackChevronCentered'
-import { navigateBack } from 'src/navigator/NavigationService'
-import { TopBarIconButton } from 'src/navigator/TopBarButton'
+import Logo from 'src/images/Logo'
+import DemoModeChipIndicator from 'src/navigator/DemoModeChipIndicator'
 import DisconnectBanner from 'src/shared/DisconnectBanner'
-import colors from 'src/styles/colors'
+import Colors from 'src/styles/colors'
 import { typeScale } from 'src/styles/fonts'
 import { Spacing } from 'src/styles/styles'
 import { useTokenInfoByCurrency } from 'src/tokens/hooks'
@@ -32,50 +31,13 @@ export const noHeaderGestureDisabled: NativeStackNavigationOptions = {
   gestureEnabled: false,
 }
 
-const android_ripple = {
-  color: colors.gray2,
-  foreground: true,
-  borderless: true,
-}
-
-export const headerTransparentWithBack: NativeStackNavigationOptions = {
-  animation: 'slide_from_right',
-  animationDuration: 130,
-  headerShown: true,
-  headerTransparent: true,
-  // Needed for Android to truly make the header transparent
-  headerStyle: {
-    backgroundColor: 'transparent',
-  },
-  headerLeft: ({ canGoBack }) =>
-    canGoBack ? (
-      Platform.OS === 'ios' ? (
-        <TopBarIconButton
-          onPress={navigateBack}
-          icon={<BackChevronCentered />}
-          style={styles.floatingButton}
-          testID="FloatingBackButton"
-        />
-      ) : (
-        <Pressable
-          android_ripple={android_ripple}
-          onPress={navigateBack}
-          style={styles.floatingButton}
-          testID="FloatingBackButton"
-        >
-          <BackChevronCentered />
-        </Pressable>
-      )
-    ) : null,
-}
-
 export const styles = StyleSheet.create({
   headerTitle: {
     ...typeScale.labelSemiBoldMedium,
     maxWidth: Dimensions.get('window').width * 0.65,
   },
   headerSubTitle: {
-    color: colors.gray4,
+    color: Colors.contentSecondary,
   },
   header: {
     alignItems: 'center',
@@ -84,23 +46,6 @@ export const styles = StyleSheet.create({
   screenHeader: {
     textAlign: 'center',
     fontWeight: undefined,
-  },
-  floatingButton: {
-    alignItems: 'center',
-    backgroundColor: colors.white,
-    borderColor: colors.black,
-    borderRadius: 100,
-    elevation: 4,
-    height: 32,
-    justifyContent: 'center',
-    shadowColor: colors.black,
-    shadowOffset: {
-      height: 2,
-      width: 0,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    width: 32,
   },
   topElementsContainer: {
     flexDirection: 'row',
@@ -124,7 +69,7 @@ export const nuxNavigationOptions: NativeStackNavigationOptions = {
 export const nuxNavigationOptionsOnboarding: NativeStackNavigationOptions = {
   ...nuxNavigationOptions,
   headerLeft: ({ canGoBack }) =>
-    canGoBack ? <BackButton color={colors.onboardingBrownLight} /> : <View />,
+    canGoBack ? <BackButton color={Colors.navigationTopPrimary} /> : <View />,
 }
 
 export const nuxNavigationOptionsNoBackButton: NativeStackNavigationOptions = {
@@ -133,7 +78,7 @@ export const nuxNavigationOptionsNoBackButton: NativeStackNavigationOptions = {
 }
 
 export const emptyHeader: NativeStackNavigationOptions = {
-  headerTitle: ' ',
+  headerTitle: '',
   headerShown: true,
   // Prevents double back button on Android
   headerBackVisible: false,
@@ -141,7 +86,7 @@ export const emptyHeader: NativeStackNavigationOptions = {
   headerShadowVisible: false,
   headerTitleAlign: 'center',
   headerStyle: {
-    backgroundColor: colors.white,
+    backgroundColor: Colors.backgroundPrimary,
   },
 }
 
@@ -172,14 +117,14 @@ export const headerWithBackEditButtons: NativeStackNavigationOptions = {
 
 interface Props {
   title: string | React.ReactNode
-  token: Currency
+  token?: Currency
   switchTitleAndSubtitle?: boolean
   displayCrypto?: boolean
 }
 
 export function HeaderTitleWithBalance({
   title,
-  token,
+  token = Currency.Dollar,
   switchTitleAndSubtitle = false,
   displayCrypto = false,
 }: Props) {
@@ -250,7 +195,7 @@ export function HeaderTitleWithSubtitle({
   subTitle,
   testID,
 }: {
-  title: string | React.ReactNode
+  title?: string | React.ReactNode
   subTitle?: string | React.ReactNode
   testID?: string
 }) {
@@ -286,13 +231,17 @@ export const tabHeader: NativeStackNavigationOptions = {
     return (
       <View style={[styles.topElementsContainer, { marginRight: Spacing.Tiny4 }]}>
         <QrScanButton testID="WalletHome/QRScanButton" />
+        <SettingsGearButton testID="WalletHome/SettingsGearButton" />
         <NotificationBell testID="WalletHome/NotificationBell" />
       </View>
     )
   },
   headerLeft: () => (
-    <View style={[styles.topElementsContainer, { marginLeft: Spacing.Tiny4 }]}>
-      <AccountCircleButton testID="WalletHome/AccountCircle" />
+    <View
+      style={[styles.topElementsContainer, { marginLeft: Spacing.Regular16, gap: Spacing.Small12 }]}
+    >
+      <Logo color={Colors.navigationTopPrimary} size={22} />
+      <DemoModeChipIndicator />
     </View>
   ),
 }
@@ -306,8 +255,4 @@ export const headerWithCloseButton: NativeStackNavigationOptions = {
       <CloseButton testID="CloseButton" />
     </View>
   ),
-}
-
-HeaderTitleWithBalance.defaultProps = {
-  token: Currency.Dollar,
 }

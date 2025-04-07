@@ -4,10 +4,10 @@ import org.apache.tools.ant.taskdefs.condition.Os
 
 buildscript {
     ext {
-        buildToolsVersion = "33.0.0"
+        buildToolsVersion = "34.0.0"
         minSdkVersion = 24
-        compileSdkVersion = 33
-        targetSdkVersion = 33
+        compileSdkVersion = 34
+        targetSdkVersion = 34
         supportLibVersion = "31.0.0"
         kotlinVersion = "1.9.20"
         // We use NDK 23 which has both M1 support and is the side-by-side NDK version from AGP.
@@ -18,9 +18,9 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:7.3.1'
+        classpath "com.android.tools.build:gradle"
         classpath "com.facebook.react:react-native-gradle-plugin"
-        classpath 'com.google.gms:google-services:4.3.15'
+        classpath "com.google.gms:google-services:4.3.15"
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion"
         classpath "org.jetbrains.kotlin:kotlin-android-extensions:$kotlinVersion"
 
@@ -42,6 +42,15 @@ allprojects {
         }
         maven {
             url 'https://sdk.withpersona.com/android/releases'
+        }
+    }
+
+    // Needed to avoid the following error
+    // `Inconsistent JVM-target compatibility detected for tasks 'compileDebugJavaWithJavac' (11) and 'compileDebugKotlin' (17).`
+    // For devs running Java > 11
+    tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile.class) {
+        kotlinOptions {
+            jvmTarget = "11"
         }
     }
 }

@@ -10,16 +10,12 @@ import { StoredTokenBalance, TokenBalance } from 'src/tokens/slice'
 import { getLatestSchema } from 'test/schemas'
 import {
   mockAddressToE164Number,
+  mockAppRecipientCache,
   mockContractAddress,
   mockE164NumberToAddress,
   mockNavigation,
   mockPhoneRecipientCache,
-  mockValoraRecipientCache,
 } from 'test/values'
-
-// Sleep for a number of ms
-export const sleep = (time: number) =>
-  new Promise((resolve) => setTimeout(() => resolve(true), time))
 
 // ContractKit test utils
 export const mockContractKitBalance = jest.fn(() => new BigNumber(10))
@@ -98,13 +94,16 @@ export function getMockStoreData(overrides: RecursivePartial<RootState> = {}): R
     recipients: {
       ...defaultSchema.recipients,
       phoneRecipientCache: mockPhoneRecipientCache,
-      valoraRecipientCache: mockValoraRecipientCache,
+      appRecipientCache: mockAppRecipientCache,
     },
   }
   const mockStoreData: any = {
     ...defaultSchema,
     ...contactMappingData,
     ...recipientData,
+
+    // ignore api reducers that are managed by RTK-Query library itself
+    transactionFeedV2Api: undefined,
   }
 
   // Apply overrides. Note: only merges one level deep

@@ -13,18 +13,6 @@ export interface E164NumberToAddressType {
   [e164PhoneNumber: string]: string[] | null | undefined // null means unverified
 }
 
-export interface E164NumberToSaltType {
-  [e164PhoneNumber: string]: string | null // null means unverified
-}
-
-export interface IdentifierToE164NumberType {
-  [identifier: string]: string | null // null means no number
-}
-
-export interface AddressToDataEncryptionKeyType {
-  [address: string]: string | null // null means no DEK registered
-}
-
 export interface AddressInfoToDisplay {
   name: string
   imageUrl: string | null
@@ -33,13 +21,9 @@ export interface AddressInfoToDisplay {
 }
 
 // This mapping is just for storing provider info from firebase
-// other known recipient should be stored in the valoraRecipientCache
+// other known recipient should be stored in the appRecipientCache
 export interface AddressToDisplayNameType {
   [address: string]: AddressInfoToDisplay | undefined
-}
-
-export interface WalletToAccountAddressType {
-  [address: string]: string
 }
 
 export interface ImportContactProgress {
@@ -71,15 +55,9 @@ export interface AddressToVerificationStatus {
 }
 
 interface State {
-  hasSeenVerificationNux: boolean
   addressToE164Number: AddressToE164NumberType
   // Note: Do not access values in this directly, use the `getAddressFromPhoneNumber` helper in contactMapping
   e164NumberToAddress: E164NumberToAddressType
-  // This contains a mapping of walletAddress (EOA) to accountAddress (either MTW or EOA)
-  // and is needed to query for a user's DEK while knowing only their walletAddress
-  walletToAccountAddress: WalletToAccountAddressType
-  e164NumberToSalt: E164NumberToSaltType
-  addressToDataEncryptionKey: AddressToDataEncryptionKeyType
   // Doesn't contain all known addresses, use only as a fallback.
   addressToDisplayName: AddressToDisplayNameType
   // Has the user already been asked for contacts permission
@@ -94,12 +72,8 @@ interface State {
 }
 
 const initialState: State = {
-  hasSeenVerificationNux: false,
   addressToE164Number: {},
   e164NumberToAddress: {},
-  walletToAccountAddress: {},
-  e164NumberToSalt: {},
-  addressToDataEncryptionKey: {},
   addressToDisplayName: {},
   askedContactsPermission: false,
   importContactsProgress: {
@@ -132,11 +106,6 @@ export const reducer = (
         },
       }
     }
-    case Actions.SET_SEEN_VERIFICATION_NUX:
-      return {
-        ...state,
-        hasSeenVerificationNux: action.status,
-      }
     case Actions.UPDATE_E164_PHONE_NUMBER_ADDRESSES:
       return {
         ...state,
@@ -145,19 +114,6 @@ export const reducer = (
           ...state.e164NumberToAddress,
           ...action.e164NumberToAddress,
         },
-      }
-    case Actions.UPDATE_WALLET_TO_ACCOUNT_ADDRESS:
-      return {
-        ...state,
-        walletToAccountAddress: {
-          ...state.walletToAccountAddress,
-          ...action.walletToAccountAddress,
-        },
-      }
-    case Actions.UPDATE_E164_PHONE_NUMBER_SALT:
-      return {
-        ...state,
-        e164NumberToSalt: { ...state.e164NumberToSalt, ...action.e164NumberToSalt },
       }
     case Actions.UPDATE_KNOWN_ADDRESSES:
       return {
@@ -191,11 +147,6 @@ export const reducer = (
           ...state.importContactsProgress,
           status: success ? ImportContactsStatus.Done : ImportContactsStatus.Failed,
         },
-      }
-    case Actions.DENY_IMPORT_CONTACTS:
-      return {
-        ...state,
-        askedContactsPermission: true,
       }
     case Actions.VALIDATE_RECIPIENT_ADDRESS_SUCCESS:
       return {
@@ -251,21 +202,11 @@ export const reducer = (
           { isFetchingAddresses: false, lastFetchSuccessful: action.lastFetchSuccessful }
         ),
       }
-    case Actions.UPDATE_ADDRESS_DEK_MAP:
-      return {
-        ...state,
-        addressToDataEncryptionKey: dotProp.set(
-          state.addressToDataEncryptionKey,
-          action.address,
-          action.dataEncryptionKey
-        ),
-      }
     case AccountActions.CLEAR_STORED_ACCOUNT:
       return {
         ...initialState,
         addressToE164Number: state.addressToE164Number,
         e164NumberToAddress: state.e164NumberToAddress,
-        e164NumberToSalt: state.e164NumberToSalt,
         secureSendPhoneNumberMapping: state.secureSendPhoneNumberMapping,
       }
     case Actions.FETCH_ADDRESS_VERIFICATION_STATUS:

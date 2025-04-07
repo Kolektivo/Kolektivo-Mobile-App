@@ -1,6 +1,7 @@
-import { SAMPLE_BACKUP_KEY } from '../utils/consts'
+import { E2E_WALLET_MNEMONIC } from 'react-native-dotenv'
 import { reloadReactNative } from '../utils/retries'
-import { enterPinUiIfNecessary, navigateToSettings, waitForElementId } from '../utils/utils'
+import { enterPinUiIfNecessary, waitForElementById } from '../utils/utils'
+import { navigateToSecurity } from '../utils/navigation'
 
 export default ResetAccount = () => {
   beforeEach(async () => {
@@ -15,16 +16,8 @@ export default ResetAccount = () => {
     //   return
     // }
 
-    // Go to Settings
-    await navigateToSettings()
+    await navigateToSecurity()
 
-    // Scroll to bottom and start the reset process.
-    // await waitForElementId('SettingsScrollView')
-    // The sleep is here to avoid flakiness on the scroll. Without it the scroll to bottom intermittently fails
-    // with a ~"Can't find view" error even though the SettingsScrollView is visible.
-    // This probably doesn't reduce flakiness 100%, but in practice it reduces it significantly.
-    // await sleep(2000)
-    // await element(by.id('SettingsScrollView')).scrollTo('bottom')
     try {
       await waitFor(element(by.text('ResetAccount')))
         .toBeVisible()
@@ -39,8 +32,8 @@ export default ResetAccount = () => {
     // Go through the quiz.
     await element(by.id('backupKeySavedSwitch')).longPress()
     await element(by.id('backupKeyContinue')).tap()
-    const mnemonic = SAMPLE_BACKUP_KEY.split(' ')
-    await waitForElementId(`backupQuiz/${mnemonic[0]}`)
+    const mnemonic = E2E_WALLET_MNEMONIC.split(' ')
+    await waitForElementById(`backupQuiz/${mnemonic[0]}`)
     for (const word of mnemonic) {
       await element(by.id(`backupQuiz/${word}`)).tap()
     }
@@ -50,7 +43,7 @@ export default ResetAccount = () => {
     // TODO: Figure out a way to confirm and test that the app goes to the onboarding
     // screen on next open.
     // await element(by.id('ConfirmAccountRemovalModal/PrimaryAction')).tap()
-    await waitForElementId('ConfirmAccountRemovalModal/PrimaryAction')
+    await waitForElementById('ConfirmAccountRemovalModal/PrimaryAction')
     await expect(element(by.id('ConfirmAccountRemovalModal/PrimaryAction'))).toBeVisible()
   })
 }

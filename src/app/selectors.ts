@@ -1,6 +1,4 @@
-import { createSelector } from 'reselect'
 import { RootState } from 'src/redux/reducers'
-import { walletAddressSelector } from 'src/web3/selectors'
 
 export const getRequirePinOnAppOpen = (state: RootState) => {
   return state.app.requirePinOnAppOpen
@@ -26,71 +24,17 @@ export const sessionIdSelector = (state: RootState) => {
   return state.app.sessionId
 }
 
-export const numberVerifiedDecentrallySelector = (state: RootState) => state.app.numberVerified
-
-// this can be called with undefined state in the tests
-export const walletConnectEnabledSelector = (state?: RootState) => ({
-  v2: state?.app.walletConnectV2Enabled ?? false,
-})
-
-export const superchargeTokenConfigByTokenSelector = (state: RootState) =>
-  state.app.superchargeTokenConfigByToken
-
-export const rewardsEnabledSelector = createSelector(
-  [walletAddressSelector, superchargeTokenConfigByTokenSelector],
-  (address, superchargeTokenConfigByToken) =>
-    !!address && Object.keys(superchargeTokenConfigByToken).length > 0
-)
-
-export const logPhoneNumberTypeEnabledSelector = (state: RootState) =>
-  state.app.logPhoneNumberTypeEnabled
-
 export const googleMobileServicesAvailableSelector = (state: RootState) =>
   state.app.googleMobileServicesAvailable
 
 export const huaweiMobileServicesAvailableSelector = (state: RootState) =>
   state.app.huaweiMobileServicesAvailable
 
-export const sentryTracesSampleRateSelector = (state: RootState) => state.app.sentryTracesSampleRate
-
-export const sentryNetworkErrorsSelector = (state: RootState) => state.app.sentryNetworkErrors
-
 export const supportedBiometryTypeSelector = (state: RootState) => state.app.supportedBiometryType
-
-export const fiatConnectCashInEnabledSelector = (state: RootState) =>
-  state.app.fiatConnectCashInEnabled
-export const fiatConnectCashOutEnabledSelector = (state: RootState) =>
-  state.app.fiatConnectCashOutEnabled
-
-export const coinbasePayEnabledSelector = (state: RootState) => state.app.coinbasePayEnabled
-
-export const maxSwapSlippagePercentageSelector = (state: RootState) =>
-  state.app.maxSwapSlippagePercentage
 
 export const phoneNumberVerifiedSelector = (state: RootState) => state.app.phoneNumberVerified
 
-export const phoneVerificationStatusSelector = createSelector(
-  numberVerifiedDecentrallySelector,
-  phoneNumberVerifiedSelector,
-  (numberVerifiedDecentralized, numberVerifiedCentralized) => {
-    return {
-      numberVerifiedDecentralized,
-      numberVerifiedCentralized,
-    }
-  }
-)
-
-export const shouldRunVerificationMigrationSelector = createSelector(
-  [phoneNumberVerifiedSelector, numberVerifiedDecentrallySelector],
-  (numberVerifiedCentrally, numberVerifiedDecentrally) =>
-    !numberVerifiedCentrally && numberVerifiedDecentrally
-)
-
 export const inviterAddressSelector = (state: RootState) => state.app.inviterAddress
-
-export const networkTimeoutSecondsSelector = (state: RootState) => state.app.networkTimeoutSeconds
-
-export const celoNewsConfigSelector = (state: RootState) => state.app.celoNews
 
 export const hapticFeedbackEnabledSelector = (state: RootState) => state.app.hapticFeedbackEnabled
 
@@ -108,6 +52,6 @@ export const showNotificationSpotlightSelector = (state: RootState) =>
 
 export const hideWalletBalancesSelector = (state: RootState) => state.app.hideBalances
 
-export const multichainBetaStatusSelector = (state: RootState) => state.app.multichainBetaStatus
-
 export const pendingDeepLinkSelector = (state: RootState) => state.app.pendingDeepLinks[0] ?? null
+
+export const divviRegistrationsSelector = (state: RootState) => state.app.divviRegistrations

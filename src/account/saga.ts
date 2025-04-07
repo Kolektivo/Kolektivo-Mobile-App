@@ -1,7 +1,3 @@
-import { ContractKit } from '@celo/contractkit'
-import { parsePhoneNumber } from '@celo/phone-utils'
-import { EIP712TypedData } from '@celo/utils/lib/sign-typed-data-utils'
-import { UnlockableWallet } from '@celo/wallet-base'
 import firebase from '@react-native-firebase/app'
 import { Platform } from 'react-native'
 import DeviceInfo from 'react-native-device-info'
@@ -14,15 +10,14 @@ import {
 import { choseToRestoreAccountSelector } from 'src/account/selectors'
 import { updateAccountRegistration } from 'src/account/updateAccountRegistration'
 import { showError } from 'src/alert/actions'
+import AppAnalytics from 'src/analytics/AppAnalytics'
 import { OnboardingEvents } from 'src/analytics/Events'
-import ValoraAnalytics from 'src/analytics/ValoraAnalytics'
 import { ErrorMessages } from 'src/app/ErrorMessages'
 import { phoneNumberVerificationCompleted } from 'src/app/actions'
 import { inviterAddressSelector } from 'src/app/selectors'
 import { clearStoredMnemonic } from 'src/backup/utils'
 import { FIREBASE_ENABLED } from 'src/config'
 import { firebaseSignOut } from 'src/firebase/firebase'
-import { refreshAllBalances } from 'src/home/actions'
 import { currentLanguageSelector } from 'src/i18n/selectors'
 import { navigate, navigateClearingStack, navigateHome } from 'src/navigator/NavigationService'
 import { Screens } from 'src/navigator/Screens'
@@ -41,10 +36,10 @@ import { patchUpdateStatsigUser } from 'src/statsig'
 import { restartApp } from 'src/utils/AppRestart'
 import Logger from 'src/utils/Logger'
 import { ensureError } from 'src/utils/ensureError'
+import { parsePhoneNumber } from 'src/utils/phoneNumbers'
 import { safely } from 'src/utils/safely'
-import { clearStoredAccounts } from 'src/web3/KeychainLock'
-import { getContractKit, getWallet } from 'src/web3/contracts'
-import { registerAccountDek } from 'src/web3/dataEncryptionKey'
+import { clearStoredAccounts } from 'src/web3/KeychainAccounts'
+import { getKeychainAccounts } from 'src/web3/contracts'
 import networkConfig from 'src/web3/networkConfig'
 import { getOrCreateAccount, getWalletAddress, unlockAccount } from 'src/web3/saga'
 import { walletAddressSelector } from 'src/web3/selectors'
@@ -53,21 +48,19 @@ const TAG = 'account/saga'
 
 export const SENTINEL_MIGRATE_COMMENT = '__CELO_MIGRATE_TX__'
 
-function* clearStoredAccountSaga({ account, onlyReduxState }: ClearStoredAccountAction) {
+function* clearStoredAccountSaga({ account }: ClearStoredAccountAction) {
   try {
-    if (!onlyReduxState) {
-      yield* call(removeAccountLocally, account)
-      yield* call(clearStoredMnemonic)
-      yield* call(ValoraAnalytics.reset)
-      yield* call(clearStoredAccounts)
+    yield* call(removeAccountLocally, account)
+    yield* call(clearStoredMnemonic)
+    yield* call(AppAnalytics.reset)
+    yield* call(clearStoredAccounts)
 
-      // Ignore error if it was caused by Firebase.
-      try {
-        yield* call(firebaseSignOut, firebase.app())
-      } catch (error) {
-        if (FIREBASE_ENABLED) {
-          Logger.error(TAG + '@clearStoredAccount', 'Failed to sign out from Firebase', error)
-        }
+    // Ignore error if it was caused by Firebase.
+    try {
+      yield* call(firebaseSignOut, firebase.app())
+    } catch (error) {
+      if (FIREBASE_ENABLED) {
+        Logger.error(TAG + '@clearStoredAccount', 'Failed to sign out from Firebase', error)
       }
     }
 
@@ -82,10 +75,9 @@ function* clearStoredAccountSaga({ account, onlyReduxState }: ClearStoredAccount
 export function* initializeAccountSaga() {
   Logger.debug(TAG + '@initializeAccountSaga', 'Creating account')
   try {
-    ValoraAnalytics.track(OnboardingEvents.initialize_account_start)
+    AppAnalytics.track(OnboardingEvents.initialize_account_start)
     yield* call(getOrCreateAccount)
     yield* call(generateSignedMessage)
-    yield* put(refreshAllBalances())
 
     const choseToRestoreAccount = yield* select(choseToRestoreAccountSelector)
     if (choseToRestoreAccount) {
@@ -95,13 +87,13 @@ export function* initializeAccountSaga() {
     Logger.debug(TAG + '@initializeAccountSaga', 'Account creation success')
     yield* put(initializeAccountSuccess())
     const inviterAddress = yield* select(inviterAddressSelector)
-    ValoraAnalytics.track(OnboardingEvents.initialize_account_complete, {
+    AppAnalytics.track(OnboardingEvents.initialize_account_complete, {
       inviterAddress,
     })
   } catch (err) {
     const error = ensureError(err)
     Logger.error(TAG, 'Failed to initialize account', error)
-    ValoraAnalytics.track(OnboardingEvents.initialize_account_error, { error: error.message })
+    AppAnalytics.track(OnboardingEvents.initialize_account_error, { error: error.message })
     navigateClearingStack(Screens.AccounSetupFailureScreen)
   }
 }
@@ -120,7 +112,7 @@ function* handlePreviouslyVerifiedPhoneNumber() {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-        authorization: `Valora ${address}:${signedMessage}`,
+        authorization: `${networkConfig.authHeaderIssuer} ${address}:${signedMessage}`,
       },
     })
 
@@ -155,35 +147,23 @@ function* handlePreviouslyVerifiedPhoneNumber() {
 
 export function* generateSignedMessage() {
   try {
-    const wallet: UnlockableWallet = yield* call(getWallet)
+    const keychainAccounts = yield* call(getKeychainAccounts)
     const address = yield* select(walletAddressSelector)
     if (!address) {
       throw new Error('No address found')
     }
-    yield* call(unlockAccount, address)
 
-    const kit: ContractKit = yield* call(getContractKit)
-    const chainId = yield* call([kit.connection, 'chainId'])
-    const payload: EIP712TypedData = {
-      types: {
-        EIP712Domain: [
-          { name: 'name', type: 'string' },
-          { name: 'version', type: 'string' },
-          { name: 'chainId', type: 'uint256' },
-        ],
-        Message: [{ name: 'content', type: 'string' }],
-      },
-      domain: {
-        name: 'Valora',
-        version: '1',
-        chainId,
-      },
-      message: {
-        content: 'valora auth message',
-      },
-      primaryType: 'Message',
+    yield* call(unlockAccount, address)
+    const viemAccount = yield* call([keychainAccounts, 'getViemAccount'], address)
+    if (!viemAccount) {
+      // This should never happen
+      throw new Error('Viem account not found')
     }
-    const signedTypedMessage = yield* call([wallet, 'signTypedData'], address, payload)
+
+    const signedTypedMessage = yield* call(
+      [viemAccount, 'signTypedData'],
+      networkConfig.setRegistrationPropertiesAuth
+    )
 
     yield* call(storeSignedMessage, signedTypedMessage)
     yield* put(saveSignedMessage())
@@ -273,6 +253,5 @@ export function* accountSaga() {
   yield* spawn(watchUpdateStatsigAndNavigate)
   yield* spawn(watchClearStoredAccount)
   yield* spawn(watchInitializeAccount)
-  yield* spawn(registerAccountDek)
   yield* spawn(watchSignedMessage)
 }

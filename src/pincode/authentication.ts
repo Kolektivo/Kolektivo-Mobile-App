@@ -5,15 +5,12 @@
  * The password is a combination of the two. It is used for unlocking the account in the keychain
  */
 
-import { isValidAddress, normalizeAddress } from '@celo/utils/lib/address'
-import { sleep } from '@celo/utils/lib/async'
-import { sha256 } from 'ethereumjs-util'
-import * as Keychain from 'react-native-keychain'
-import { generateSecureRandom } from 'react-native-securerandom'
+import * as Keychain from '@divvi/react-native-keychain'
+import crypto from 'crypto'
 import { PincodeType } from 'src/account/reducer'
 import { pincodeTypeSelector } from 'src/account/selectors'
+import AppAnalytics from 'src/analytics/AppAnalytics'
 import { AuthenticationEvents, OnboardingEvents } from 'src/analytics/Events'
-import ValoraAnalytics from 'src/analytics/ValoraAnalytics'
 import { ErrorMessages } from 'src/app/ErrorMessages'
 import { getStoredMnemonic, storeMnemonic } from 'src/backup/utils'
 import i18n from 'src/i18n'
@@ -40,12 +37,13 @@ import {
   storeItem,
 } from 'src/storage/keychain'
 import Logger from 'src/utils/Logger'
+import { isValidAddress, normalizeAddress } from 'src/utils/address'
 import { ensureError } from 'src/utils/ensureError'
+import { sleep } from 'src/utils/sleep'
 import { UNLOCK_DURATION } from 'src/web3/consts'
-import { getWalletAsync } from 'src/web3/contracts'
+import { getKeychainAccounts } from 'src/web3/contracts'
 import { call, select } from 'typed-redux-saga'
-
-const PIN_BLOCKLIST = require('src/pincode/pin-blocklist-hibpv7-top-25k-with-keyboard-translations.json')
+import { sha256 } from 'viem'
 
 const TAG = 'pincode/authentication'
 
@@ -61,63 +59,8 @@ export const PIN_LENGTH = 6
 // Pepper and pin not currently generalized to be per account
 // Using this value in the caches
 export const DEFAULT_CACHE_ACCOUNT = 'default'
-export const DEK = 'DEK'
 export const CANCELLED_PIN_INPUT = 'CANCELLED_PIN_INPUT'
 export const BIOMETRY_VERIFICATION_DELAY = 800
-
-/**
- * Pin blocklist that loads from the bundle resources a pre-configured list and allows it to be
- * searched to determine if a given PIN should be allowed.
- *
- * @remarks Blocklist format is a sorted list of blocked 6-digit PINs, each encoded as their
- * big-endian numeric representation, truncated to 3-bytes. When bundled as a resource, this binary
- * structure is base64 encoded and formatted as JSON string literal.
- */
-export class PinBlocklist {
-  private readonly buffer: Buffer
-
-  constructor() {
-    this.buffer = Buffer.from(PIN_BLOCKLIST, 'base64')
-  }
-
-  public size(): number {
-    return Math.floor(this.buffer.length / 3)
-  }
-
-  public contains(pin: string): boolean {
-    // Parse the provided 6-digit PIN into an integer in the range [1000000, 0].
-    const target = parseInt(pin)
-    if (isNaN(target) || target > 1e6 || target < 0 || target % 1 !== 0) {
-      throw new Error('failed to parse integer from blocklist search PIN')
-    }
-
-    // Recursively defined binary search in the sorted blocklist.
-    const search = (blocklist: Buffer, target: number): boolean => {
-      if (blocklist.length === 0) {
-        return false
-      }
-
-      const blocklistSize = Math.floor(blocklist.length / 3)
-      const middle = Math.floor(blocklistSize / 2)
-      const pivot = Buffer.concat([
-        Buffer.from([0]),
-        blocklist.slice(middle * 3, (middle + 1) * 3),
-      ]).readUInt32BE(0)
-
-      if (target === pivot) {
-        return true
-      }
-
-      if (target < pivot) {
-        return search(blocklist.slice(0, middle * 3), target)
-      } else {
-        return search(blocklist.slice((middle + 1) * 3), target)
-      }
-    }
-
-    return search(this.buffer, target)
-  }
-}
 
 const DEPRECATED_PIN_BLOCKLIST = [
   '000000',
@@ -143,8 +86,8 @@ export async function retrieveOrGeneratePepper(account = DEFAULT_CACHE_ACCOUNT) 
     let storedPepper = await retrieveStoredItem(STORAGE_KEYS.PEPPER)
     if (!storedPepper) {
       Logger.debug(TAG, 'No stored pepper, generating new pepper and storing it to the keychain')
-      const randomBytes = await generateSecureRandom(PEPPER_LENGTH)
-      const pepper = Buffer.from(randomBytes).toString('hex')
+      const randomBytes = crypto.randomBytes(PEPPER_LENGTH)
+      const pepper = randomBytes.toString('hex')
       await storeItem({ key: STORAGE_KEYS.PEPPER, value: pepper })
       storedPepper = pepper
     }
@@ -164,9 +107,14 @@ async function getPasswordHashForPin(pin: string) {
   return getPasswordHash(password)
 }
 
-function getPasswordHash(password: string) {
-  return sha256(Buffer.from(password, 'hex')).toString('hex')
+// TODO: this existing implementation implies password is in hex (no '0x' prefix)
+// but we should lift that restriction as it's too easy to misuse
+function getPasswordHash(password: string): string {
+  return sha256(Buffer.from(password, 'hex')).slice(2)
 }
+
+// for testing
+export const _getPasswordHash = getPasswordHash
 
 export function passwordHashStorageKey(account: string) {
   if (!isValidAddress(account)) {
@@ -187,7 +135,6 @@ function storePinWithBiometry(pin: string) {
     options: {
       accessControl: Keychain.ACCESS_CONTROL.BIOMETRY_CURRENT_SET,
       accessible: Keychain.ACCESSIBLE.WHEN_UNLOCKED_THIS_DEVICE_ONLY,
-      authenticationType: Keychain.AUTHENTICATION_TYPE.BIOMETRICS,
       securityLevel: Keychain.SECURITY_LEVEL.SECURE_SOFTWARE,
     },
   })
@@ -255,9 +202,9 @@ export async function getPassword(
       return password
     }
 
-    ValoraAnalytics.track(AuthenticationEvents.get_pincode_start)
+    AppAnalytics.track(AuthenticationEvents.get_pincode_start)
     const pin = await getPincode(withVerification)
-    ValoraAnalytics.track(AuthenticationEvents.get_pincode_complete)
+    AppAnalytics.track(AuthenticationEvents.get_pincode_complete)
     password = await getPasswordForPin(pin)
 
     if (storeHash) {
@@ -285,7 +232,7 @@ export function* getPasswordSaga(account: string, withVerification?: boolean, st
 
   if (pincodeType === PincodeType.Unset) {
     Logger.debug(TAG + '@getPincode', 'Pin has never been set')
-    ValoraAnalytics.track(OnboardingEvents.pin_never_set)
+    AppAnalytics.track(OnboardingEvents.pin_never_set)
     throw Error('Pin has never been set')
   }
 
@@ -319,7 +266,7 @@ export async function setPincodeWithBiometry() {
 
 export async function getPincodeWithBiometry() {
   try {
-    ValoraAnalytics.track(AuthenticationEvents.get_pincode_with_biometry_start)
+    AppAnalytics.track(AuthenticationEvents.get_pincode_with_biometry_start)
     const retrievedPin = await retrieveStoredItem(STORAGE_KEYS.PIN, {
       // only displayed on Android - would be displayed on iOS too if we allow
       // device pincode fallback
@@ -328,7 +275,7 @@ export async function getPincodeWithBiometry() {
       },
     })
     if (retrievedPin) {
-      ValoraAnalytics.track(AuthenticationEvents.get_pincode_with_biometry_complete)
+      AppAnalytics.track(AuthenticationEvents.get_pincode_with_biometry_complete)
       setCachedPin(DEFAULT_CACHE_ACCOUNT, retrievedPin)
       // allow native biometry verification animation to run fully
       await sleep(BIOMETRY_VERIFICATION_DELAY)
@@ -336,7 +283,7 @@ export async function getPincodeWithBiometry() {
     }
     throw new Error('Failed to retrieve pin with biometry, recieved null value')
   } catch (error) {
-    ValoraAnalytics.track(AuthenticationEvents.get_pincode_with_biometry_error)
+    AppAnalytics.track(AuthenticationEvents.get_pincode_with_biometry_error)
     Logger.warn(TAG, 'Failed to retrieve pin with biometry', error)
     throw error
   }
@@ -421,10 +368,10 @@ export async function checkPin(pin: string, account: string) {
 
 export async function updatePin(account: string, oldPin: string, newPin: string) {
   try {
-    const wallet = await getWalletAsync()
+    const accounts = await getKeychainAccounts()
     const oldPassword = await getPasswordForPin(oldPin)
     const newPassword = await getPasswordForPin(newPin)
-    const updated = await wallet.updateAccount(account, oldPassword, newPassword)
+    const updated = await accounts.updatePassphrase(account, oldPassword, newPassword)
     if (updated) {
       clearPasswordCaches()
       setCachedPin(DEFAULT_CACHE_ACCOUNT, newPin)
@@ -454,8 +401,8 @@ export async function ensureCorrectPassword(
   currentAccount: string
 ): Promise<boolean> {
   try {
-    const wallet = await getWalletAsync()
-    const result = await wallet.unlockAccount(currentAccount, password, UNLOCK_DURATION)
+    const accounts = await getKeychainAccounts()
+    const result = await accounts.unlock(currentAccount, password, UNLOCK_DURATION)
     return result
   } catch (error) {
     Logger.error(TAG, 'Error attempting to unlock wallet', error, true)

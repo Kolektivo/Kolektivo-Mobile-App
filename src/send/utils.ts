@@ -1,5 +1,4 @@
 import { SendOrigin } from 'src/analytics/types'
-import { MAX_ENCRYPTED_COMMENT_LENGTH_APPROX } from 'src/config'
 import { LocalCurrencyCode } from 'src/localCurrency/consts'
 import {
   convertDollarsToLocalAmount,
@@ -12,24 +11,29 @@ import { navigate } from 'src/navigator/NavigationService'
 import { Screens } from 'src/navigator/Screens'
 import { UriData, uriDataFromUrl } from 'src/qrcode/schema'
 import { AddressRecipient, Recipient, RecipientType } from 'src/recipients/recipient'
-import { updateValoraRecipientCache } from 'src/recipients/reducer'
+import { updateAppRecipientCache } from 'src/recipients/reducer'
 import { TransactionDataInput } from 'src/send/types'
 import { tokensListSelector } from 'src/tokens/selectors'
 import { TokenBalance } from 'src/tokens/slice'
-import { convertLocalToTokenAmount, getSupportedNetworkIdsForSend } from 'src/tokens/utils'
+import { convertLocalToTokenAmount } from 'src/tokens/utils'
 import { Currency } from 'src/utils/currencies'
 import Logger from 'src/utils/Logger'
+import { getSupportedNetworkIds } from 'src/web3/utils'
 import { call, put, select } from 'typed-redux-saga'
-
-export const COMMENT_PLACEHOLDER_FOR_FEE_ESTIMATE = ' '.repeat(MAX_ENCRYPTED_COMMENT_LENGTH_APPROX)
 
 const TAG = 'send/utils'
 
-export function* handleSendPaymentData(
-  data: UriData,
-  isFromScan: boolean,
+export function* handleSendPaymentData({
+  data,
+  isFromScan,
+  cachedRecipient,
+  defaultTokenIdOverride,
+}: {
+  data: UriData
+  isFromScan: boolean
   cachedRecipient?: Recipient
-) {
+  defaultTokenIdOverride?: string
+}) {
   const recipient: AddressRecipient = {
     address: data.address.toLowerCase(),
     name: data.displayName || cachedRecipient?.name,
@@ -40,12 +44,12 @@ export function* handleSendPaymentData(
     recipientType: RecipientType.Address,
   }
   yield* put(
-    updateValoraRecipientCache({
+    updateAppRecipientCache({
       [data.address.toLowerCase()]: recipient,
     })
   )
 
-  const supportedNetworkIds = yield* select(getSupportedNetworkIdsForSend)
+  const supportedNetworkIds = yield* call(getSupportedNetworkIds)
   const tokens: TokenBalance[] = yield* select((state) =>
     tokensListSelector(state, supportedNetworkIds)
   )
@@ -66,7 +70,7 @@ export function* handleSendPaymentData(
     const currency: LocalCurrencyCode = data.currencyCode
       ? (data.currencyCode as LocalCurrencyCode)
       : yield* select(getLocalCurrencyCode)
-    const exchangeRate = yield* call(fetchExchangeRate, LocalCurrencyCode.USD, currency)
+    const exchangeRate = yield* call(fetchExchangeRate, currency)
     const dollarAmount = convertLocalAmountToDollars(data.amount, exchangeRate)
     const usdToLocalRate = yield* select(usdToLocalCurrencyRateSelector)
     const localAmount = convertDollarsToLocalAmount(dollarAmount, usdToLocalRate)
@@ -87,7 +91,6 @@ export function* handleSendPaymentData(
       tokenAddress: tokenInfo.address,
       tokenAmount,
       tokenId: tokenInfo.tokenId,
-      comment: data.comment,
     }
 
     navigate(Screens.SendConfirmation, {
@@ -100,7 +103,8 @@ export function* handleSendPaymentData(
       recipient,
       isFromScan,
       origin: SendOrigin.AppSendFlow,
-      defaultTokenIdOverride: data.token ? tokenInfo?.tokenId : undefined,
+      defaultTokenIdOverride:
+        defaultTokenIdOverride ?? (data.token ? tokenInfo?.tokenId : undefined),
       forceTokenId: !!(data.token && tokenInfo?.tokenId),
     })
   }
@@ -109,7 +113,7 @@ export function* handleSendPaymentData(
 export function* handlePaymentDeeplink(deeplink: string) {
   try {
     const paymentData = uriDataFromUrl(deeplink)
-    yield* call(handleSendPaymentData, paymentData, true)
+    yield* call(handleSendPaymentData, { data: paymentData, isFromScan: true })
   } catch (e) {
     Logger.warn('handlePaymentDeepLink', `deeplink ${deeplink} failed with ${e}`)
   }

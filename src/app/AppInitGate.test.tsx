@@ -3,7 +3,7 @@ import * as React from 'react'
 import { Text } from 'react-native'
 import * as RNLocalize from 'react-native-localize'
 import { Provider } from 'react-redux'
-import ValoraAnalytics from 'src/analytics/ValoraAnalytics'
+import AppAnalytics from 'src/analytics/AppAnalytics'
 import { appMounted } from 'src/app/actions'
 import AppInitGate from 'src/app/AppInitGate'
 import { setLanguage } from 'src/i18n/slice'
@@ -12,14 +12,13 @@ import { waitUntilSagasFinishLoading } from 'src/redux/sagas'
 import { createMockStore } from 'test/utils'
 
 jest.mock('src/redux/store')
-jest.mock('src/analytics/ValoraAnalytics')
+jest.mock('src/analytics/AppAnalytics')
 jest.mock('src/redux/sagas', () => ({
   ...(jest.requireActual('src/redux/sagas') as any),
   waitUntilSagasFinishLoading: jest.fn(),
 }))
 
 jest.mock('src/i18n', () => ({
-  ...(jest.requireActual('src/i18n') as any),
   changeLanguage: jest.fn().mockResolvedValue(jest.fn()),
   t: jest.fn(),
 }))
@@ -67,7 +66,7 @@ describe('AppInitGate', () => {
 
     await waitFor(() => expect(getByText('App')).toBeTruthy())
     expect(store.getActions()).toEqual([appMounted()])
-    expect(ValoraAnalytics.startSession).toHaveBeenCalledWith(
+    expect(AppAnalytics.startSession).toHaveBeenCalledWith(
       'app_launched',
       expect.objectContaining({
         appLoadDuration: 12,

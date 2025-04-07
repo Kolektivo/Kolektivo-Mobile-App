@@ -1,11 +1,11 @@
 import React, { RefObject } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, Text, View } from 'react-native'
+import AppAnalytics from 'src/analytics/AppAnalytics'
 import { AssetsEvents } from 'src/analytics/Events'
-import ValoraAnalytics from 'src/analytics/ValoraAnalytics'
-import BottomSheet, { BottomSheetRefType } from 'src/components/BottomSheet'
+import BottomSheet, { BottomSheetModalRefType } from 'src/components/BottomSheet'
 import Touchable from 'src/components/Touchable'
-import { Colors } from 'src/styles/colors'
+import Colors from 'src/styles/colors'
 import { typeScale } from 'src/styles/fonts'
 import { Spacing } from 'src/styles/styles'
 import { TokenBalance } from 'src/tokens/slice'
@@ -17,7 +17,7 @@ export default function TokenDetailsMoreActions({
   actions,
   token,
 }: {
-  forwardedRef: RefObject<BottomSheetRefType>
+  forwardedRef: RefObject<BottomSheetModalRefType>
   actions: TokenAction[]
   token: TokenBalance
 }) {
@@ -27,7 +27,7 @@ export default function TokenDetailsMoreActions({
     <BottomSheet
       forwardedRef={forwardedRef}
       title={t('tokenDetails.moreActions')}
-      testId={'TokenDetailsMoreActions'}
+      testId="TokenDetailsMoreActions"
       titleStyle={styles.title}
     >
       <View style={styles.actionsContainer}>
@@ -37,16 +37,17 @@ export default function TokenDetailsMoreActions({
             key={action.name}
             borderRadius={20}
             onPress={() => {
-              ValoraAnalytics.track(AssetsEvents.tap_token_details_bottom_sheet_action, {
+              AppAnalytics.track(AssetsEvents.tap_token_details_bottom_sheet_action, {
                 action: action.name,
                 ...getTokenAnalyticsProps(token),
               })
               action.onPress()
+              forwardedRef.current?.dismiss()
             }}
             testID={`TokenDetailsMoreActions/${action.name}`}
           >
             <>
-              <action.iconComponent color={Colors.black} />
+              <action.iconComponent color={Colors.contentPrimary} />
               <View style={{ flex: 1 }}>
                 <Text style={styles.actionTitle}>{action.title}</Text>
                 <Text style={styles.actionDetails}>{action.details}</Text>
@@ -74,7 +75,7 @@ const styles = StyleSheet.create({
     ...typeScale.labelLarge,
   },
   touchable: {
-    backgroundColor: Colors.gray1,
+    backgroundColor: Colors.buttonSecondaryBackground,
     padding: Spacing.Regular16,
     flexDirection: 'row',
     gap: Spacing.Regular16,

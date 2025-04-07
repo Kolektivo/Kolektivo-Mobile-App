@@ -1,5 +1,4 @@
 /* Shared mock values to facilitate testing */
-import { UnlockableWallet } from '@celo/wallet-base'
 import {
   CryptoType,
   FeeFrequency,
@@ -15,28 +14,21 @@ import BigNumber from 'bignumber.js'
 import { range } from 'lodash'
 import { MinimalContact } from 'react-native-contacts'
 import { Dapp, DappWithCategoryNames } from 'src/dapps/types'
-import { EscrowedPayment } from 'src/escrow/actions'
-import { FeeType } from 'src/fees/reducer'
 import { ExternalExchangeProvider } from 'src/fiatExchanges/ExternalExchanges'
-import { ProviderSelectionAnalyticsData } from 'src/fiatExchanges/types'
-import {
-  FetchProvidersOutput,
-  LegacyMobileMoneyProvider,
-  PaymentMethod,
-} from 'src/fiatExchanges/utils'
+import { CicoQuote, PaymentMethod, ProviderSelectionAnalyticsData } from 'src/fiatExchanges/types'
+import { LegacyMobileMoneyProvider } from 'src/fiatExchanges/utils'
 import {
   FiatConnectProviderInfo,
   FiatConnectQuoteError,
   FiatConnectQuoteSuccess,
   GetFiatConnectQuotesResponse,
 } from 'src/fiatconnect'
-import { CleverTapInboxMessage } from 'src/home/cleverTapInbox'
 import { NftCelebrationStatus } from 'src/home/reducers'
 import { AddressToE164NumberType, E164NumberToAddressType } from 'src/identity/reducer'
 import { LocalCurrencyCode } from 'src/localCurrency/consts'
 import { StackParamList } from 'src/navigator/types'
 import { Nft, NftWithMetadata } from 'src/nfts/types'
-import { Position, Shortcut } from 'src/positions/types'
+import { EarnPosition, Position, Shortcut } from 'src/positions/types'
 import { PriceHistoryStatus } from 'src/priceHistory/slice'
 import { UriData } from 'src/qrcode/schema'
 import {
@@ -51,8 +43,10 @@ import {
 import { TransactionDataInput } from 'src/send/types'
 import { NativeTokenBalance, StoredTokenBalance, TokenBalance } from 'src/tokens/slice'
 import {
+  ClaimReward,
   EarnClaimReward,
   EarnDeposit,
+  EarnSwapDeposit,
   EarnWithdraw,
   NetworkId,
   TokenApproval,
@@ -61,7 +55,7 @@ import {
 } from 'src/transactions/types'
 import { CiCoCurrency, Currency } from 'src/utils/currencies'
 import { ONE_DAY_IN_MILLIS } from 'src/utils/time'
-import networkConfig from 'src/web3/networkConfig'
+import { Address, privateKeyToAccount } from 'viem/accounts'
 
 export const nullAddress = '0x0'
 
@@ -80,21 +74,22 @@ export const mockMnemonicShard1 =
 export const mockMnemonicShard2 =
   'celo old unable wash wrong need fluid hammer coach reveal plastic trust lake'
 
-export const mockPrivateDEK = '41e8e8593108eeedcbded883b8af34d2f028710355c57f4c10a056b72486aa04'
-export const mockPublicDEK = '02c9cacca8c5c5ebb24dc6080a933f6d52a072136a069083438293d71da36049dc'
-export const mockDEKAddress = '0xa81a5f8c5894676fc11c0e3b6f75aa89cf117240'
-export const mockPrivateDEK2 = '855c5f9d5fc53962537eaf9a0f3ea40a7bc7e57a119e8473fffef24be20bffff'
-export const mockPublicDEK2 = '024c158e98449d9ca4dddeaa12c2432a5e7d38a48a53299fd22c51daf8d409957a'
-export const mockDEKAddress2 = '0x5fB37627975be239eDaf3A41852A12E7cd3965d1'
+export const mockPrivateKey = '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef'
+const mockViemAccount = privateKeyToAccount(mockPrivateKey)
+// This is encryptPrivateKey(mockPrivateKey, 'password'), but hardcoding for predictability in tests
+export const mockKeychainEncryptedPrivateKey =
+  'U2FsdGVkX1+4Da/3VE98t6m9FNs+Q0fqJlckHnL2+XctJPyvhZY+b0TSAB9oGiAMNDow1bjA3NYyzA3aKhFhHwAySzPOArFI/RpPlArT2/IGZ/IxKtKzKnd1pa4+q4fx'
+export const mockAddress = mockViemAccount.address.toLowerCase() as Address
+export const mockPrivateKey2 = '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890fdeccc'
+const mockViemAccount2 = privateKeyToAccount(mockPrivateKey2)
+// This is encryptPrivateKey(mockPrivateKey2, 'password'), but hardcoding for predictability in tests
+export const mockKeychainEncryptedPrivateKey2 =
+  'U2FsdGVkX18191f7q1dS0CCvSGNjJ9PkcBGKaf+u1LVpuoBw2xSJe17hLW8QRXyKCtwvMknW2uTeWUeMRSfg/O1UdsEwdhMPxzqtOUTwT9evQri80JMGBImihFXKDdgN'
+export const mockAddress2 = mockViemAccount2.address.toLowerCase() as Address
 
 export const mockContractAddress = '0x000000000000000000000000000000000000CE10'
 export const mockE164Number = '+14155550000'
 export const mockDisplayNumber = '(415) 555-0000'
-export const mockE164NumberHash =
-  '0xefbc804cdddcb76544e1dd2c25e9624edae290d175ccd20538e5cae06c7dbe9e'
-export const mockE164NumberPepper = 'piWqRHHYWtfg9'
-export const mockE164NumberHashWithPepper =
-  '0xf6429456331dedf8bd32b5e3a578e5bc589a28d012724dcd3e0a4b1be67bb454'
 
 export const mockE164Number2 = '+12095559790'
 export const mockDisplayNumber2 = '+1 209-555-9790'
@@ -146,6 +141,7 @@ export const mockArbEthTokenId = `arbitrum-sepolia:native`
 export const mockOPTokenId = `op-sepolia:native`
 export const mockArbUsdcTokenId = `arbitrum-sepolia:${mockUSDCAddress}`
 export const mockArbArbTokenId = `arbitrum-sepolia:${mockArbArbAddress}`
+export const mockAaveArbUsdcTokenId = `arbitrum-sepolia:${mockAaveArbUsdcAddress}`
 
 export const mockQrCodeData2 = {
   address: mockAccount2Invite,
@@ -274,7 +270,7 @@ export const mockPhoneRecipientCache: NumberToRecipient = {
   [mockE164Number2Invite]: mockInvitableRecipient3,
 }
 
-export const mockValoraRecipientCache: AddressToRecipient = {
+export const mockAppRecipientCache: AddressToRecipient = {
   [mockAccount]: mockRecipient,
   [mockAccount2]: mockRecipient2,
   [mockAccountInvite]: mockRecipient2,
@@ -337,17 +333,6 @@ export const mockContactWithPhone2: MinimalContact = {
 
 export const mockContactList = [mockContactWithPhone2, mockContactWithPhone]
 
-export const mockEscrowedPayment: EscrowedPayment = {
-  senderAddress: mockAccount2,
-  recipientPhone: mockE164Number,
-  recipientIdentifier: mockE164NumberHashWithPepper,
-  paymentID: mockAccount,
-  tokenAddress: mockCusdAddress,
-  amount: new BigNumber(10).toString(),
-  timestamp: new BigNumber(10000),
-  expirySeconds: new BigNumber(50000),
-}
-
 export const mockUriData: UriData[] = [
   {
     address: '0xf7f551752A78Ce650385B58364225e5ec18D96cB',
@@ -355,7 +340,6 @@ export const mockUriData: UriData[] = [
     e164PhoneNumber: undefined,
     currencyCode: 'USD' as LocalCurrencyCode,
     amount: '1',
-    comment: undefined,
     token: 'CELO',
   },
   {
@@ -364,7 +348,6 @@ export const mockUriData: UriData[] = [
     e164PhoneNumber: undefined,
     currencyCode: undefined,
     amount: undefined,
-    comment: undefined,
     token: 'CELO',
   },
   {
@@ -373,7 +356,6 @@ export const mockUriData: UriData[] = [
     e164PhoneNumber: undefined,
     currencyCode: 'USD' as LocalCurrencyCode,
     amount: '1',
-    comment: undefined,
     token: 'BTC',
   },
   {
@@ -382,7 +364,6 @@ export const mockUriData: UriData[] = [
     e164PhoneNumber: undefined,
     currencyCode: 'USD' as LocalCurrencyCode,
     amount: undefined,
-    comment: undefined,
     token: undefined,
   },
   {
@@ -391,7 +372,6 @@ export const mockUriData: UriData[] = [
     e164PhoneNumber: undefined,
     currencyCode: 'USD' as LocalCurrencyCode,
     amount: '1',
-    comment: undefined,
     token: undefined,
   },
   {
@@ -400,7 +380,6 @@ export const mockUriData: UriData[] = [
     e164PhoneNumber: undefined,
     currencyCode: 'USD' as LocalCurrencyCode,
     amount: '1',
-    comment: undefined,
     token: 'cUSD',
   },
 ]
@@ -417,23 +396,9 @@ export const mockQRCodeRecipient: AddressRecipient = {
 
 export const mockRecipientInfo: RecipientInfo = {
   phoneRecipientCache: mockPhoneRecipientCache,
-  valoraRecipientCache: mockValoraRecipientCache,
+  appRecipientCache: mockAppRecipientCache,
   addressToE164Number: mockAddressToE164Number,
   addressToDisplayName: {},
-}
-
-export const mockWallet: UnlockableWallet = {
-  unlockAccount: jest.fn(),
-  isAccountUnlocked: jest.fn(),
-  addAccount: jest.fn(),
-  getAccounts: jest.fn(),
-  removeAccount: jest.fn(),
-  hasAccount: jest.fn(),
-  signTransaction: jest.fn(),
-  signTypedData: jest.fn(),
-  signPersonalMessage: jest.fn(),
-  decrypt: jest.fn(),
-  computeSharedSecret: jest.fn(),
 }
 
 export const mockTokenBalances: Record<string, StoredTokenBalance> = {
@@ -495,8 +460,7 @@ export const mockTokenBalances: Record<string, StoredTokenBalance> = {
     tokenId: mockCeloTokenId,
     networkId: NetworkId['celo-alfajores'],
     symbol: 'CELO', // NOT cGLD, see https://github.com/valora-inc/address-metadata/blob/c84ef7056fa066ef86f9b4eb295ae248f363f67a/src/data/mainnet/tokens-info.json#L173
-    imageUrl:
-      'https://raw.githubusercontent.com/valora-inc/address-metadata/main/assets/tokens/CELO.png',
+    imageUrl: 'https://example.com/address-metadata/main/assets/tokens/CELO.png',
     name: 'Celo native asset',
     decimals: 18,
     balance: '0',
@@ -514,8 +478,7 @@ export const mockTokenBalances: Record<string, StoredTokenBalance> = {
     tokenId: mockCrealTokenId,
     networkId: NetworkId['celo-alfajores'],
     symbol: 'cREAL',
-    imageUrl:
-      'https://raw.githubusercontent.com/valora-inc/address-metadata/main/assets/tokens/cREAL.png',
+    imageUrl: 'https://example.com/address-metadata/main/assets/tokens/cREAL.png',
     name: 'Celo Real',
     decimals: 18,
     balance: '0',
@@ -531,8 +494,7 @@ export const mockTokenBalances: Record<string, StoredTokenBalance> = {
     tokenId: mockEthTokenId,
     networkId: NetworkId['ethereum-sepolia'],
     symbol: 'ETH',
-    imageUrl:
-      'https://raw.githubusercontent.com/valora-inc/address-metadata/main/assets/tokens/ETH.png',
+    imageUrl: 'https://example.com/address-metadata/main/assets/tokens/ETH.png',
     name: 'Ether',
     decimals: 18,
     balance: '0',
@@ -563,8 +525,7 @@ export const mockTokenBalances: Record<string, StoredTokenBalance> = {
     address: null,
     symbol: 'ETH',
     decimals: 18,
-    imageUrl:
-      'https://raw.githubusercontent.com/valora-inc/address-metadata/main/assets/tokens/ETH.png',
+    imageUrl: 'https://example.com/address-metadata/main/assets/tokens/ETH.png',
     balance: '0',
     priceUsd: '1500',
     isNative: true,
@@ -577,8 +538,7 @@ export const mockTokenBalances: Record<string, StoredTokenBalance> = {
     address: null,
     symbol: 'ETH',
     decimals: 18,
-    imageUrl:
-      'https://raw.githubusercontent.com/valora-inc/address-metadata/main/assets/tokens/ETH.png',
+    imageUrl: 'https://example.com/address-metadata/main/assets/tokens/ETH.png',
     balance: '0',
     priceUsd: '1500',
     isNative: true,
@@ -591,8 +551,7 @@ export const mockTokenBalances: Record<string, StoredTokenBalance> = {
     address: mockUSDCAddress,
     symbol: 'USDC',
     decimals: 6,
-    imageUrl:
-      'https://raw.githubusercontent.com/valora-inc/address-metadata/main/assets/tokens/ETH.png',
+    imageUrl: 'https://example.com/address-metadata/main/assets/tokens/ETH.png',
     balance: '0',
     priceUsd: '1',
     priceFetchedAt: Date.now(),
@@ -604,10 +563,21 @@ export const mockTokenBalances: Record<string, StoredTokenBalance> = {
     address: mockArbArbAddress,
     symbol: 'ARB',
     decimals: 18,
-    imageUrl:
-      'https://raw.githubusercontent.com/valora-inc/address-metadata/main/assets/tokens/ARB.png',
+    imageUrl: 'https://example.com/address-metadata/main/assets/tokens/ARB.png',
     balance: '0',
     priceUsd: '1.2',
+    priceFetchedAt: Date.now(),
+  },
+  [mockAaveArbUsdcTokenId]: {
+    name: 'Aave USDC',
+    networkId: NetworkId['arbitrum-sepolia'],
+    tokenId: mockAaveArbUsdcTokenId,
+    address: mockAaveArbUsdcAddress,
+    symbol: 'AUSDC',
+    decimals: 6,
+    imageUrl: 'https://example.com/address-metadata/main/assets/tokens/AUSDC.png',
+    balance: '0',
+    priceUsd: '1',
     priceFetchedAt: Date.now(),
   },
 }
@@ -624,6 +594,20 @@ export const mockCusdTokenBalance: TokenBalance = {
   priceUsd: new BigNumber(1.001),
   lastKnownPriceUsd: new BigNumber(1.001),
   balance: new BigNumber(0),
+}
+
+export const mockCeurTokenBalance: TokenBalance = {
+  ...mockTokenBalances[mockCeurTokenId],
+  priceUsd: new BigNumber(1.101),
+  lastKnownPriceUsd: new BigNumber(1.101),
+  balance: new BigNumber(100),
+}
+
+export const mockCrealTokenBalance: TokenBalance = {
+  ...mockTokenBalances[mockCrealTokenId],
+  priceUsd: new BigNumber(0.17),
+  lastKnownPriceUsd: new BigNumber(0.17),
+  balance: new BigNumber(100),
 }
 
 export const mockEthTokenBalance: NativeTokenBalance = {
@@ -687,17 +671,10 @@ export const mockFeeInfo = {
   feeCurrency: undefined,
 }
 
-export const emptyFees = {
-  [FeeType.SEND]: undefined,
-  [FeeType.EXCHANGE]: undefined,
-  [FeeType.RECLAIM_ESCROW]: undefined,
-  [FeeType.REGISTER_DEK]: undefined,
-}
-
 export const mockSimplexQuote = {
   user_id: mockAccount,
   quote_id: 'be976b14-0828-4834-bd24-e4193a225980',
-  wallet_id: 'valorapp',
+  wallet_id: 'appname',
   digital_money: {
     currency: 'CUSD',
     amount: 25,
@@ -711,123 +688,101 @@ export const mockSimplexQuote = {
   supported_digital_currencies: ['CUSD', 'CELO'],
 }
 
-export const mockProviders: FetchProvidersOutput[] = [
+export const mockCicoQuotes: CicoQuote[] = [
   {
-    name: 'Simplex',
-    restricted: false,
-    unavailable: false,
-    paymentMethods: [PaymentMethod.Card],
-    logo: 'https://firebasestorage.googleapis.com/v0/b/celo-mobile-mainnet.appspot.com/o/images%2Fsimplex.jpg?alt=media',
-    logoWide:
-      'https://firebasestorage.googleapis.com/v0/b/celo-mobile-mainnet.appspot.com/o/images%2Fsimplex.jpg?alt=media',
-    cashIn: true,
-    cashOut: false,
-    quote: mockSimplexQuote,
-  },
-  {
-    name: 'Moonpay',
-    restricted: false,
-    paymentMethods: [PaymentMethod.Card, PaymentMethod.Bank],
-    url: 'https://www.moonpay.com/',
-    logo: 'https://firebasestorage.googleapis.com/v0/b/celo-mobile-mainnet.appspot.com/o/images%2Fmoonpay.png?alt=media',
-    logoWide:
-      'https://firebasestorage.googleapis.com/v0/b/celo-mobile-mainnet.appspot.com/o/images%2Fsimplex.jpg?alt=media',
-    cashIn: true,
-    cashOut: false,
-    quote: [
-      { paymentMethod: PaymentMethod.Bank, digitalAsset: 'cusd', returnedAmount: 95, fiatFee: 5 },
-      { paymentMethod: PaymentMethod.Card, digitalAsset: 'cusd', returnedAmount: 90, fiatFee: 10 },
-    ],
-  },
-  {
-    name: 'Ramp',
-    restricted: false,
-    paymentMethods: [PaymentMethod.Card, PaymentMethod.Bank],
-    url: 'www.fakewebsite.com',
-    logo: 'https://firebasestorage.googleapis.com/v0/b/celo-mobile-mainnet.appspot.com/o/images%2Framp.png?alt=media',
-    logoWide:
-      'https://firebasestorage.googleapis.com/v0/b/celo-mobile-mainnet.appspot.com/o/images%2Fsimplex.jpg?alt=media',
-    quote: [
-      { paymentMethod: PaymentMethod.Card, digitalAsset: 'cusd', returnedAmount: 100, fiatFee: 0 },
-    ],
-    cashIn: true,
-    cashOut: false,
-  },
-  {
-    name: 'Xanpool',
-    restricted: true,
-    paymentMethods: [PaymentMethod.Card, PaymentMethod.Bank],
-    url: 'www.fakewebsite.com',
-    logo: 'https://firebasestorage.googleapis.com/v0/b/celo-mobile-mainnet.appspot.com/o/images%2Fxanpool.png?alt=media',
-    logoWide:
-      'https://firebasestorage.googleapis.com/v0/b/celo-mobile-mainnet.appspot.com/o/images%2Fsimplex.jpg?alt=media',
-    cashIn: true,
-    cashOut: true,
-    quote: [
-      { paymentMethod: PaymentMethod.Card, digitalAsset: 'cusd', returnedAmount: 97, fiatFee: 3 },
-    ],
-  },
-  {
-    name: 'Transak',
-    restricted: false,
-    unavailable: true,
-    paymentMethods: [PaymentMethod.Card, PaymentMethod.Bank],
-    url: 'www.fakewebsite.com',
-    logo: 'https://firebasestorage.googleapis.com/v0/b/celo-mobile-mainnet.appspot.com/o/images%2Ftransak.png?alt=media',
-    logoWide:
-      'https://firebasestorage.googleapis.com/v0/b/celo-mobile-mainnet.appspot.com/o/images%2Fsimplex.jpg?alt=media',
-    cashIn: true,
-    cashOut: false,
-    quote: [
-      { paymentMethod: PaymentMethod.Bank, digitalAsset: 'cusd', returnedAmount: 94, fiatFee: 6 },
-      { paymentMethod: PaymentMethod.Card, digitalAsset: 'cusd', returnedAmount: 88, fiatFee: 12 },
-    ],
-  },
-  {
-    name: 'CoinbasePay',
-    restricted: false,
-    unavailable: false,
-    paymentMethods: [PaymentMethod.Coinbase],
+    paymentMethod: 'Card',
     url: undefined,
-    logo: 'https://firebasestorage.googleapis.com/v0/b/celo-mobile-mainnet.appspot.com/o/images%2FcbPay-button.png?alt=media',
-    logoWide:
-      'https://firebasestorage.googleapis.com/v0/b/celo-mobile-mainnet.appspot.com/o/images%2FcbPay-button.png?alt=media',
-    quote: undefined,
-    cashIn: true,
-    cashOut: false,
+    fiatCurrency: LocalCurrencyCode.USD,
+    tokenId: 'cusd',
+    txType: 'cashIn',
+    fiatAmount: '25',
+    cryptoAmount: '25',
+    fiatFee: '6',
+    provider: {
+      id: 'Simplex',
+      displayName: 'Simplex',
+      logoUrl:
+        'https://firebasestorage.googleapis.com/v0/b/celo-mobile-mainnet.appspot.com/o/images%2Fsimplex.jpg?alt=media',
+      logoWideUrl:
+        'https://firebasestorage.googleapis.com/v0/b/celo-mobile-mainnet.appspot.com/o/images%2Fsimplex.jpg?alt=media',
+    },
+    additionalInfo: { simplexQuote: mockSimplexQuote },
   },
   {
-    name: 'Ramp',
-    restricted: false,
-    unavailable: false,
-    paymentMethods: [PaymentMethod.Card, PaymentMethod.Bank],
+    paymentMethod: 'Bank',
+    url: 'https://www.moonpay.com/',
+    fiatCurrency: LocalCurrencyCode.USD,
+    tokenId: 'cusd',
+    txType: 'cashIn',
+    fiatAmount: '100',
+    cryptoAmount: '95',
+    fiatFee: '5',
+    provider: {
+      id: 'Moonpay',
+      displayName: 'Moonpay',
+      logoUrl:
+        'https://firebasestorage.googleapis.com/v0/b/celo-mobile-mainnet.appspot.com/o/images%2Fmoonpay.png?alt=media',
+      logoWideUrl:
+        'https://firebasestorage.googleapis.com/v0/b/celo-mobile-mainnet.appspot.com/o/images%2Fsimplex.jpg?alt=media',
+    },
+    additionalInfo: undefined,
+  },
+  {
+    paymentMethod: 'Card',
+    url: 'https://www.moonpay.com/',
+    fiatCurrency: LocalCurrencyCode.USD,
+    tokenId: 'cusd',
+    txType: 'cashIn',
+    fiatAmount: '100',
+    cryptoAmount: '90',
+    fiatFee: '10',
+    provider: {
+      id: 'Moonpay',
+      displayName: 'Moonpay',
+      logoUrl:
+        'https://firebasestorage.googleapis.com/v0/b/celo-mobile-mainnet.appspot.com/o/images%2Fmoonpay.png?alt=media',
+      logoWideUrl:
+        'https://firebasestorage.googleapis.com/v0/b/celo-mobile-mainnet.appspot.com/o/images%2Fsimplex.jpg?alt=media',
+    },
+    additionalInfo: undefined,
+  },
+  {
+    paymentMethod: 'Card',
     url: 'www.fakewebsite.com',
-    logo: 'https://firebasestorage.googleapis.com/v0/b/celo-mobile-mainnet.appspot.com/o/images%2Framp.png?alt=media',
-    logoWide:
-      'https://firebasestorage.googleapis.com/v0/b/celo-mobile-mainnet.appspot.com/o/images%2Fsimplex.jpg?alt=media',
-    quote: [],
-    cashIn: false,
-    cashOut: true,
+    fiatCurrency: LocalCurrencyCode.USD,
+    tokenId: 'cusd',
+    txType: 'cashIn',
+    fiatAmount: '100',
+    cryptoAmount: '100',
+    fiatFee: '0',
+    provider: {
+      id: 'Ramp',
+      displayName: 'Ramp',
+      logoUrl:
+        'https://firebasestorage.googleapis.com/v0/b/celo-mobile-mainnet.appspot.com/o/images%2Framp.png?alt=media',
+      logoWideUrl:
+        'https://firebasestorage.googleapis.com/v0/b/celo-mobile-mainnet.appspot.com/o/images%2Fsimplex.jpg?alt=media',
+    },
+    additionalInfo: undefined,
   },
   {
-    name: 'Fonbnk',
-    restricted: false,
-    paymentMethods: [PaymentMethod.Airtime],
+    paymentMethod: 'Airtime',
     url: 'https://www.fakewebsite.com/',
-    logo: 'https://firebasestorage.googleapis.com/v0/b/celo-mobile-mainnet.appspot.com/o/images%2Ffonbnk.png?alt=media',
-    logoWide:
-      'https://firebasestorage.googleapis.com/v0/b/celo-mobile-mainnet.appspot.com/o/images%2Ffonbnk.png?alt=media',
-    cashIn: true,
-    cashOut: false,
-    quote: [
-      {
-        paymentMethod: PaymentMethod.Airtime,
-        digitalAsset: 'cusd',
-        returnedAmount: 93,
-        fiatFee: 7,
-        extraReqs: { mobileCarrier: 'MTN' },
-      },
-    ],
+    fiatCurrency: LocalCurrencyCode.USD,
+    tokenId: 'cusd',
+    txType: 'cashIn',
+    fiatAmount: '100',
+    cryptoAmount: '93',
+    fiatFee: '7',
+    provider: {
+      id: 'Fonbnk',
+      displayName: 'Fonbnk',
+      logoUrl:
+        'https://firebasestorage.googleapis.com/v0/b/celo-mobile-mainnet.appspot.com/o/images%2Ffonbnk.png?alt=media',
+      logoWideUrl:
+        'https://firebasestorage.googleapis.com/v0/b/celo-mobile-mainnet.appspot.com/o/images%2Ffonbnk.png?alt=media',
+    },
+    additionalInfo: { mobileCarrier: 'MTN' },
   },
 ]
 
@@ -841,10 +796,10 @@ export const mockFiatConnectProviderInfo: FiatConnectProviderInfo[] = [
     id: 'provider-two',
     providerName: 'Provider Two',
     imageUrl: mockFiatConnectProviderImage,
-    baseUrl: 'fakewebsite.valoraapp.com',
-    websiteUrl: 'https://fakewebsite.valorapp.com',
-    termsAndConditionsUrl: 'https://fakewebsite.valorapp.com/terms',
-    privacyPolicyUrl: 'https://fakewebsite.valorapp.com/privacy',
+    baseUrl: 'fakewebsite.example.com',
+    websiteUrl: 'https://fakewebsite.example.com',
+    termsAndConditionsUrl: 'https://fakewebsite.example.com/terms',
+    privacyPolicyUrl: 'https://fakewebsite.example.com/privacy',
     iconUrl: mockFiatConnectProviderIcon,
     apiKey: 'fake-api-key',
     isNew: {
@@ -856,10 +811,10 @@ export const mockFiatConnectProviderInfo: FiatConnectProviderInfo[] = [
     id: 'provider-one',
     providerName: 'Provider One',
     imageUrl: mockFiatConnectProviderImage,
-    baseUrl: 'fakewebsite.valoraapp.com',
-    websiteUrl: 'https://fakewebsite.valorapp.com',
-    termsAndConditionsUrl: 'https://fakewebsite.valorapp.com/terms',
-    privacyPolicyUrl: 'https://fakewebsite.valorapp.com/privacy',
+    baseUrl: 'fakewebsite.example.com',
+    websiteUrl: 'https://fakewebsite.example.com',
+    termsAndConditionsUrl: 'https://fakewebsite.example.com/terms',
+    privacyPolicyUrl: 'https://fakewebsite.example.com/privacy',
     iconUrl: mockFiatConnectProviderIcon,
     isNew: {
       in: true,
@@ -870,10 +825,10 @@ export const mockFiatConnectProviderInfo: FiatConnectProviderInfo[] = [
     id: 'provider-three',
     providerName: 'Provider Three',
     imageUrl: mockFiatConnectProviderImage,
-    baseUrl: 'fakewebsite.valoraapp.com',
-    websiteUrl: 'https://fakewebsite.valorapp.com',
-    termsAndConditionsUrl: 'https://fakewebsite.valorapp.com/terms',
-    privacyPolicyUrl: 'https://fakewebsite.valorapp.com/privacy',
+    baseUrl: 'fakewebsite.example.com',
+    websiteUrl: 'https://fakewebsite.example.com',
+    termsAndConditionsUrl: 'https://fakewebsite.example.com/terms',
+    privacyPolicyUrl: 'https://fakewebsite.example.com/privacy',
     iconUrl: mockFiatConnectProviderIcon,
     isNew: {
       in: false,
@@ -933,10 +888,10 @@ export const mockFiatConnectQuotes: (FiatConnectQuoteSuccess | FiatConnectQuoteE
       id: 'provider-one',
       providerName: 'Provider One',
       imageUrl: mockFiatConnectProviderImage,
-      baseUrl: 'fakewebsite.valoraapp.com',
-      websiteUrl: 'https://fakewebsite.valorapp.com',
-      termsAndConditionsUrl: 'https://fakewebsite.valorapp.com/terms',
-      privacyPolicyUrl: 'https://fakewebsite.valorapp.com/privacy',
+      baseUrl: 'fakewebsite.example.com',
+      websiteUrl: 'https://fakewebsite.example.com',
+      termsAndConditionsUrl: 'https://fakewebsite.example.com/terms',
+      privacyPolicyUrl: 'https://fakewebsite.example.com/privacy',
       iconUrl: mockFiatConnectProviderIcon,
       isNew: {
         in: true,
@@ -1103,8 +1058,6 @@ export const mockFiatConnectQuotesWithUnknownFees: FiatConnectQuoteSuccess[] = [
   },
 ]
 
-export const mockMaxSendAmount = new BigNumber(999.99995)
-
 export const mockExchanges: ExternalExchangeProvider[] = [
   {
     name: 'Bittrex',
@@ -1130,10 +1083,12 @@ export const mockOnboardingProps = {
   recoveringFromStoreWipe: true,
   choseToRestoreAccount: false,
   supportedBiometryType: null,
-  skipVerification: true,
+  skipVerification: false,
   numberAlreadyVerifiedCentrally: false,
   showRecoveryPhrase: false,
   showCloudAccountBackupRestore: false,
+  showCloudAccountBackupSetup: false,
+  skipProtectWallet: false,
 }
 
 export const mockDappList: Dapp[] = [
@@ -1142,7 +1097,7 @@ export const mockDappList: Dapp[] = [
     id: 'dapp1',
     categories: ['1'],
     description: 'Swap tokens!',
-    iconUrl: 'https://raw.githubusercontent.com/valora-inc/app-list/main/assets/dapp1.png',
+    iconUrl: 'https://example.com/app-list/main/assets/dapp1.png',
     dappUrl: 'https://app.dapp1.org/',
   },
   {
@@ -1150,7 +1105,7 @@ export const mockDappList: Dapp[] = [
     id: 'dapp2',
     categories: ['2'],
     description: 'Lend and borrow tokens!',
-    iconUrl: 'https://raw.githubusercontent.com/valora-inc/app-list/main/assets/dapp2.png',
+    iconUrl: 'https://example.com/app-list/main/assets/dapp2.png',
     dappUrl: 'celo://wallet/dapp2Screen',
   },
 ]
@@ -1162,7 +1117,7 @@ export const mockDappListWithCategoryNames: DappWithCategoryNames[] = [
     categories: ['1'],
     categoryNames: ['Swap'],
     description: 'Swap tokens!',
-    iconUrl: 'https://raw.githubusercontent.com/valora-inc/app-list/main/assets/dapp1.png',
+    iconUrl: 'https://example.com/app-list/main/assets/dapp1.png',
     dappUrl: 'https://app.dapp1.org/',
   },
   {
@@ -1171,7 +1126,7 @@ export const mockDappListWithCategoryNames: DappWithCategoryNames[] = [
     categories: ['2'],
     categoryNames: ['Lend, Borrow & Earn'],
     description: 'Lend and borrow tokens!',
-    iconUrl: 'https://raw.githubusercontent.com/valora-inc/app-list/main/assets/dapp2.png',
+    iconUrl: 'https://example.com/app-list/main/assets/dapp2.png',
     dappUrl: 'celo://wallet/dapp2Screen',
   },
   {
@@ -1180,7 +1135,7 @@ export const mockDappListWithCategoryNames: DappWithCategoryNames[] = [
     categories: ['1'],
     categoryNames: ['Swap'],
     description: 'Do something cool!',
-    iconUrl: 'https://raw.githubusercontent.com/valora-inc/app-list/main/assets/dapp3.png',
+    iconUrl: 'https://example.com/main/assets/dapp3.png',
     dappUrl: 'https://app.dapp3.org/',
   },
 ]
@@ -1359,7 +1314,8 @@ export const mockPositionsLegacy = [
   },
 ]
 
-export const mockPositions: Position[] = [
+export const mockPositionsLegacy2 = [
+  // positions after migration 204 (not including tokenId)
   {
     type: 'app-token',
     networkId: NetworkId['celo-mainnet'],
@@ -1506,6 +1462,376 @@ export const mockPositions: Position[] = [
   },
 ]
 
+export const mockPositions: Position[] = [
+  {
+    type: 'app-token',
+    networkId: NetworkId['celo-mainnet'],
+    address: '0x19a75250c5a3ab22a8662e55a2b90ff9d3334b00',
+    tokenId: `${NetworkId['celo-mainnet']}:0x19a75250c5a3ab22a8662e55a2b90ff9d3334b00`,
+    positionId: `${NetworkId['celo-mainnet']}:0x19a75250c5a3ab22a8662e55a2b90ff9d3334b00`,
+    appId: 'ubeswap',
+    symbol: 'ULP',
+    decimals: 18,
+    appName: 'Ubeswap',
+    displayProps: {
+      title: 'MOO / CELO',
+      description: 'Pool',
+      imageUrl: '',
+      manageUrl: 'mock-position.com',
+    },
+    tokens: [
+      {
+        type: 'base-token',
+        networkId: NetworkId['celo-mainnet'],
+        address: '0x17700282592d6917f6a73d0bf8accf4d578c131e',
+        tokenId: `${NetworkId['celo-mainnet']}:0x17700282592d6917f6a73d0bf8accf4d578c131e`,
+        symbol: 'MOO',
+        decimals: 18,
+        priceUsd: '0.006945061569050171',
+        balance: '180.868419020792201216',
+      },
+      {
+        type: 'base-token',
+        networkId: NetworkId['celo-mainnet'],
+        address: '0x471ece3750da237f93b8e339c536989b8978a438',
+        tokenId: `${NetworkId['celo-mainnet']}:0x471ece3750da237f93b8e339c536989b8978a438`,
+        symbol: 'CELO',
+        decimals: 18,
+        priceUsd: '0.6959536890241361',
+        balance: '1.801458498251141632',
+      },
+    ],
+    pricePerShare: ['15.203387577266431', '0.15142650055521278'],
+    priceUsd: '0.21097429445966362',
+    balance: '11.896586737763895000',
+    supply: '29726.018516587721136286',
+    availableShortcutIds: [],
+  },
+  {
+    type: 'app-token',
+    networkId: NetworkId['celo-mainnet'],
+    address: '0x31f9dee850b4284b81b52b25a3194f2fc8ff18cf',
+    tokenId: `${NetworkId['celo-mainnet']}:0x31f9dee850b4284b81b52b25a3194f2fc8ff18cf`,
+    positionId: `${NetworkId['celo-mainnet']}:0x31f9dee850b4284b81b52b25a3194f2fc8ff18cf`,
+    appId: 'ubeswap',
+    symbol: 'ULP',
+    decimals: 18,
+    appName: 'Ubeswap',
+    displayProps: {
+      title: 'G$ / cUSD',
+      description: 'Pool',
+      imageUrl: '',
+    },
+    tokens: [
+      {
+        type: 'base-token',
+        networkId: NetworkId['celo-mainnet'],
+        address: '0x62b8b11039fcfe5ab0c56e502b1c372a3d2a9c7a',
+        tokenId: `${NetworkId['celo-mainnet']}:0x62b8b11039fcfe5ab0c56e502b1c372a3d2a9c7a`,
+        symbol: 'G$',
+        decimals: 18,
+        priceUsd: '0.00016235559507324788',
+        balance: '12400.197092864986',
+      },
+      {
+        type: 'base-token',
+        networkId: NetworkId['celo-mainnet'],
+        address: '0x765de816845861e75a25fca122bb6898b8b1282a',
+        tokenId: `${NetworkId['celo-mainnet']}:0x765de816845861e75a25fca122bb6898b8b1282a`,
+        symbol: 'cUSD',
+        decimals: 18,
+        priceUsd: '1',
+        balance: '2.066998331535406848',
+      },
+    ],
+    pricePerShare: ['77.49807502864574', '0.012918213362397938'],
+    priceUsd: '0.025500459450704928',
+    balance: '160.006517430032700000',
+    supply: '232.413684885485035933',
+    availableShortcutIds: [],
+  },
+  {
+    type: 'contract-position',
+    networkId: NetworkId['celo-mainnet'],
+    address: '0xda7f463c27ec862cfbf2369f3f74c364d050d93f',
+    positionId: `${NetworkId['celo-mainnet']}:0xda7f463c27ec862cfbf2369f3f74c364d050d93f`,
+    appId: 'ubeswap',
+    appName: 'Ubeswap',
+    displayProps: {
+      title: 'CELO / cUSD',
+      description: 'Farm',
+      imageUrl: '',
+    },
+    tokens: [
+      {
+        type: 'app-token',
+        networkId: NetworkId['celo-mainnet'],
+        address: '0x1e593f1fe7b61c53874b54ec0c59fd0d5eb8621e',
+        tokenId: `${NetworkId['celo-mainnet']}:0x1e593f1fe7b61c53874b54ec0c59fd0d5eb8621e`,
+        positionId: `${NetworkId['celo-mainnet']}:0x1e593f1fe7b61c53874b54ec0c59fd0d5eb8621e`,
+        appId: 'ubeswap',
+        symbol: 'ULP',
+        decimals: 18,
+        appName: 'Ubeswap',
+        displayProps: {
+          title: 'CELO / cUSD',
+          description: 'Pool',
+          imageUrl: '',
+        },
+        tokens: [
+          {
+            type: 'base-token',
+            networkId: NetworkId['celo-mainnet'],
+            address: '0x471ece3750da237f93b8e339c536989b8978a438',
+            tokenId: `${NetworkId['celo-mainnet']}:0x471ece3750da237f93b8e339c536989b8978a438`,
+            symbol: 'CELO',
+            decimals: 18,
+            priceUsd: '0.6959536890241361',
+            balance: '0.950545800159603456', // total USD value = priceUsd * balance = $0.66
+            category: 'claimable',
+          },
+          {
+            type: 'base-token',
+            networkId: NetworkId['celo-mainnet'],
+            address: '0x765de816845861e75a25fca122bb6898b8b1282a',
+            tokenId: `${NetworkId['celo-mainnet']}:0x765de816845861e75a25fca122bb6898b8b1282a`,
+            symbol: 'cUSD',
+            decimals: 18,
+            priceUsd: '1',
+            balance: '0.659223169268731392',
+          },
+        ],
+        pricePerShare: ['2.827719585853931', '1.961082008754231'],
+        priceUsd: '3.9290438860550765',
+        balance: '0.336152780111169400',
+        supply: '42744.727037884449180591',
+        availableShortcutIds: [],
+      },
+      {
+        priceUsd: '0.00904673476946796903',
+        type: 'base-token',
+        category: 'claimable',
+        decimals: 18,
+        networkId: NetworkId['celo-mainnet'],
+        balance: '0.098322815093446616', // total USD value = priceUsd * balance = $0.00009
+        symbol: 'UBE',
+        address: '0x00be915b9dcf56a3cbe739d9b9c202ca692409ec',
+        tokenId: `${NetworkId['celo-mainnet']}:0x00be915b9dcf56a3cbe739d9b9c202ca692409ec`,
+      },
+    ],
+    balanceUsd: '1.3207590254762067',
+    availableShortcutIds: ['claim-reward'],
+  },
+]
+
+export const mockRewardsPositions: Position[] = [
+  {
+    type: 'app-token',
+    networkId: NetworkId['arbitrum-sepolia'],
+    address: '0x460b97bd498e1157530aeb3086301d5225b91216',
+    tokenId: 'arbitrum-sepolia:0x460b97bd498e1157530aeb3086301d5225b91216',
+    positionId: 'arbitrum-sepolia:0x460b97bd498e1157530aeb3086301d5225b91216',
+    appId: 'aave',
+    appName: 'Aave',
+    symbol: 'aArbUSDCn',
+    decimals: 6,
+    displayProps: {
+      title: 'USDC',
+      description: 'Supplied (APY: 4.45%)',
+      imageUrl: 'https://raw.githubusercontent.com/valora-inc/dapp-list/main/assets/aave.png',
+    },
+    dataProps: {
+      manageUrl: 'https://app.aave.com/?marketName=proto_arbitrum_v3',
+      contractCreatedAt: '2023-06-28T10:09:48.000Z',
+      tvl: '199457378.015289',
+      yieldRates: [
+        {
+          percentage: 4.445551082862642,
+          label: 'Earnings APY',
+          tokenId: mockArbUsdcTokenId,
+        },
+      ],
+      earningItems: [
+        {
+          amount: '0.047640282134479525',
+          label: 'Rewards',
+          tokenId: 'arbitrum-sepolia:0x912ce59144191c1204e64559fe8253a0e49e6548',
+        },
+      ],
+      rewardsPositionIds: [
+        'arbitrum-sepolia:0x460b97bd498e1157530aeb3086301d5225b91216:supply-incentives',
+      ],
+      depositTokenId: mockArbUsdcTokenId,
+      withdrawTokenId: 'arbitrum-sepolia:0x460b97bd498e1157530aeb3086301d5225b91216',
+    },
+    tokens: [
+      {
+        tokenId: mockArbUsdcTokenId,
+        networkId: NetworkId['arbitrum-sepolia'],
+        address: mockUSDCAddress,
+        symbol: 'USDC',
+        decimals: 6,
+        priceUsd: '1.2',
+        type: 'base-token',
+        balance: '10.75',
+      },
+    ],
+    pricePerShare: ['1'],
+    priceUsd: '0.997821',
+    balance: '10.75',
+    supply: '199457378.565488',
+    availableShortcutIds: ['deposit', 'withdraw'],
+  },
+  {
+    type: 'contract-position',
+    address: '0x460b97bd498e1157530aeb3086301d5225b91216',
+    networkId: NetworkId['arbitrum-sepolia'],
+    positionId: 'arbitrum-sepolia:0x460b97bd498e1157530aeb3086301d5225b91216:supply-incentives',
+    appId: 'aave',
+    appName: 'Aave',
+    displayProps: {
+      title: 'USDC supply incentives',
+      description: 'Rewards for supplying',
+      imageUrl: 'https://raw.githubusercontent.com/valora-inc/dapp-list/main/assets/aave.png',
+    },
+    tokens: [
+      {
+        address: '0x912ce59144191c1204e64559fe8253a0e49e6548',
+        symbol: 'ARB',
+        decimals: 18,
+        imageUrl:
+          'https://raw.githubusercontent.com/valora-inc/address-metadata/main/assets/tokens/ARB.png',
+        networkId: NetworkId['arbitrum-sepolia'],
+        tokenId: 'arbitrum-sepolia:0x912ce59144191c1204e64559fe8253a0e49e6548',
+        networkIconUrl:
+          'https://raw.githubusercontent.com/valora-inc/address-metadata/main/assets/tokens/ARB.png',
+        priceUsd: '0.5443',
+        balance: '0.01',
+        type: 'base-token',
+        category: 'claimable',
+      },
+    ],
+    shortcutTriggerArgs: {
+      'claim-rewards': {
+        positionAddress: '0x460b97bd498e1157530aeb3086301d5225b91216',
+      },
+    },
+    balanceUsd: '0.02593060556579720546',
+    availableShortcutIds: ['claim-rewards'],
+  },
+]
+
+export const mockEarnPositions: EarnPosition[] = [
+  {
+    type: 'app-token',
+    networkId: NetworkId['arbitrum-sepolia'],
+    address: '0x460b97bd498e1157530aeb3086301d5225b91216',
+    tokenId: 'arbitrum-sepolia:0x460b97bd498e1157530aeb3086301d5225b91216',
+    positionId: 'arbitrum-sepolia:0x460b97bd498e1157530aeb3086301d5225b91216',
+    appId: 'aave',
+    appName: 'Aave',
+    symbol: 'aArbSepUSDC',
+    decimals: 6,
+    displayProps: {
+      title: 'USDC',
+      description: 'Supplied (APY: 1.92%)',
+      imageUrl: 'https://raw.githubusercontent.com/valora-inc/dapp-list/main/assets/aave.png',
+    },
+    dataProps: {
+      yieldRates: [
+        {
+          percentage: 1.9194202601763743,
+          label: 'Earnings APY',
+          tokenId: mockArbUsdcTokenId,
+        },
+      ],
+      earningItems: [],
+      depositTokenId: mockArbUsdcTokenId,
+      withdrawTokenId: 'arbitrum-sepolia:0x460b97bd498e1157530aeb3086301d5225b91216',
+      tvl: '1360000',
+      contractCreatedAt: '2024-03-08T02:23:53.000Z',
+      manageUrl: 'https://app.aave.com/?marketName=proto_arbitrum_v3',
+      termsUrl: 'termsUrl',
+      rewardsPositionIds: [
+        'arbitrum-sepolia:0x460b97bd498e1157530aeb3086301d5225b91216:supply-incentives',
+      ],
+      claimType: 'earnings',
+    },
+    tokens: [
+      {
+        tokenId: mockArbUsdcTokenId,
+        networkId: NetworkId['arbitrum-sepolia'],
+        address: mockUSDCAddress,
+        symbol: 'USDC',
+        decimals: 6,
+        priceUsd: '1.2',
+        type: 'base-token',
+        balance: '0',
+      },
+    ],
+    pricePerShare: ['1.1'],
+    priceUsd: '1.2',
+    balance: '0',
+    supply: '190288.768509',
+    availableShortcutIds: ['deposit', 'withdraw', 'swap-deposit'],
+    shortcutTriggerArgs: {
+      deposit: {
+        tokenDecimals: 6,
+      },
+      withdraw: {
+        tokenDecimals: 6,
+      },
+    },
+  },
+  {
+    type: 'app-token',
+    networkId: NetworkId['ethereum-sepolia'],
+    address: '0xe50fa9b3c56ffb159cb0fca61f5c9d750e8128c8',
+    tokenId: 'ethereum-sepolia:0xe50fa9b3c56ffb159cb0fca61f5c9d750e8128c8',
+    positionId: 'ethereum-sepolia:0xe50fa9b3c56ffb159cb0fca61f5c9d750e8128c8',
+    appId: 'aave',
+    appName: 'Aave',
+    symbol: 'aEthETH',
+    decimals: 6,
+    displayProps: {
+      title: 'ETH',
+      description: 'Supplied (APY: 10.42%)',
+      imageUrl: 'https://raw.githubusercontent.com/valora-inc/dapp-list/main/assets/aave.png',
+    },
+    dataProps: {
+      yieldRates: [
+        {
+          percentage: 10.421746584,
+          label: 'Earnings APY',
+          tokenId: mockEthTokenId,
+        },
+      ],
+      earningItems: [],
+      depositTokenId: mockEthTokenId,
+      withdrawTokenId: 'ethereum-sepolia:0xe50fa9b3c56ffb159cb0fca61f5c9d750e8128c8',
+      contractCreatedAt: '2023-07-04T08:25:48.000Z',
+      manageUrl: 'https://app.aave.com/?marketName=proto_mainnet_v3',
+    },
+    tokens: [
+      {
+        tokenId: mockEthTokenId,
+        networkId: NetworkId['ethereum-sepolia'],
+        symbol: 'ETH',
+        decimals: 6,
+        priceUsd: '0',
+        type: 'base-token',
+        balance: '0',
+        address: '0x0',
+      },
+    ],
+    pricePerShare: ['1'],
+    priceUsd: '1',
+    balance: '0',
+    supply: '190288.768509',
+    availableShortcutIds: ['deposit', 'withdraw'],
+  },
+]
+
 export const mockShortcutsLegacy = [
   {
     category: 'claim',
@@ -1526,16 +1852,22 @@ export const mockShortcuts: Shortcut[] = [
     id: 'claim-reward',
     appId: 'ubeswap',
   },
+  {
+    id: 'claim-rewards',
+    name: 'Claim',
+    description: 'Claim rewards',
+    networkIds: [NetworkId['arbitrum-sepolia']],
+    category: 'claim',
+    appId: 'aave',
+  },
 ]
 
 export const mockProviderSelectionAnalyticsData: ProviderSelectionAnalyticsData = {
   centralizedExchangesAvailable: true,
-  coinbasePayAvailable: true,
   totalOptions: 3,
   paymentMethodsAvailable: {
     [PaymentMethod.Card]: false,
     [PaymentMethod.Bank]: true,
-    [PaymentMethod.Coinbase]: true,
     [PaymentMethod.MobileMoney]: true,
     [PaymentMethod.FiatConnectMobileMoney]: false,
     [PaymentMethod.Airtime]: false,
@@ -1653,11 +1985,10 @@ export const mockTypedData = {
     },
     contents: 'Hello, Bob!',
   },
-}
+} as const
 
 export const mockApprovalTransaction: TokenApproval = {
   tokenId: 'ethereum-sepolia:0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
-  __typename: 'TokenApproval',
   timestamp: 1695389027000,
   type: TokenTransactionTypeV2.Approval,
   networkId: NetworkId['ethereum-sepolia'],
@@ -1676,9 +2007,8 @@ export const mockApprovalTransaction: TokenApproval = {
   status: TransactionStatus.Complete,
 }
 
-export const mockEarnClaimRewardTransaction: EarnClaimReward = {
-  type: TokenTransactionTypeV2.EarnClaimReward,
-  __typename: 'EarnClaimReward',
+export const mockClaimRewardTransaction: ClaimReward = {
+  type: TokenTransactionTypeV2.ClaimReward,
   amount: {
     localAmount: undefined,
     tokenAddress: mockArbArbAddress,
@@ -1698,24 +2028,50 @@ export const mockEarnClaimRewardTransaction: EarnClaimReward = {
     },
   ],
   networkId: NetworkId['arbitrum-sepolia'],
-  providerId: 'aave-v3',
+  appName: 'Aave',
+  timestamp: Date.now(),
+  transactionHash: '0xHASH2',
+  status: TransactionStatus.Complete,
+}
+
+export const mockEarnClaimRewardTransaction: EarnClaimReward = {
+  type: TokenTransactionTypeV2.EarnClaimReward,
+  amount: {
+    localAmount: undefined,
+    tokenAddress: mockArbArbAddress,
+    tokenId: mockArbArbTokenId,
+    value: '1.5',
+  },
+  block: '211278852',
+  fees: [
+    {
+      amount: {
+        localAmount: undefined,
+        tokenAddress: mockArbArbAddress,
+        tokenId: mockArbArbTokenId,
+        value: '0.00000146037',
+      },
+      type: 'SECURITY_FEE',
+    },
+  ],
+  networkId: NetworkId['arbitrum-sepolia'],
+  providerId: 'aave',
   timestamp: Date.now(),
   transactionHash: '0xHASH2',
   status: TransactionStatus.Complete,
 }
 
 export const mockEarnDepositTransaction: EarnDeposit = {
-  __typename: 'EarnDeposit',
   inAmount: {
     localAmount: undefined,
     tokenAddress: mockAaveArbUsdcAddress,
-    tokenId: networkConfig.aaveArbUsdcTokenId,
-    value: '10',
+    tokenId: mockAaveArbUsdcTokenId,
+    value: '10.01',
   },
   outAmount: {
     localAmount: undefined,
     tokenAddress: '0xdef',
-    tokenId: networkConfig.arbUsdcTokenId,
+    tokenId: mockArbUsdcTokenId,
     value: '10',
   },
   block: '210927567',
@@ -1731,26 +2087,74 @@ export const mockEarnDepositTransaction: EarnDeposit = {
     },
   ],
   networkId: NetworkId['arbitrum-sepolia'],
-  providerId: 'aave-v3',
+  providerId: 'aave',
   timestamp: Date.now(),
   transactionHash: '0xHASH1',
   status: TransactionStatus.Complete,
   type: TokenTransactionTypeV2.EarnDeposit,
 }
 
+export const mockEarnSwapDeposit: EarnSwapDeposit = {
+  deposit: {
+    inAmount: {
+      localAmount: undefined,
+      tokenAddress: mockAaveArbUsdcAddress,
+      tokenId: mockAaveArbUsdcTokenId,
+      value: '10.01',
+    },
+    outAmount: {
+      localAmount: undefined,
+      tokenAddress: mockUSDCAddress,
+      tokenId: mockArbUsdcTokenId,
+      value: '10',
+    },
+    providerId: 'aave',
+  },
+  swap: {
+    inAmount: {
+      localAmount: undefined,
+      tokenAddress: mockUSDCAddress,
+      tokenId: mockArbUsdcTokenId,
+      value: '10',
+    },
+    outAmount: {
+      localAmount: undefined,
+      tokenAddress: mockCeloAddress,
+      tokenId: mockCeloTokenId,
+      value: '50',
+    },
+  },
+  block: '210927567',
+  fees: [
+    {
+      amount: {
+        localAmount: undefined,
+        tokenAddress: mockArbArbAddress,
+        tokenId: mockArbArbTokenId,
+        value: '0.00000284243',
+      },
+      type: 'SECURITY_FEE',
+    },
+  ],
+  networkId: NetworkId['arbitrum-sepolia'],
+  timestamp: Date.now(),
+  transactionHash: '0xHASH1',
+  status: TransactionStatus.Complete,
+  type: TokenTransactionTypeV2.EarnSwapDeposit,
+}
+
 export const mockEarnWithdrawTransaction: EarnWithdraw = {
-  __typename: 'EarnWithdraw',
   inAmount: {
     localAmount: undefined,
     tokenAddress: '0xdef',
-    tokenId: networkConfig.arbUsdcTokenId,
+    tokenId: mockArbUsdcTokenId,
     value: '1',
   },
   outAmount: {
     localAmount: undefined,
     tokenAddress: mockAaveArbUsdcAddress,
-    tokenId: networkConfig.aaveArbUsdcTokenId,
-    value: '0.996614',
+    tokenId: mockAaveArbUsdcTokenId,
+    value: '0.986614',
   },
   block: '211276583',
   fees: [
@@ -1765,83 +2169,11 @@ export const mockEarnWithdrawTransaction: EarnWithdraw = {
     },
   ],
   networkId: NetworkId['arbitrum-sepolia'],
-  providerId: 'aave-v3',
+  providerId: 'aave',
   timestamp: Date.now(),
   transactionHash: '0xHASH0',
   type: TokenTransactionTypeV2.EarnWithdraw,
   status: TransactionStatus.Complete,
-}
-
-export const mockExpectedCleverTapInboxMessage = {
-  wzrkParams: { wzrk_id: '0_0' },
-  id: '1704393845',
-  wzrk_id: '0_0',
-  msg: {
-    tags: [],
-    type: 'message-icon',
-    content: [
-      {
-        icon: {
-          processing: false,
-          poster: '',
-          filename: '',
-          content_type: 'image/jpeg',
-          key: 'fd152d1004504c0ab68a99ce9e3fe5e7',
-          url: 'https://d2trgtv8344lrj.cloudfront.net/dist/1634904064/i/fd152d1004504c0ab68a99ce9e3fe5e7.jpeg?v=1704392507',
-        },
-        title: {
-          color: '#434761',
-          replacements: 'CleverTap Message Header',
-          text: 'CleverTap Message Header',
-        },
-        action: {
-          url: { ios: { replacements: '', text: '' }, android: { replacements: '', text: '' } },
-          links: [
-            {
-              kv: {},
-              url: {
-                ios: { replacements: 'https://valoraapp.com', text: 'https://valoraapp.com' },
-                android: { replacements: 'https://valoraapp.com', text: 'https://valoraapp.com' },
-              },
-              copyText: { replacements: 'https://valoraapp.com', text: 'https://valoraapp.com' },
-              text: 'CleverTap Message CTA',
-              bg: '#ffffff',
-              color: '#007bff',
-              type: 'url',
-            },
-          ],
-          hasLinks: true,
-          hasUrl: false,
-        },
-        message: {
-          color: '#434761',
-          replacements: 'CleverTap Message Body Text',
-          text: 'CleverTap Message Body Text',
-        },
-        media: {},
-        key: 99060129,
-      },
-    ],
-    enableTags: false,
-    custom_kv: [],
-    orientation: 'p',
-    bg: '#ffffff',
-  },
-  tags: [''],
-  isRead: true,
-}
-
-export const mockCleverTapInboxMessage: CleverTapInboxMessage = {
-  messageId: '1704393845',
-  header: 'CleverTap Message Header',
-  text: 'CleverTap Message Body Text',
-  icon: {
-    uri: 'https://d2trgtv8344lrj.cloudfront.net/dist/1634904064/i/fd152d1004504c0ab68a99ce9e3fe5e7.jpeg?v=1704392507',
-  },
-  ctaText: 'CleverTap Message CTA',
-  ctaUrl: 'https://valoraapp.com',
-  priority: undefined,
-  openInExternalBrowser: false,
 }
 
 export const mockStoreCelebrationReady = {

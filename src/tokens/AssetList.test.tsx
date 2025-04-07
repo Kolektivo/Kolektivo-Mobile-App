@@ -1,8 +1,8 @@
 import { fireEvent, render } from '@testing-library/react-native'
 import * as React from 'react'
 import { Provider } from 'react-redux'
+import AppAnalytics from 'src/analytics/AppAnalytics'
 import { AssetsEvents } from 'src/analytics/Events'
-import ValoraAnalytics from 'src/analytics/ValoraAnalytics'
 import { navigate } from 'src/navigator/NavigationService'
 import { Screens } from 'src/navigator/Screens'
 import { fetchNfts } from 'src/nfts/slice'
@@ -22,14 +22,7 @@ import {
   mockTokenBalances,
 } from 'test/values'
 
-jest.mock('src/statsig', () => {
-  return {
-    getFeatureGate: jest.fn(),
-    getDynamicConfigParams: jest.fn(() => ({
-      showBalances: ['celo-alfajores', 'ethereum-sepolia'],
-    })),
-  }
-})
+jest.mock('src/statsig')
 
 const storeWithAssets = {
   tokens: {
@@ -195,7 +188,7 @@ describe('AssetList', () => {
     fireEvent.press(getAllByTestId('TokenBalanceItem')[0])
     expect(navigate).toHaveBeenCalledTimes(1)
     expect(navigate).toHaveBeenCalledWith(Screens.TokenDetails, { tokenId: mockPoofTokenId })
-    expect(ValoraAnalytics.track).toHaveBeenCalledTimes(1)
+    expect(AppAnalytics.track).toHaveBeenCalledTimes(1)
   })
 
   it('clicking an NFT navigates to the nfts info screen', async () => {
@@ -250,8 +243,8 @@ describe('AssetList', () => {
     fireEvent.press(getByTestId('AssetList/ImportTokens'))
     expect(navigate).toHaveBeenCalledTimes(1)
     expect(navigate).toHaveBeenCalledWith(Screens.TokenImport)
-    expect(ValoraAnalytics.track).toHaveBeenCalledTimes(1)
-    expect(ValoraAnalytics.track).toHaveBeenCalledWith(AssetsEvents.import_token_screen_open)
+    expect(AppAnalytics.track).toHaveBeenCalledTimes(1)
+    expect(AppAnalytics.track).toHaveBeenCalledWith(AssetsEvents.import_token_screen_open)
   })
 
   it.each([

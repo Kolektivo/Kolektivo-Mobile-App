@@ -1,31 +1,31 @@
-import { appendPath } from '@celo/utils/lib/string'
 import { formatJsonRpcError, formatJsonRpcResult, JsonRpcResult } from '@json-rpc-tools/utils'
+import { IWalletKit, WalletKit, WalletKitTypes } from '@reown/walletkit'
 import { Core } from '@walletconnect/core'
 import '@walletconnect/react-native-compat'
 import { SessionTypes } from '@walletconnect/types'
 import { buildApprovedNamespaces, getSdkError, parseUri } from '@walletconnect/utils'
-import { IWeb3Wallet, Web3Wallet, Web3WalletTypes } from '@walletconnect/web3wallet'
 import { EventChannel, eventChannel } from 'redux-saga'
 import { showMessage } from 'src/alert/actions'
+import AppAnalytics from 'src/analytics/AppAnalytics'
 import { WalletConnectEvents } from 'src/analytics/Events'
 import { WalletConnect2Properties } from 'src/analytics/Properties'
 import { DappRequestOrigin, WalletConnectPairingOrigin } from 'src/analytics/types'
-import ValoraAnalytics from 'src/analytics/ValoraAnalytics'
-import { walletConnectEnabledSelector } from 'src/app/selectors'
 import { getDappRequestOrigin } from 'src/app/utils'
-import { APP_NAME, WEB_LINK } from 'src/brandingConfig'
-import { WALLET_CONNECT_PROJECT_ID } from 'src/config'
+import { APP_NAME, DEEP_LINK_URL_SCHEME, WALLET_CONNECT_PROJECT_ID } from 'src/config'
 import { activeDappSelector } from 'src/dapps/selectors'
 import { ActiveDapp } from 'src/dapps/types'
 import i18n from 'src/i18n'
 import { isBottomSheetVisible, navigate, navigateBack } from 'src/navigator/NavigationService'
 import { Screens } from 'src/navigator/Screens'
+import { getDynamicConfigParams, getFeatureGate } from 'src/statsig'
+import { DynamicConfigs } from 'src/statsig/constants'
+import { StatsigDynamicConfigs, StatsigFeatureGates } from 'src/statsig/types'
 import { feeCurrenciesSelector } from 'src/tokens/selectors'
-import { getSupportedNetworkIdsForWalletConnect } from 'src/tokens/utils'
 import { Network } from 'src/transactions/types'
 import { ensureError } from 'src/utils/ensureError'
 import Logger from 'src/utils/Logger'
 import { safely } from 'src/utils/safely'
+import { appendPath } from 'src/utils/string'
 import { publicClient } from 'src/viem'
 import { getSerializablePreparedTransaction } from 'src/viem/preparedTransactionSerialization'
 import {
@@ -72,7 +72,8 @@ import networkConfig, {
   walletConnectChainIdToNetworkId,
 } from 'src/web3/networkConfig'
 import { getWalletAddress } from 'src/web3/saga'
-import { walletAddressSelector } from 'src/web3/selectors'
+import { demoModeEnabledSelector, walletAddressSelector } from 'src/web3/selectors'
+import { getSupportedNetworkIds } from 'src/web3/utils'
 import {
   call,
   delay,
@@ -87,9 +88,9 @@ import {
 import { Address, BaseError, GetTransactionCountParameters, hexToBigInt, isHex } from 'viem'
 import { getTransactionCount } from 'viem/actions'
 
-let client: IWeb3Wallet | null = null
+let client: IWalletKit | null = null
 
-export function _setClientForTesting(newClient: IWeb3Wallet | null) {
+export function _setClientForTesting(newClient: IWalletKit | null) {
   client = newClient
 }
 
@@ -98,7 +99,7 @@ const TAG = 'WalletConnect/saga'
 const GET_SESSION_TIMEOUT = 10_000
 
 export function* getDefaultSessionTrackedProperties(
-  session: Web3WalletTypes.EventArguments['session_proposal'] | SessionTypes.Struct
+  session: WalletKitTypes.EventArguments['session_proposal'] | SessionTypes.Struct
 ) {
   const activeDapp: ActiveDapp | null = yield* select(activeDappSelector)
   return getDefaultSessionTrackedPropertiesAnalytics(session, activeDapp)
@@ -116,7 +117,7 @@ function* handleInitialiseWalletConnect() {
 // so to avoid crashing the code depending on this, we fix it here
 // Note: this method mutates the session
 function applyIconFixIfNeeded(
-  session: Web3WalletTypes.EventArguments['session_proposal'] | SessionTypes.Struct
+  session: WalletKitTypes.EventArguments['session_proposal'] | SessionTypes.Struct
 ) {
   const peer = 'params' in session ? session.params.proposer : session.peer
   const { icons } = peer?.metadata || {}
@@ -131,7 +132,8 @@ export const _applyIconFixIfNeeded = applyIconFixIfNeeded
 function* createWalletConnectChannel() {
   if (!client) {
     Logger.debug(TAG + '@createWalletConnectChannel', `init start`)
-    client = yield* call([Web3Wallet, 'init'], {
+    const { links } = getDynamicConfigParams(DynamicConfigs[StatsigDynamicConfigs.APP_CONFIG])
+    client = yield* call([WalletKit, 'init'], {
       core: new Core({
         projectId: WALLET_CONNECT_PROJECT_ID,
         relayUrl: networkConfig.walletConnectEndpoint,
@@ -139,10 +141,10 @@ function* createWalletConnectChannel() {
       metadata: {
         name: APP_NAME,
         description: i18n.t('appDescription'),
-        url: WEB_LINK,
-        icons: [appendPath(WEB_LINK, 'favicon.ico')],
+        url: links.web,
+        icons: [appendPath(links.web, 'favicon.ico')],
         redirect: {
-          native: 'celo://wallet/wc',
+          native: `${DEEP_LINK_URL_SCHEME}://wallet/wc`,
           universal: 'https://valoraapp.com/wc',
         },
       },
@@ -153,15 +155,15 @@ function* createWalletConnectChannel() {
   }
 
   return eventChannel((emit) => {
-    const onSessionProposal = (session: Web3WalletTypes.EventArguments['session_proposal']) => {
+    const onSessionProposal = (session: WalletKitTypes.EventArguments['session_proposal']) => {
       applyIconFixIfNeeded(session)
       emit(sessionProposal(session))
     }
 
-    const onSessionDeleted = (session: Web3WalletTypes.EventArguments['session_delete']) => {
+    const onSessionDeleted = (session: WalletKitTypes.EventArguments['session_delete']) => {
       emit(sessionDeleted(session))
     }
-    const onSessionRequest = (request: Web3WalletTypes.EventArguments['session_request']) => {
+    const onSessionRequest = (request: WalletKitTypes.EventArguments['session_request']) => {
       emit(sessionPayload(request))
     }
 
@@ -202,7 +204,7 @@ function* createWalletConnectChannel() {
 function* handleInitialisePairing({ uri, origin }: InitialisePairing) {
   const activeDapp: ActiveDapp | null = yield* select(activeDappSelector)
   try {
-    ValoraAnalytics.track(WalletConnectEvents.wc_pairing_start, {
+    AppAnalytics.track(WalletConnectEvents.wc_pairing_start, {
       dappRequestOrigin: getDappRequestOrigin(activeDapp),
       origin,
     })
@@ -217,7 +219,7 @@ function* handleInitialisePairing({ uri, origin }: InitialisePairing) {
   } catch (err) {
     const error = ensureError(err)
     Logger.debug(TAG + '@handleInitialisePairing', error.message)
-    ValoraAnalytics.track(WalletConnectEvents.wc_pairing_error, {
+    AppAnalytics.track(WalletConnectEvents.wc_pairing_error, {
       dappRequestOrigin: getDappRequestOrigin(activeDapp),
       error: error.message,
     })
@@ -232,7 +234,7 @@ function* handleInitialisePairing({ uri, origin }: InitialisePairing) {
  */
 
 function* handleIncomingSessionRequest({ session }: SessionProposal) {
-  const { pending }: { pending: Web3WalletTypes.EventArguments['session_proposal'][] } =
+  const { pending }: { pending: WalletKitTypes.EventArguments['session_proposal'][] } =
     yield* select(selectSessions)
   if (pending.length > 1) {
     return
@@ -242,7 +244,7 @@ function* handleIncomingSessionRequest({ session }: SessionProposal) {
 }
 
 function* handleIncomingActionRequest({ request }: SessionPayload) {
-  const pendingActions: Web3WalletTypes.EventArguments['session_request'][] =
+  const pendingActions: WalletKitTypes.EventArguments['session_request'][] =
     yield* select(selectPendingActions)
   if (pendingActions.length > 1) {
     return
@@ -251,9 +253,9 @@ function* handleIncomingActionRequest({ request }: SessionPayload) {
   yield* call(showActionRequest, request)
 }
 
-function* showSessionRequest(session: Web3WalletTypes.EventArguments['session_proposal']) {
+function* showSessionRequest(session: WalletKitTypes.EventArguments['session_proposal']) {
   const activeDapp = yield* select(activeDappSelector)
-  ValoraAnalytics.track(WalletConnectEvents.wc_pairing_success, {
+  AppAnalytics.track(WalletConnectEvents.wc_pairing_success, {
     dappRequestOrigin: activeDapp ? DappRequestOrigin.InAppWebView : DappRequestOrigin.External,
   })
 
@@ -261,7 +263,7 @@ function* showSessionRequest(session: Web3WalletTypes.EventArguments['session_pr
     getDefaultSessionTrackedProperties,
     session
   )
-  ValoraAnalytics.track(WalletConnectEvents.wc_session_propose, {
+  AppAnalytics.track(WalletConnectEvents.wc_session_propose, {
     ...defaultSessionTrackedProperties,
   })
 
@@ -333,7 +335,7 @@ function* showSessionRequest(session: Web3WalletTypes.EventArguments['session_pr
 export const _showSessionRequest = showSessionRequest
 
 function getSupportedChains() {
-  const supportedNetworkIdsForWalletConnect = getSupportedNetworkIdsForWalletConnect()
+  const supportedNetworkIdsForWalletConnect = getSupportedNetworkIds()
   return supportedNetworkIdsForWalletConnect.map((networkId) => {
     return networkIdToWalletConnectChainId[networkId]
   })
@@ -421,9 +423,16 @@ export function* normalizeTransaction(rawTx: any, network: Network) {
   return tx
 }
 
-function* showActionRequest(request: Web3WalletTypes.EventArguments['session_request']) {
+function* showActionRequest(request: WalletKitTypes.EventArguments['session_request']) {
   if (!client) {
     throw new Error('missing client')
+  }
+
+  const demoModeEnabled = yield* select(demoModeEnabledSelector)
+  if (demoModeEnabled) {
+    navigate(Screens.DemoModeAuthBlock)
+    yield* put(denyRequest(request, getSdkError('USER_REJECTED')))
+    return
   }
 
   const method = request.params.request.method
@@ -438,7 +447,7 @@ function* showActionRequest(request: Web3WalletTypes.EventArguments['session_req
     getDefaultSessionTrackedProperties,
     session
   )
-  ValoraAnalytics.track(WalletConnectEvents.wc_request_propose, {
+  AppAnalytics.track(WalletConnectEvents.wc_request_propose, {
     ...defaultSessionTrackedProperties,
     ...getDefaultRequestTrackedProperties(request),
   })
@@ -476,6 +485,7 @@ function* showActionRequest(request: Web3WalletTypes.EventArguments['session_req
         feeCurrencies,
         decreasedAmountGasFeeMultiplier: 1,
         baseTransactions: [normalizedTx],
+        origin: 'wallet-connect' as const,
       })
     } catch (err) {
       Logger.warn(TAG + '@showActionRequest', 'Failed to prepare transaction', err)
@@ -517,7 +527,7 @@ function* acceptSession({ session, approvedNamespaces }: AcceptSession) {
     session
   )
   try {
-    ValoraAnalytics.track(WalletConnectEvents.wc_session_approve_start, defaultTrackedProperties)
+    AppAnalytics.track(WalletConnectEvents.wc_session_approve_start, defaultTrackedProperties)
 
     if (!client) {
       throw new Error('missing client')
@@ -531,7 +541,7 @@ function* acceptSession({ session, approvedNamespaces }: AcceptSession) {
       namespaces: approvedNamespaces,
     })
 
-    ValoraAnalytics.track(WalletConnectEvents.wc_session_approve_success, defaultTrackedProperties)
+    AppAnalytics.track(WalletConnectEvents.wc_session_approve_success, defaultTrackedProperties)
 
     // the Client does not emit any events when a new session value is
     // available, so if no matching session could be found we can wait and try again.
@@ -549,7 +559,7 @@ function* acceptSession({ session, approvedNamespaces }: AcceptSession) {
   } catch (err) {
     const e = ensureError(err)
     Logger.debug(TAG + '@acceptSession', e.message)
-    ValoraAnalytics.track(WalletConnectEvents.wc_session_approve_error, {
+    AppAnalytics.track(WalletConnectEvents.wc_session_approve_error, {
       ...defaultTrackedProperties,
       error: e.message,
     })
@@ -561,7 +571,7 @@ function* acceptSession({ session, approvedNamespaces }: AcceptSession) {
 // Export for testing
 export const _acceptSession = acceptSession
 
-function* getSessionFromClient(session: Web3WalletTypes.EventArguments['session_proposal']) {
+function* getSessionFromClient(session: WalletKitTypes.EventArguments['session_proposal']) {
   if (!client) {
     // should not happen
     throw new Error('missing client')
@@ -596,7 +606,7 @@ function* denySession({ session, reason }: DenySession) {
   }
 
   try {
-    ValoraAnalytics.track(WalletConnectEvents.wc_session_reject_start, defaultTrackedProperties)
+    AppAnalytics.track(WalletConnectEvents.wc_session_reject_start, defaultTrackedProperties)
 
     if (!client) {
       throw new Error('missing client')
@@ -607,11 +617,11 @@ function* denySession({ session, reason }: DenySession) {
       reason,
     })
 
-    ValoraAnalytics.track(WalletConnectEvents.wc_session_reject_success, defaultTrackedProperties)
+    AppAnalytics.track(WalletConnectEvents.wc_session_reject_success, defaultTrackedProperties)
   } catch (err) {
     const e = ensureError(err)
     Logger.debug(TAG + '@denySession', e.message)
-    ValoraAnalytics.track(WalletConnectEvents.wc_session_reject_error, {
+    AppAnalytics.track(WalletConnectEvents.wc_session_reject_error, {
       ...defaultTrackedProperties,
       error: e.message,
     })
@@ -620,7 +630,7 @@ function* denySession({ session, reason }: DenySession) {
   yield* call(handlePendingStateOrNavigateBack)
 }
 
-function* getSessionFromRequest(request: Web3WalletTypes.EventArguments['session_request']) {
+export function* getSessionFromRequest(request: WalletKitTypes.EventArguments['session_request']) {
   if (!client) {
     // should not happen
     throw new Error('missing client')
@@ -649,7 +659,7 @@ function* handleAcceptRequest({ request, preparedTransaction }: AcceptRequest) {
   }
 
   try {
-    ValoraAnalytics.track(WalletConnectEvents.wc_request_accept_start, defaultTrackedProperties)
+    AppAnalytics.track(WalletConnectEvents.wc_request_accept_start, defaultTrackedProperties)
 
     if (!client) {
       throw new Error('Missing client')
@@ -667,12 +677,12 @@ function* handleAcceptRequest({ request, preparedTransaction }: AcceptRequest) {
     const response: JsonRpcResult<string> = formatJsonRpcResult(id, result)
     yield* call([client, 'respondSessionRequest'], { topic, response })
 
-    ValoraAnalytics.track(WalletConnectEvents.wc_request_accept_success, defaultTrackedProperties)
+    AppAnalytics.track(WalletConnectEvents.wc_request_accept_success, defaultTrackedProperties)
     yield* call(showWalletConnectionSuccessMessage, activeSession.peer.metadata.name)
   } catch (err) {
     const e = ensureError(err)
     Logger.debug(TAG + '@acceptRequest', e.message)
-    ValoraAnalytics.track(WalletConnectEvents.wc_request_accept_error, {
+    AppAnalytics.track(WalletConnectEvents.wc_request_accept_error, {
       ...defaultTrackedProperties,
       error: e.message,
     })
@@ -687,7 +697,7 @@ function* handleAcceptRequest({ request, preparedTransaction }: AcceptRequest) {
     } catch (error) {
       const e = ensureError(err)
       Logger.debug(TAG + '@acceptRequest', e.message)
-      ValoraAnalytics.track(WalletConnectEvents.wc_request_accept_error, {
+      AppAnalytics.track(WalletConnectEvents.wc_request_accept_error, {
         ...defaultTrackedProperties,
         error: e.message,
       })
@@ -710,7 +720,7 @@ function* handleDenyRequest({ request, reason }: DenyRequest) {
   }
 
   try {
-    ValoraAnalytics.track(WalletConnectEvents.wc_request_deny_start, defaultTrackedProperties)
+    AppAnalytics.track(WalletConnectEvents.wc_request_deny_start, defaultTrackedProperties)
 
     if (!client) {
       throw new Error('Missing client')
@@ -719,11 +729,11 @@ function* handleDenyRequest({ request, reason }: DenyRequest) {
     const { topic, id } = request
     const response = formatJsonRpcError(id, reason.message)
     yield* call([client, 'respondSessionRequest'], { topic, response })
-    ValoraAnalytics.track(WalletConnectEvents.wc_request_deny_success, defaultTrackedProperties)
+    AppAnalytics.track(WalletConnectEvents.wc_request_deny_success, defaultTrackedProperties)
   } catch (err) {
     const e = ensureError(err)
     Logger.debug(TAG + '@denyRequest', e.message)
-    ValoraAnalytics.track(WalletConnectEvents.wc_request_deny_error, {
+    AppAnalytics.track(WalletConnectEvents.wc_request_deny_error, {
       ...defaultTrackedProperties,
       error: e.message,
     })
@@ -739,7 +749,7 @@ function* closeSession({ session }: CloseSession) {
   )
 
   try {
-    ValoraAnalytics.track(WalletConnectEvents.wc_session_remove_start, defaultTrackedProperties)
+    AppAnalytics.track(WalletConnectEvents.wc_session_remove_start, defaultTrackedProperties)
 
     if (!client) {
       throw new Error('missing client')
@@ -750,11 +760,11 @@ function* closeSession({ session }: CloseSession) {
       reason: getSdkError('USER_DISCONNECTED'),
     })
 
-    ValoraAnalytics.track(WalletConnectEvents.wc_session_remove_success, defaultTrackedProperties)
+    AppAnalytics.track(WalletConnectEvents.wc_session_remove_success, defaultTrackedProperties)
   } catch (err) {
     const e = ensureError(err)
     Logger.debug(TAG + '@closeSession', e.message)
-    ValoraAnalytics.track(WalletConnectEvents.wc_session_remove_error, {
+    AppAnalytics.track(WalletConnectEvents.wc_session_remove_error, {
       ...defaultTrackedProperties,
       error: e.message,
     })
@@ -771,17 +781,17 @@ function* handlePendingStateOrNavigateBack() {
   }
 }
 
-function* handlePendingState() {
+export function* handlePendingState() {
   const {
     pending: [pendingSession],
-  }: { pending: Web3WalletTypes.EventArguments['session_proposal'][] } =
+  }: { pending: WalletKitTypes.EventArguments['session_proposal'][] } =
     yield* select(selectSessions)
   if (pendingSession) {
     yield* call(showSessionRequest, pendingSession)
     return
   }
 
-  const [pendingRequest]: Web3WalletTypes.EventArguments['session_request'][] =
+  const [pendingRequest]: WalletKitTypes.EventArguments['session_request'][] =
     yield* select(selectPendingActions)
   if (pendingRequest) {
     yield* call(showActionRequest, pendingRequest)
@@ -829,13 +839,11 @@ export function* initialiseWalletConnectV2(uri: string, origin: WalletConnectPai
   yield* put(initialisePairing(uri, origin))
 }
 
-export function* isWalletConnectEnabled(uri: string) {
+export function isWalletConnectEnabled(uri: string) {
   const { version } = parseUri(uri)
-  const { v2 } = yield* select(walletConnectEnabledSelector)
-  const versionEnabled: { [version: string]: boolean | undefined } = {
-    '2': v2,
-  }
-  return versionEnabled[version] ?? false
+  const walletConnectV2Disabled = getFeatureGate(StatsigFeatureGates.DISABLE_WALLET_CONNECT_V2)
+
+  return !walletConnectV2Disabled && version === 2
 }
 
 export function* initialiseWalletConnect(uri: string, origin: WalletConnectPairingOrigin) {

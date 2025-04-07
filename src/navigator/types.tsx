@@ -1,26 +1,27 @@
-import { Countries } from '@celo/phone-utils'
-import { AccountAuthRequest, SignTxRequest } from '@celo/utils'
 import { KycSchema } from '@fiatconnect/fiatconnect-types'
 import { SendOrigin, WalletConnectPairingOrigin } from 'src/analytics/types'
-import { EscrowedPayment } from 'src/escrow/actions'
+import { EarnActiveMode, EarnTabType } from 'src/earn/types'
 import { ExternalExchangeProvider } from 'src/fiatExchanges/ExternalExchanges'
 import FiatConnectQuote from 'src/fiatExchanges/quotes/FiatConnectQuote'
-import { CICOFlow, FiatExchangeFlow, SimplexQuote } from 'src/fiatExchanges/utils'
+import { CICOFlow, FiatExchangeFlow, SimplexQuote } from 'src/fiatExchanges/types'
 import { Props as KycLandingProps } from 'src/fiatconnect/KycLanding'
 import { FiatAccount } from 'src/fiatconnect/slice'
 import { KeylessBackupFlow, KeylessBackupOrigin } from 'src/keylessBackup/types'
 import { ActivityModel } from 'src/kolektivo/activities/utils'
 import { Screens } from 'src/navigator/Screens'
 import { Nft } from 'src/nfts/types'
+import { EarnPosition } from 'src/positions/types'
 import { Recipient } from 'src/recipients/recipient'
 import { QrCode, TransactionDataInput } from 'src/send/types'
 import { AssetTabType } from 'src/tokens/types'
 import { NetworkId, TokenTransaction, TokenTransfer } from 'src/transactions/types'
+import { Countries } from 'src/utils/Countries'
 import { Currency } from 'src/utils/currencies'
 import { SerializableTransactionRequest } from 'src/viem/preparedTransactionSerialization'
 import { ActionRequestProps } from 'src/walletConnect/screens/ActionRequest'
 import { SessionRequestProps } from 'src/walletConnect/screens/SessionRequest'
 import { WalletConnectRequestType } from 'src/walletConnect/types'
+import { Address } from 'viem'
 
 // Typed nested navigator params
 type NestedNavigatorParams<ParamList> = {
@@ -61,7 +62,8 @@ export type StackParamList = {
   [Screens.AccountKeyEducation]:
     | undefined
     | {
-        nextScreen: keyof StackParamList
+        nextScreen?: keyof StackParamList
+        origin?: 'cabOnboarding'
       }
   [Screens.AccounSetupFailureScreen]: undefined
   [Screens.BackupPhrase]: { isAccountRemoval?: boolean } | undefined
@@ -71,42 +73,38 @@ export type StackParamList = {
     flow: CICOFlow
   }
   [Screens.BidaliScreen]: { currency?: Currency }
-  [Screens.CoinbasePayScreen]: { uri: string }
   [Screens.CashInSuccess]: { provider?: string }
-  [Screens.ChooseYourAdventure]: undefined
   [Screens.ConsumerIncentivesHomeScreen]: undefined
-  [Screens.DappKitAccountScreen]: {
-    dappKitRequest: AccountAuthRequest
-  }
-  [Screens.DappKitSignTxScreen]: {
-    dappKitRequest: SignTxRequest
-  }
   [Screens.DappShortcutsRewards]: undefined
   [Screens.DappShortcutTransactionRequest]: {
     rewardId: string
   }
-  [Screens.Debug]: undefined
-  [Screens.EarnInfoScreen]: {
-    tokenId: string
-  }
+  [Screens.DappsScreen]: undefined
+  [Screens.DebugImages]: undefined
+  [Screens.DemoModeAuthBlock]: undefined
+  [Screens.EarnInfoScreen]: undefined
   [Screens.EarnEnterAmount]: {
-    tokenId: string
+    pool: EarnPosition
+    mode?: Extract<EarnActiveMode, 'deposit' | 'swap-deposit' | 'withdraw'>
   }
-  [Screens.EarnCollectScreen]: {
-    depositTokenId: string
-    poolTokenId: string
+  [Screens.EarnConfirmationScreen]: {
+    pool: EarnPosition
+    mode: Extract<EarnActiveMode, 'claim-rewards' | 'exit' | 'withdraw'>
+    inputAmount?: string
+    useMax: boolean
   }
+  [Screens.EarnHome]: { activeEarnTab?: EarnTabType } | undefined
+  [Screens.EarnPoolInfoScreen]: { pool: EarnPosition }
   [Screens.ErrorScreen]: {
     errorMessage?: string
   }
-  [Screens.EscrowedPaymentListScreen]: undefined
   [Screens.ExternalExchanges]: {
     tokenId: string
     exchanges: ExternalExchangeProvider[]
   }
   [Screens.ExchangeQR]: {
     flow: CICOFlow
-    exchanges: ExternalExchangeProvider[]
+    exchanges?: ExternalExchangeProvider[]
   }
   [Screens.FiatExchangeAmount]: {
     tokenId: string
@@ -118,6 +116,7 @@ export type StackParamList = {
   }
   [Screens.FiatExchangeCurrencyBottomSheet]: {
     flow: FiatExchangeFlow
+    networkId?: NetworkId
   }
   [Screens.FiatConnectLinkAccount]: {
     quote: FiatConnectQuote
@@ -225,9 +224,17 @@ export type StackParamList = {
   [Screens.PointsHome]: undefined
   [Screens.PointsIntro]: undefined
   [Screens.ProtectWallet]: undefined
-  [Screens.OnboardingRecoveryPhrase]: undefined
+  [Screens.OnboardingRecoveryPhrase]:
+    | {
+        origin?: 'cabOnboarding'
+      }
+    | undefined
   [Screens.Profile]: undefined
-  [Screens.ProfileMenu]: undefined
+  [Screens.ProfileSubmenu]: undefined
+  [Screens.LegalSubmenu]: undefined
+  [Screens.PreferencesSubmenu]: undefined
+  [Screens.SecuritySubmenu]: { promptConfirmRemovalModal?: boolean } | undefined
+  [Screens.SettingsMenu]: undefined
   [Screens.QRNavigator]: NestedNavigatorParams<QRTabParamList> | undefined
   [Screens.QRKolektivoNavigator]: NestedNavigatorParams<QRTabParamList> | undefined
   [Screens.ReclaimPaymentConfirmationScreen]: {
@@ -257,7 +264,7 @@ export type StackParamList = {
       }
     | undefined
   [Screens.SendConfirmation]: SendConfirmationParams
-  [Screens.SendConfirmationModal]: SendConfirmationParams
+  [Screens.SendConfirmationFromExternal]: SendConfirmationParams
   [Screens.SendEnterAmount]: SendEnterAmountParams
   [Screens.JumpstartEnterAmount]: undefined
   [Screens.JumpstartSendConfirmation]: {
@@ -265,13 +272,13 @@ export type StackParamList = {
     sendAmount: string
     tokenId: string
     serializablePreparedTransactions: SerializableTransactionRequest[]
+    beneficiaryAddress: Address
   }
   [Screens.JumpstartShareLink]: {
     link: string
     sendAmount: string
     tokenId: string
   }
-  [Screens.Settings]: { promptConfirmRemovalModal?: boolean } | undefined
   [Screens.SignInWithEmail]: {
     keylessBackupFlow: KeylessBackupFlow
     origin: KeylessBackupOrigin
@@ -288,6 +295,7 @@ export type StackParamList = {
     | {
         fromTokenId?: string
         toTokenId?: string
+        toTokenNetworkId?: NetworkId
       }
     | undefined
   [Screens.TabDiscover]: {} | undefined
@@ -318,6 +326,7 @@ export type StackParamList = {
     registrationStep?: { step: number; totalSteps: number }
     e164Number: string
     countryCallingCode: string
+    hasOnboarded?: boolean
   }
   [Screens.OnboardingSuccessScreen]: undefined
   [Screens.WalletConnectRequest]:
@@ -331,7 +340,7 @@ export type StackParamList = {
     | { type: WalletConnectRequestType.TimeOut }
   [Screens.WalletConnectSessions]: undefined
   [Screens.WalletSecurityPrimer]: undefined
-  [Screens.WebViewScreen]: { uri: string; dappkitDeeplink?: string }
+  [Screens.WebViewScreen]: { uri: string }
   [Screens.Welcome]: undefined
   [Screens.WithdrawSpend]: undefined
 }
@@ -343,6 +352,18 @@ export type QRTabParamList = {
       }
     | undefined
   [Screens.QRScanner]:
+    | {
+        showSecureSendStyling?: true
+        onQRCodeDetected?: (qrCode: QrCode) => void
+        defaultTokenIdOverride?: string
+      }
+    | undefined
+  [Screens.QRKolektivoCode]:
+    | {
+        showSecureSendStyling?: true
+      }
+    | undefined
+  [Screens.QRKolektivoScanner]:
     | {
         showSecureSendStyling?: true
         onQRCodeDetected?: (qrCode: QrCode) => void

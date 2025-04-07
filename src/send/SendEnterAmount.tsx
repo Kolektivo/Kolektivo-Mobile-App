@@ -1,8 +1,8 @@
 import { NativeStackScreenProps } from '@react-navigation/native-stack'
 import BigNumber from 'bignumber.js'
 import React, { useMemo } from 'react'
+import AppAnalytics from 'src/analytics/AppAnalytics'
 import { SendEvents } from 'src/analytics/Events'
-import ValoraAnalytics from 'src/analytics/ValoraAnalytics'
 import { getLocalCurrencyCode, usdToLocalCurrencyRateSelector } from 'src/localCurrency/selectors'
 import { navigate } from 'src/navigator/NavigationService'
 import { Screens } from 'src/navigator/Screens'
@@ -11,12 +11,11 @@ import { useSelector } from 'src/redux/hooks'
 import EnterAmount, { ProceedArgs, SendProceed } from 'src/send/EnterAmount'
 import { lastUsedTokenIdSelector } from 'src/send/selectors'
 import { usePrepareSendTransactions } from 'src/send/usePrepareSendTransactions'
-import { COMMENT_PLACEHOLDER_FOR_FEE_ESTIMATE } from 'src/send/utils'
 import { sortedTokensWithBalanceOrShowZeroBalanceSelector } from 'src/tokens/selectors'
 import { TokenBalance } from 'src/tokens/slice'
-import { getSupportedNetworkIdsForSend } from 'src/tokens/utils'
 import Logger from 'src/utils/Logger'
 import { walletAddressSelector } from 'src/web3/selectors'
+import { getSupportedNetworkIds } from 'src/web3/utils'
 
 type Props = NativeStackScreenProps<StackParamList, Screens.SendEnterAmount>
 
@@ -24,7 +23,7 @@ const TAG = 'SendEnterAmount'
 
 function SendEnterAmount({ route }: Props) {
   const { defaultTokenIdOverride, origin, recipient, isFromScan, forceTokenId } = route.params
-  const supportedNetworkIds = getSupportedNetworkIdsForSend()
+  const supportedNetworkIds = getSupportedNetworkIds()
   // explicitly allow zero state tokens to be shown for exploration purposes for
   // new users with no balance
   const tokens = useSelector((state) =>
@@ -60,7 +59,7 @@ function SendEnterAmount({ route }: Props) {
         tokenAmount,
       },
     })
-    ValoraAnalytics.track(SendEvents.send_amount_continue, {
+    AppAnalytics.track(SendEvents.send_amount_continue, {
       origin,
       isScan: isFromScan,
       recipientType: recipient.recipientType,
@@ -82,6 +81,7 @@ function SendEnterAmount({ route }: Props) {
     refreshPreparedTransactions,
     clearPreparedTransactions,
     prepareTransactionError,
+    prepareTransactionLoading,
   } = usePrepareSendTransactions()
 
   const walletAddress = useSelector(walletAddressSelector)
@@ -102,7 +102,6 @@ function SendEnterAmount({ route }: Props) {
       recipientAddress: recipient.address,
       walletAddress,
       feeCurrencies,
-      comment: COMMENT_PLACEHOLDER_FOR_FEE_ESTIMATE,
     })
   }
 
@@ -111,6 +110,7 @@ function SendEnterAmount({ route }: Props) {
       tokens={tokens}
       defaultToken={defaultToken}
       prepareTransactionsResult={prepareTransactionsResult}
+      prepareTransactionsLoading={prepareTransactionLoading}
       onClearPreparedTransactions={clearPreparedTransactions}
       onRefreshPreparedTransactions={handleRefreshPreparedTransactions}
       prepareTransactionError={prepareTransactionError}

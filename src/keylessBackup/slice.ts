@@ -2,12 +2,13 @@ import { PayloadAction, createSlice } from '@reduxjs/toolkit'
 import {
   KeylessBackupDeleteStatus,
   KeylessBackupFlow,
+  KeylessBackupOrigin,
   KeylessBackupStatus,
 } from 'src/keylessBackup/types'
 
 interface State {
-  googleIdToken: string | null
-  valoraKeyshare: string | null
+  auth0IdToken: string | null
+  appKeyshare: string | null
   torusKeyshare: string | null
   backupStatus: KeylessBackupStatus
   deleteBackupStatus: KeylessBackupDeleteStatus
@@ -15,8 +16,8 @@ interface State {
 }
 
 const initialState: State = {
-  googleIdToken: null,
-  valoraKeyshare: null,
+  auth0IdToken: null,
+  appKeyshare: null,
   torusKeyshare: null,
   backupStatus: KeylessBackupStatus.NotStarted,
   deleteBackupStatus: KeylessBackupDeleteStatus.NotStarted,
@@ -27,14 +28,19 @@ export const slice = createSlice({
   name: 'keylessBackup',
   initialState,
   reducers: {
-    googleSignInCompleted: (state, action: PayloadAction<{ idToken: string }>) => {
-      state.googleIdToken = action.payload.idToken
+    auth0SignInCompleted: (state, action: PayloadAction<{ idToken: string }>) => {
+      state.auth0IdToken = action.payload.idToken
     },
-    valoraKeyshareIssued: (
+    appKeyshareIssued: (
       state,
-      action: PayloadAction<{ keyshare: string; keylessBackupFlow: KeylessBackupFlow; jwt: string }>
+      action: PayloadAction<{
+        keyshare: string
+        keylessBackupFlow: KeylessBackupFlow
+        origin: KeylessBackupOrigin
+        jwt: string
+      }>
     ) => {
-      state.valoraKeyshare = action.payload.keyshare
+      state.appKeyshare = action.payload.keyshare
     },
     torusKeyshareIssued: (state, action: PayloadAction<{ keyshare: string }>) => {
       state.torusKeyshare = action.payload.keyshare
@@ -58,8 +64,8 @@ export const slice = createSlice({
       state.backupStatus = KeylessBackupStatus.InProgress
     },
     keylessBackupBail: (state) => {
-      state.googleIdToken = initialState.googleIdToken
-      state.valoraKeyshare = initialState.valoraKeyshare
+      state.auth0IdToken = initialState.auth0IdToken
+      state.appKeyshare = initialState.appKeyshare
       state.torusKeyshare = initialState.torusKeyshare
       state.backupStatus = initialState.backupStatus
     },
@@ -83,8 +89,8 @@ export const slice = createSlice({
 })
 
 export const {
-  googleSignInCompleted,
-  valoraKeyshareIssued,
+  auth0SignInCompleted,
+  appKeyshareIssued,
   torusKeyshareIssued,
   keylessBackupStarted,
   keylessBackupFailed,

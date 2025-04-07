@@ -3,37 +3,38 @@ import React, { useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ScrollView, StyleSheet, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
+import AppAnalytics from 'src/analytics/AppAnalytics'
 import { AssetsEvents } from 'src/analytics/Events'
 import { TokenProperties } from 'src/analytics/Properties'
-import ValoraAnalytics from 'src/analytics/ValoraAnalytics'
 import CeloNewsFeed from 'src/celoNews/CeloNewsFeed'
 import BackButton from 'src/components/BackButton'
-import { BottomSheetRefType } from 'src/components/BottomSheet'
+import { BottomSheetModalRefType } from 'src/components/BottomSheet'
 import Button, { BtnSizes } from 'src/components/Button'
 import PercentageIndicator from 'src/components/PercentageIndicator'
 import TokenDisplay from 'src/components/TokenDisplay'
 import TokenIcon, { IconSize } from 'src/components/TokenIcon'
 import Touchable from 'src/components/Touchable'
 import CustomHeader from 'src/components/header/CustomHeader'
-import { EarnCardTokenDetails } from 'src/earn/EarnCard'
-import { CICOFlow } from 'src/fiatExchanges/utils'
+import { CICOFlow } from 'src/fiatExchanges/types'
 import ArrowRightThick from 'src/icons/ArrowRightThick'
 import DataDown from 'src/icons/DataDown'
 import DataUp from 'src/icons/DataUp'
+import SwapArrows from 'src/icons/SwapArrows'
 import QuickActionsAdd from 'src/icons/quick-actions/Add'
 import QuickActionsMore from 'src/icons/quick-actions/More'
 import QuickActionsSend from 'src/icons/quick-actions/Send'
-import QuickActionsSwap from 'src/icons/quick-actions/Swap'
 import QuickActionsWithdraw from 'src/icons/quick-actions/Withdraw'
 import { getLocalCurrencySymbol } from 'src/localCurrency/selectors'
 import { noHeader } from 'src/navigator/Headers'
 import { navigate } from 'src/navigator/NavigationService'
 import { Screens } from 'src/navigator/Screens'
-import { isAppSwapsEnabledSelector } from 'src/navigator/selectors'
 import { StackParamList } from 'src/navigator/types'
 import PriceHistoryChart from 'src/priceHistory/PriceHistoryChart'
 import { useSelector } from 'src/redux/hooks'
 import { NETWORK_NAMES } from 'src/shared/conts'
+import { getDynamicConfigParams } from 'src/statsig'
+import { DynamicConfigs } from 'src/statsig/constants'
+import { StatsigDynamicConfigs } from 'src/statsig/types'
 import Colors from 'src/styles/colors'
 import { typeScale } from 'src/styles/fonts'
 import { Spacing } from 'src/styles/styles'
@@ -49,12 +50,9 @@ import {
 import { sortedTokensWithBalanceSelector } from 'src/tokens/selectors'
 import { TokenBalance } from 'src/tokens/slice'
 import { TokenAction, TokenActionName } from 'src/tokens/types'
-import {
-  getSupportedNetworkIdsForSend,
-  getTokenAnalyticsProps,
-  isHistoricalPriceUpdated,
-} from 'src/tokens/utils'
+import { getTokenAnalyticsProps, isHistoricalPriceUpdated } from 'src/tokens/utils'
 import networkConfig from 'src/web3/networkConfig'
+import { getSupportedNetworkIds } from 'src/web3/utils'
 
 type Props = NativeStackScreenProps<StackParamList, Screens.TokenDetails>
 
@@ -66,7 +64,7 @@ export default function TokenDetailsScreen({ route }: Props) {
   const token = useTokenInfo(tokenId)
   if (!token) throw new Error(`token with id ${tokenId} not found`)
   const actions = useActions(token)
-  const tokenDetailsMoreActionsBottomSheetRef = useRef<BottomSheetRefType>(null)
+  const tokenDetailsMoreActionsBottomSheetRef = useRef<BottomSheetModalRefType>(null)
   const localCurrencySymbol = useSelector(getLocalCurrencySymbol)
 
   return (
@@ -98,7 +96,6 @@ export default function TokenDetailsScreen({ route }: Props) {
             containerStyle={styles.chartContainer}
             chartPadding={Spacing.Thick24}
             testID={`TokenDetails/Chart/${tokenId}`}
-            color={Colors.black}
           />
         )}
         <Actions
@@ -116,12 +113,6 @@ export default function TokenDetailsScreen({ route }: Props) {
           />
         )}
         {token.tokenId === networkConfig.celoTokenId && <CeloNewsFeed />}
-        {token.tokenId === networkConfig.aaveArbUsdcTokenId && (
-          <EarnCardTokenDetails
-            poolTokenId={networkConfig.aaveArbUsdcTokenId}
-            depositTokenId={networkConfig.arbUsdcTokenId}
-          />
-        )}
       </ScrollView>
       <TokenDetailsMoreActions
         forwardedRef={tokenDetailsMoreActionsBottomSheetRef}
@@ -169,14 +160,17 @@ function PriceInfo({ token }: { token: TokenBalance }) {
 
 export const useActions = (token: TokenBalance) => {
   const { t } = useTranslation()
-  const supportedNetworkIdsForSend = getSupportedNetworkIdsForSend()
+  const supportedNetworkIdsForSend = getSupportedNetworkIds()
   const sendableTokensWithBalance = useSelector((state) =>
     sortedTokensWithBalanceSelector(state, supportedNetworkIdsForSend)
   )
   const { swappableFromTokens } = useSwappableTokens()
   const cashInTokens = useCashInTokens()
   const cashOutTokens = useCashOutTokens()
-  const isSwapEnabled = useSelector(isAppSwapsEnabledSelector)
+  const isSwapEnabled = getDynamicConfigParams(
+    DynamicConfigs[StatsigDynamicConfigs.SWAP_CONFIG]
+  ).enabled
+
   const showWithdraw = !!cashOutTokens.find((tokenInfo) => tokenInfo.tokenId === token.tokenId)
 
   return [
@@ -199,7 +193,7 @@ export const useActions = (token: TokenBalance) => {
       name: TokenActionName.Swap,
       title: t('tokenDetails.actions.swap'),
       details: t('tokenDetails.actionDescriptions.swap'),
-      iconComponent: QuickActionsSwap,
+      iconComponent: SwapArrows,
       onPress: () => {
         navigate(Screens.SwapScreenWithBack, { fromTokenId: token.tokenId })
       },
@@ -240,7 +234,7 @@ function Actions({
   actions,
 }: {
   token: TokenBalance
-  bottomSheetRef: React.RefObject<BottomSheetRefType>
+  bottomSheetRef: React.RefObject<BottomSheetModalRefType>
   actions: TokenAction[]
 }) {
   const { t } = useTranslation()
@@ -278,13 +272,13 @@ function Actions({
           key={action.name}
           text={action.title}
           onPress={() => {
-            ValoraAnalytics.track(AssetsEvents.tap_token_details_action, {
+            AppAnalytics.track(AssetsEvents.tap_token_details_action, {
               action: action.name,
               ...getTokenAnalyticsProps(token),
             })
             action.onPress()
           }}
-          icon={<action.iconComponent color={Colors.white} />}
+          icon={<action.iconComponent />}
           style={styles.actionButton}
           size={BtnSizes.FULL}
           touchableStyle={styles.actionTouchable}
@@ -307,7 +301,7 @@ function LearnMore({
   const { t } = useTranslation()
 
   const onPress = () => {
-    ValoraAnalytics.track(AssetsEvents.tap_token_details_learn_more, analyticsProps)
+    AppAnalytics.track(AssetsEvents.tap_token_details_learn_more, analyticsProps)
     navigate(Screens.WebViewScreen, { uri: infoUrl })
   }
 
@@ -318,7 +312,7 @@ function LearnMore({
           <Text style={styles.learnMoreText} testID="TokenDetails/LearnMore">
             {t('tokenDetails.learnMore', { tokenName: tokenName })}
           </Text>
-          <ArrowRightThick />
+          <ArrowRightThick color={Colors.textLink} />
         </View>
       </Touchable>
     </View>
@@ -337,14 +331,12 @@ const styles = StyleSheet.create({
   },
   tokenName: {
     ...typeScale.labelLarge,
-    color: Colors.black,
   },
   tokenImg: {
     marginRight: Spacing.Tiny4,
   },
   assetValue: {
     ...typeScale.titleLarge,
-    color: Colors.black,
     marginHorizontal: Spacing.Thick24,
   },
   chartContainer: {
@@ -369,12 +361,11 @@ const styles = StyleSheet.create({
   },
   yourBalance: {
     ...typeScale.labelMedium,
-    color: Colors.black,
     marginTop: Spacing.Regular16,
     marginHorizontal: Spacing.Thick24,
   },
   learnMoreContainer: {
-    borderTopColor: Colors.gray2,
+    borderTopColor: Colors.borderPrimary,
     borderTopWidth: 1,
     paddingTop: Spacing.Regular16,
     marginHorizontal: Spacing.Thick24,
@@ -386,7 +377,7 @@ const styles = StyleSheet.create({
   },
   learnMoreText: {
     ...typeScale.labelSmall,
-    color: Colors.gray3,
+    color: Colors.textLink,
   },
   priceInfo: {
     marginTop: Spacing.Tiny4,
@@ -397,6 +388,6 @@ const styles = StyleSheet.create({
   },
   priceInfoUnavailable: {
     ...typeScale.labelSmall,
-    color: Colors.gray3,
+    color: Colors.contentSecondary,
   },
 })

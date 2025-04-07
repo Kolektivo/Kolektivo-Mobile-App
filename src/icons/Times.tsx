@@ -1,17 +1,14 @@
 import * as React from 'react'
-import Animated from 'react-native-reanimated'
 import colors from 'src/styles/colors'
 import Svg, { Path } from 'svgs'
 
-const AnimatedPath = Animated.createAnimatedComponent(Path)
-
 export interface Props {
   height?: number
-  color?: string | Animated.Node<number | string>
+  color?: string
   strokeWidth?: number
 }
 
-function Times({ color, height, strokeWidth }: Props) {
+function Times({ color = colors.contentPrimary, height = 16, strokeWidth = 2 }: Props) {
   return (
     <Svg
       testID="Times"
@@ -20,16 +17,14 @@ function Times({ color, height, strokeWidth }: Props) {
       width={height}
       viewBox="0 0 16 16"
     >
-      <AnimatedPath
-        // @ts-ignore
+      <Path
         d="M13.9999 2.00146L1.99994 14.0015"
         stroke={color}
         strokeWidth={strokeWidth}
         strokeLinecap="round"
         strokeLinejoin="round"
       />
-      <AnimatedPath
-        // @ts-ignore
+      <Path
         d="M1.99994 2.00146L13.9999 14.0015"
         stroke={color}
         strokeWidth={strokeWidth}
@@ -38,12 +33,6 @@ function Times({ color, height, strokeWidth }: Props) {
       />
     </Svg>
   )
-}
-
-Times.defaultProps = {
-  height: 16,
-  color: colors.black,
-  strokeWidth: 2,
 }
 
 export default React.memo(Times)

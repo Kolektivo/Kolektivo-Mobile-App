@@ -1,17 +1,17 @@
-import GorhomBottomSheet, { BottomSheetSectionList } from '@gorhom/bottom-sheet'
+import { BottomSheetModal, BottomSheetSectionList } from '@gorhom/bottom-sheet'
 import React, { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ActivityIndicator, ListRenderItem, StyleSheet, Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import AppAnalytics from 'src/analytics/AppAnalytics'
 import { PointsEvents } from 'src/analytics/Events'
-import ValoraAnalytics from 'src/analytics/ValoraAnalytics'
 import BottomSheetBase from 'src/components/BottomSheetBase'
 import Button, { BtnSizes, BtnTypes } from 'src/components/Button'
 import { NotificationVariant } from 'src/components/InLineNotification'
 import SectionHead from 'src/components/SectionHead'
 import Toast from 'src/components/Toast'
 import { default as Attention, default as AttentionIcon } from 'src/icons/Attention'
-import LogoHeart from 'src/icons/LogoHeart'
+import LogoHeart from 'src/images/LogoHeart'
 import { HistoryCardMetadata, useGetHistoryDefinition } from 'src/points/cardDefinitions'
 import {
   nextPageUrlSelector,
@@ -27,7 +27,7 @@ import { Spacing } from 'src/styles/styles'
 import { groupFeedItemsInSections } from 'src/transactions/utils'
 
 interface Props {
-  forwardedRef: React.RefObject<GorhomBottomSheet>
+  forwardedRef: React.RefObject<BottomSheetModal>
 }
 
 function PointsHistoryCard({
@@ -74,7 +74,7 @@ function PointsHistoryBottomSheet({ forwardedRef }: Props) {
       return
     }
 
-    ValoraAnalytics.track(PointsEvents.points_screen_activity_fetch_more)
+    AppAnalytics.track(PointsEvents.points_screen_activity_fetch_more)
     dispatch(
       getHistoryStarted({
         getNextPage: true,
@@ -93,7 +93,7 @@ function PointsHistoryBottomSheet({ forwardedRef }: Props) {
   }
 
   const onPressTryAgain = (getNextPage: boolean) => {
-    ValoraAnalytics.track(PointsEvents.points_screen_activity_try_again_press, {
+    AppAnalytics.track(PointsEvents.points_screen_activity_try_again_press, {
       getNextPage,
     })
     dispatch(
@@ -104,7 +104,7 @@ function PointsHistoryBottomSheet({ forwardedRef }: Props) {
   }
 
   const onPressLearnMore = () => {
-    ValoraAnalytics.track(PointsEvents.points_screen_activity_learn_more_press)
+    AppAnalytics.track(PointsEvents.points_screen_activity_learn_more_press)
     forwardedRef.current?.close()
   }
 
@@ -114,7 +114,7 @@ function PointsHistoryBottomSheet({ forwardedRef }: Props) {
         testID={'PointsHistoryBottomSheet/Loading'}
         style={styles.loadingIcon}
         size="large"
-        color={colors.primary}
+        color={colors.loadingIndicator}
       />
     ) : null
 
@@ -122,7 +122,7 @@ function PointsHistoryBottomSheet({ forwardedRef }: Props) {
     pointsHistoryStatus === 'errorFirstPage' ? (
       <View testID={'PointsHistoryBottomSheet/Error'} style={styles.emptyContainer}>
         <View style={styles.messageContainer}>
-          <Attention size={48} color={Colors.black} />
+          <Attention size={48} color={Colors.contentPrimary} />
           <Text style={styles.messageTitle}>{t('points.history.error.title')}</Text>
           <Text style={styles.messageSubtitle}>{t('points.history.error.subtitle')}</Text>
         </View>
@@ -188,7 +188,7 @@ function PointsHistoryBottomSheet({ forwardedRef }: Props) {
         ctaLabel={t('points.history.pageError.refresh')}
         onPressCta={() => onPressTryAgain(true)}
         style={styles.errorNotification}
-        customIcon={<AttentionIcon color={colors.errorDark} size={20} />}
+        customIcon={<AttentionIcon color={colors.errorPrimary} size={20} />}
         testID={'PointsHistoryBottomSheet/ErrorBanner'}
       />
     </BottomSheetBase>
@@ -233,9 +233,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.Thick24,
   },
   cardIcon: {
-    backgroundColor: colors.successLight,
-    justifyContent: 'flex-end',
     alignItems: 'center',
+    justifyContent: 'center',
     borderRadius: 20,
     width: 40,
     height: 40,
@@ -250,11 +249,11 @@ const styles = StyleSheet.create({
   },
   cardSubtitle: {
     ...typeScale.labelSmall,
-    color: colors.gray4,
+    color: colors.contentSecondary,
   },
   cardPointsAmount: {
     ...typeScale.labelMedium,
-    color: colors.successDark,
+    color: colors.successPrimary,
   },
   cardPointsAmountContainer: {
     flexDirection: 'row',

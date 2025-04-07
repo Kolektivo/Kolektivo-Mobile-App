@@ -1,4 +1,3 @@
-import { getRegionCode } from '@celo/phone-utils'
 import CountryData from 'country-data'
 import { getCurrencies } from 'react-native-localize'
 import { createSelector } from 'reselect'
@@ -10,8 +9,7 @@ import {
   LocalCurrencySymbol,
 } from 'src/localCurrency/consts'
 import { RootState } from 'src/redux/reducers'
-
-const MIN_UPDATE_INTERVAL = 12 * 3600 * 1000 // 12 hours
+import { getRegionCode } from 'src/utils/phoneNumbers'
 
 function getCountryCurrencies(e164PhoneNumber: string) {
   const regionCode = getRegionCode(e164PhoneNumber)
@@ -62,16 +60,6 @@ export const usdToLocalCurrencyRateSelector = (state: RootState) => {
   }
 
   return usdToLocalRate
-}
-
-export function shouldFetchCurrentRate(state: RootState): boolean {
-  const { isLoading, lastSuccessfulUpdate } = state.localCurrency
-
-  if (isLoading) {
-    return false
-  }
-
-  return !lastSuccessfulUpdate || Date.now() - lastSuccessfulUpdate > MIN_UPDATE_INTERVAL
 }
 
 export const localCurrencyExchangeRateErrorSelector = (state: RootState) =>

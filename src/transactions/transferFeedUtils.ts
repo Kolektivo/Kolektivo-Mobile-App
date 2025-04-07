@@ -10,12 +10,7 @@ import {
   getCachedFiatConnectTransferSelector,
 } from 'src/fiatconnect/selectors'
 import { txHashToFeedInfoSelector } from 'src/fiatExchanges/reducer'
-import { decryptComment } from 'src/identity/commentEncryption'
-import {
-  addressToDisplayNameSelector,
-  addressToE164NumberSelector,
-  identifierToE164NumberSelector,
-} from 'src/identity/selectors'
+import { addressToDisplayNameSelector } from 'src/identity/selectors'
 import {
   getDisplayName,
   getRecipientFromAddress,
@@ -26,16 +21,11 @@ import {
 import {
   coinbasePaySendersSelector,
   inviteRewardsSendersSelector,
-  phoneRecipientCacheSelector,
   recipientInfoSelector,
   rewardsSendersSelector,
 } from 'src/recipients/reducer'
 import { useSelector } from 'src/redux/hooks'
 import { useTokenInfoByAddress } from 'src/tokens/hooks'
-import {
-  inviteTransactionsSelector,
-  recentTxRecipientsCacheSelector,
-} from 'src/transactions/reducer'
 import {
   LocalAmount,
   TokenTransactionTypeV2,
@@ -43,51 +33,14 @@ import {
   TransactionStatus,
 } from 'src/transactions/types'
 import Logger from 'src/utils/Logger'
-import { dataEncryptionKeySelector } from 'src/web3/selectors'
 
 const TAG = 'transferFeedUtils'
 
-export function getDecryptedTransferFeedComment(
-  comment: string | null,
-  commentKey: string | null,
-  type: TokenTransactionTypeV2
-) {
-  const { comment: decryptedComment } = decryptComment(comment, commentKey, isTokenTxTypeSent(type))
-  return decryptedComment
-}
-
 // Note: This hook is tested from src/transactions/feed/TransferFeedItem.test.ts
 export function useTransactionRecipient(transfer: TokenTransfer): Recipient {
-  const phoneRecipientCache = useSelector(phoneRecipientCacheSelector)
-  const recentTxRecipientsCache = useSelector(recentTxRecipientsCacheSelector)
   const recipientInfo: RecipientInfo = useSelector(recipientInfoSelector)
   const txHashToFeedInfo = useSelector(txHashToFeedInfoSelector)
-  const addressToE164Number = useSelector(addressToE164NumberSelector)
-  const invitationTransactions = useSelector(inviteTransactionsSelector)
-  const identifierToE164Number = useSelector(identifierToE164NumberSelector)
   const fcTransferDisplayInfo = useFiatConnectTransferDisplayInfo(transfer)
-
-  const phoneNumber =
-    transfer.type === TokenTransactionTypeV2.InviteSent &&
-    !!invitationTransactions[transfer.transactionHash]
-      ? identifierToE164Number[invitationTransactions[transfer.transactionHash].recipientIdentifier]
-      : addressToE164Number[transfer.address]
-
-  let recipient: Recipient
-
-  if (phoneNumber) {
-    recipient = phoneRecipientCache[phoneNumber] ?? recentTxRecipientsCache[phoneNumber]
-    if (recipient) {
-      return { ...recipient, address: transfer.address }
-    } else {
-      recipient = {
-        e164PhoneNumber: phoneNumber,
-        address: transfer.address,
-        recipientType: RecipientType.PhoneNumber,
-      }
-      return recipient
-    }
-  }
 
   if (fcTransferDisplayInfo) {
     return {
@@ -97,7 +50,7 @@ export function useTransactionRecipient(transfer: TokenTransfer): Recipient {
     }
   }
 
-  recipient = getRecipientFromAddress(
+  const recipient = getRecipientFromAddress(
     transfer.address,
     recipientInfo,
     transfer.metadata.title,
@@ -118,7 +71,6 @@ export function useTransferFeedDetails(transfer: TokenTransfer, isJumpstart: boo
   const rewardsSenders = useSelector(rewardsSendersSelector)
   const inviteRewardSenders = useSelector(inviteRewardsSendersSelector)
   const txHashToFeedInfo = useSelector(txHashToFeedInfoSelector)
-  const commentKey = useSelector(dataEncryptionKeySelector)
   const tokenInfo = useTokenInfoByAddress(transfer.amount.tokenAddress)
   const coinbasePaySenders = useSelector(coinbasePaySendersSelector)
   const fcTransferDisplayInfo = useFiatConnectTransferDisplayInfo(transfer)
@@ -126,15 +78,13 @@ export function useTransferFeedDetails(transfer: TokenTransfer, isJumpstart: boo
   const {
     type,
     address,
-    metadata: { comment: rawComment, subtitle: defaultSubtitle },
+    metadata: { subtitle: subtitleContent },
   } = transfer
 
   const recipient = useTransactionRecipient(transfer)
 
   const nameOrNumber = recipient.name ?? recipient.e164PhoneNumber
   const displayName = getDisplayName(recipient, t)
-  const comment =
-    getDecryptedTransferFeedComment(rawComment ?? null, commentKey, type) ?? defaultSubtitle
 
   let title, subtitle, customLocalAmount
 
@@ -147,7 +97,10 @@ export function useTransferFeedDetails(transfer: TokenTransfer, isJumpstart: boo
         subtitle = t('feedItemJumpstartSentSubtitle')
       } else {
         title = t('feedItemSentTitle', { displayName })
-        subtitle = t('feedItemSentInfo', { context: !comment ? 'noComment' : null, comment })
+        subtitle = t('feedItemSentInfo', {
+          context: !subtitleContent ? 'noComment' : null,
+          subtitleContent,
+        })
       }
       break
     }
@@ -177,33 +130,20 @@ export function useTransferFeedDetails(transfer: TokenTransfer, isJumpstart: boo
         subtitle = t('tokenDeposit', { token: tokenInfo?.symbol ?? '' })
       } else if (isCoinbasePaySender) {
         title = t('feedItemDepositTitle')
-        subtitle = t('feedItemReceivedInfo', { context: !comment ? 'noComment' : null, comment })
+        subtitle = t('feedItemReceivedInfo', {
+          context: !subtitleContent ? 'noComment' : null,
+          subtitleContent,
+        })
       } else if (isJumpstart) {
         title = t('feedItemJumpstartTitle')
         subtitle = t('feedItemJumpstartReceivedSubtitle')
       } else {
         title = t('feedItemReceivedTitle', { displayName })
-        subtitle = t('feedItemReceivedInfo', { context: !comment ? 'noComment' : null, comment })
+        subtitle = t('feedItemReceivedInfo', {
+          context: !subtitleContent ? 'noComment' : null,
+          subtitleContent,
+        })
       }
-      break
-    }
-    case TokenTransactionTypeV2.InviteSent: {
-      title = t('feedItemEscrowSentTitle', {
-        context: !nameOrNumber ? 'noReceiverDetails' : null,
-        nameOrNumber,
-      })
-      subtitle = t('feedItemEscrowSentInfo', { context: !comment ? 'noComment' : null, comment })
-      break
-    }
-    case TokenTransactionTypeV2.InviteReceived: {
-      title = t('feedItemEscrowReceivedTitle', {
-        context: !nameOrNumber ? 'noSenderDetails' : null,
-        nameOrNumber,
-      })
-      subtitle = t('feedItemEscrowReceivedInfo', {
-        context: !comment ? 'noComment' : null,
-        comment,
-      })
       break
     }
     default: {
@@ -212,7 +152,7 @@ export function useTransferFeedDetails(transfer: TokenTransfer, isJumpstart: boo
         nameOrNumber,
       })
       // Fallback to just using the type
-      subtitle = comment || _.capitalize(t(_.camelCase(type)) ?? undefined)
+      subtitle = _.capitalize(t(_.camelCase(type)) ?? undefined)
       break
     }
   }

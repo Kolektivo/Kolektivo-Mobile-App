@@ -13,8 +13,8 @@ import {
 import { getNumberFormatSettings } from 'react-native-localize'
 import Animated, { useAnimatedStyle, useSharedValue } from 'react-native-reanimated'
 import { hideAlert, showToast } from 'src/alert/actions'
+import AppAnalytics from 'src/analytics/AppAnalytics'
 import { AssetsEvents, FiatExchangeEvents, HomeEvents } from 'src/analytics/Events'
-import ValoraAnalytics from 'src/analytics/ValoraAnalytics'
 import { toggleHideBalances } from 'src/app/actions'
 import { hideWalletBalancesSelector } from 'src/app/selectors'
 import { formatValueToDisplay } from 'src/components/TokenDisplay'
@@ -23,9 +23,9 @@ import Touchable from 'src/components/Touchable'
 import { useShowOrHideAnimation } from 'src/components/useShowOrHideAnimation'
 import { refreshAllBalances } from 'src/home/actions'
 import EyeIcon from 'src/icons/EyeIcon'
+import ForwardChevron from 'src/icons/ForwardChevron'
 import HiddenEyeIcon from 'src/icons/HiddenEyeIcon'
 import InfoIcon from 'src/icons/InfoIcon'
-import ProgressArrow from 'src/icons/ProgressArrow'
 import { useDollarsToLocalAmount } from 'src/localCurrency/hooks'
 import {
   getLocalCurrencySymbol,
@@ -36,7 +36,7 @@ import { Screens } from 'src/navigator/Screens'
 import { totalPositionsBalanceUsdSelector } from 'src/positions/selectors'
 import { useDispatch, useSelector } from 'src/redux/hooks'
 import Colors from 'src/styles/colors'
-import fontStyles, { typeScale } from 'src/styles/fonts'
+import { typeScale } from 'src/styles/fonts'
 import { Spacing } from 'src/styles/styles'
 import variables from 'src/styles/variables'
 import {
@@ -46,8 +46,8 @@ import {
   useTokensWithUsdValue,
   useTotalTokenBalance,
 } from 'src/tokens/hooks'
-import { tokenFetchErrorSelector, tokenFetchLoadingSelector } from 'src/tokens/selectors'
-import { getSupportedNetworkIdsForTokenBalances } from 'src/tokens/utils'
+import { tokenFetchErrorSelector } from 'src/tokens/selectors'
+import { getSupportedNetworkIds } from 'src/web3/utils'
 
 function TokenBalance({
   style = styles.balance,
@@ -58,11 +58,10 @@ function TokenBalance({
   singleTokenViewEnabled?: boolean
   showBalanceToggle?: boolean
 }) {
-  const supportedNetworkIds = getSupportedNetworkIdsForTokenBalances()
+  const supportedNetworkIds = getSupportedNetworkIds()
   const tokensWithUsdValue = useTokensWithUsdValue(supportedNetworkIds)
   const localCurrencySymbol = useSelector(getLocalCurrencySymbol)
   const totalTokenBalanceLocal = useTotalTokenBalance()
-  const tokenFetchLoading = useSelector(tokenFetchLoadingSelector)
   const tokenFetchError = useSelector(tokenFetchErrorSelector)
   const tokensAreStale = useTokenPricesAreStale(supportedNetworkIds)
   // TODO(ACT-1095): Update these to filter out unsupported networks once positions support non-Celo chains
@@ -90,7 +89,7 @@ function TokenBalance({
     )
   }
 
-  if (tokenFetchError || tokenFetchLoading || tokensAreStale) {
+  if (tokenFetchError || tokensAreStale) {
     // Show '-' if we haven't fetched the tokens yet or prices are stale
     return <TotalTokenBalance balanceDisplay={'-'} />
   } else if (
@@ -124,7 +123,7 @@ function TokenBalance({
 function HideBalanceButton({ hideBalance }: { hideBalance: boolean }) {
   const dispatch = useDispatch()
   const eyeIconOnPress = () => {
-    ValoraAnalytics.track(hideBalance ? HomeEvents.show_balances : HomeEvents.hide_balances)
+    AppAnalytics.track(hideBalance ? HomeEvents.show_balances : HomeEvents.hide_balances)
     dispatch(toggleHideBalances())
   }
   return (
@@ -137,7 +136,7 @@ function HideBalanceButton({ hideBalance }: { hideBalance: boolean }) {
 function useErrorMessageWithRefresh() {
   const { t } = useTranslation()
 
-  const supportedNetworkIds = getSupportedNetworkIdsForTokenBalances()
+  const supportedNetworkIds = getSupportedNetworkIds()
   const tokensInfoUnavailable = useTokensInfoUnavailable(supportedNetworkIds)
   const tokenFetchError = useSelector(tokenFetchErrorSelector)
   const localCurrencyError = useSelector(localCurrencyExchangeRateErrorSelector)
@@ -190,7 +189,7 @@ export function AssetsTokenBalance({ showInfo }: { showInfo: boolean }) {
 
   const toggleInfoVisible = () => {
     if (!infoVisible) {
-      ValoraAnalytics.track(AssetsEvents.show_asset_balance_info)
+      AppAnalytics.track(AssetsEvents.show_asset_balance_info)
     }
     setInfoVisible((prev) => !prev)
   }
@@ -210,7 +209,7 @@ export function AssetsTokenBalance({ showInfo }: { showInfo: boolean }) {
               hitSlop={variables.iconHitslop}
               testID="AssetsTokenBalance/Info"
             >
-              <InfoIcon color={Colors.primary} />
+              <InfoIcon color={Colors.accent} />
             </TouchableOpacity>
           )}
         </View>
@@ -236,7 +235,7 @@ export function FiatExchangeTokenBalance() {
   const tokenBalances = useTokensWithTokenBalance()
 
   const onViewBalances = () => {
-    ValoraAnalytics.track(FiatExchangeEvents.cico_landing_token_balance, {
+    AppAnalytics.track(FiatExchangeEvents.cico_landing_token_balance, {
       totalBalance: totalBalance?.toString(),
     })
     navigateClearingStack(Screens.TabNavigator, { initialScreen: Screens.TabWallet })
@@ -249,7 +248,7 @@ export function FiatExchangeTokenBalance() {
           {tokenBalances.length > 1 ? (
             <TouchableOpacity style={styles.row} onPress={onViewBalances} testID="ViewBalances">
               <Text style={styles.exchangeTotalValue}>{t('totalValue')}</Text>
-              <ProgressArrow style={styles.exchangeArrow} height={9.62} color={Colors.gray4} />
+              <ForwardChevron height={9.62} color={Colors.contentSecondary} />
             </TouchableOpacity>
           ) : (
             <Text style={styles.exchangeTotalValue}>{t('totalValue')}</Text>
@@ -267,8 +266,8 @@ const styles = StyleSheet.create({
   },
   walletTabTitle: {
     ...typeScale.titleMedium,
-    color: Colors.black,
     marginRight: 10,
+    paddingTop: Spacing.Small12,
   },
   totalAssetsInfoContainer: {
     position: 'absolute',
@@ -276,12 +275,12 @@ const styles = StyleSheet.create({
     width: 190,
     paddingVertical: Spacing.Smallest8,
     paddingHorizontal: Spacing.Regular16,
-    backgroundColor: Colors.black,
+    backgroundColor: Colors.backgroundScrim,
     borderRadius: 8,
   },
   totalAssetsInfoText: {
-    ...fontStyles.small,
-    color: Colors.white,
+    ...typeScale.bodySmall,
+    color: Colors.contentTertiary,
     textAlign: 'center',
   },
   titleExchange: {
@@ -294,22 +293,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   exchangeTotalValue: {
-    ...fontStyles.label,
-    color: Colors.gray4,
+    ...typeScale.labelSemiBoldSmall,
+    color: Colors.contentSecondary,
     paddingRight: 3,
-  },
-  exchangeArrow: {
-    paddingTop: 4,
+    paddingBottom: 4,
   },
   balance: {
-    ...fontStyles.largeNumber,
+    ...typeScale.titleLarge,
   },
   totalBalance: {
     ...typeScale.titleLarge,
-    color: Colors.black,
   },
   exchangeBalance: {
-    ...fontStyles.large500,
+    ...typeScale.labelLarge,
   },
   oneBalance: {
     flexDirection: 'row',
@@ -322,7 +318,7 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
   },
   tokenBalance: {
-    ...fontStyles.label,
-    color: Colors.gray4,
+    ...typeScale.labelSemiBoldSmall,
+    color: Colors.contentSecondary,
   },
 })

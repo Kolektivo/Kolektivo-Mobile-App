@@ -1,8 +1,9 @@
 import { PayloadAction } from '@reduxjs/toolkit'
 import BigNumber from 'bignumber.js'
 import walletJumpstart from 'src/abis/IWalletJumpstart'
+import AppAnalytics from 'src/analytics/AppAnalytics'
 import { JumpstartEvents } from 'src/analytics/Events'
-import ValoraAnalytics from 'src/analytics/ValoraAnalytics'
+import { isRegistrationTransaction } from 'src/divviProtocol/registerReferral'
 import { jumpstartLinkHandler } from 'src/jumpstart/jumpstartLinkHandler'
 import {
   JumpstarReclaimAction,
@@ -27,7 +28,7 @@ import { StatsigDynamicConfigs } from 'src/statsig/types'
 import { vibrateError } from 'src/styles/hapticFeedback'
 import { tokensByIdSelector } from 'src/tokens/selectors'
 import { getTokenId } from 'src/tokens/utils'
-import { BaseStandbyTransaction, addStandbyTransaction } from 'src/transactions/actions'
+import { BaseStandbyTransaction, addStandbyTransaction } from 'src/transactions/slice'
 import { NetworkId, TokenTransactionTypeV2, newTransactionContext } from 'src/transactions/types'
 import Logger from 'src/utils/Logger'
 import { ensureError } from 'src/utils/ensureError'
@@ -38,11 +39,11 @@ import { getPreparedTransactions } from 'src/viem/preparedTransactionSerializati
 import { sendPreparedTransactions } from 'src/viem/saga'
 import { networkIdToNetwork } from 'src/web3/networkConfig'
 import { all, call, fork, put, select, spawn, takeEvery } from 'typed-redux-saga'
-import { Address, Hash, TransactionReceipt, parseAbi, parseEventLogs } from 'viem'
+import { Address, Hash, Hex, TransactionReceipt, parseAbi, parseEventLogs } from 'viem'
 
 const TAG = 'WalletJumpstart/saga'
 
-export function* jumpstartClaim(privateKey: string, networkId: NetworkId, walletAddress: string) {
+export function* jumpstartClaim(privateKey: Hex, networkId: NetworkId, walletAddress: Address) {
   try {
     yield* put(jumpstartClaimStarted())
 
@@ -57,19 +58,19 @@ export function* jumpstartClaim(privateKey: string, networkId: NetworkId, wallet
     const transactionHashes = yield* call(
       jumpstartLinkHandler,
       networkId,
-      contractAddress,
+      contractAddress as Address,
       privateKey,
       walletAddress
     )
 
     yield* fork(dispatchPendingTransactions, networkId, transactionHashes)
 
-    ValoraAnalytics.track(JumpstartEvents.jumpstart_claim_succeeded)
+    AppAnalytics.track(JumpstartEvents.jumpstart_claim_succeeded)
 
     yield* put(jumpstartClaimSucceeded())
   } catch (error: any) {
     Logger.error(TAG, 'Error handling jumpstart link', error)
-    ValoraAnalytics.track(JumpstartEvents.jumpstart_claim_failed)
+    AppAnalytics.track(JumpstartEvents.jumpstart_claim_failed)
     yield* put(
       jumpstartClaimFailed({ isAlreadyClaimed: error?.message?.includes('Already claimed') })
     )
@@ -121,7 +122,6 @@ export function* dispatchPendingERC20Transactions(
 
       yield* put(
         addStandbyTransaction({
-          __typename: 'TokenTransferV3',
           type: TokenTransactionTypeV2.Received,
           context: {
             id: transactionHash,
@@ -138,7 +138,7 @@ export function* dispatchPendingERC20Transactions(
         })
       )
 
-      ValoraAnalytics.track(JumpstartEvents.jumpstart_claimed_token, {
+      AppAnalytics.track(JumpstartEvents.jumpstart_claimed_token, {
         networkId,
         tokenAddress,
         value: Number(value),
@@ -175,7 +175,6 @@ export function* dispatchPendingERC721Transactions(
 
         yield* put(
           addStandbyTransaction({
-            __typename: 'NftTransferV3',
             type: TokenTransactionTypeV2.NftReceived,
             context: {
               id: transactionHash,
@@ -199,7 +198,7 @@ export function* dispatchPendingERC721Transactions(
           })
         )
 
-        ValoraAnalytics.track(JumpstartEvents.jumpstart_claimed_nft, {
+        AppAnalytics.track(JumpstartEvents.jumpstart_claimed_nft, {
           networkId,
           contractAddress,
           tokenId: tokenId.toString(),
@@ -214,7 +213,8 @@ export function* dispatchPendingERC721Transactions(
 export function* sendJumpstartTransactions(
   action: PayloadAction<JumpstartTransactionStartedAction>
 ) {
-  const { serializablePreparedTransactions, sendToken, sendAmount } = action.payload
+  const { serializablePreparedTransactions, sendToken, sendAmount, beneficiaryAddress } =
+    action.payload
   const networkId = sendToken.networkId
   const localCurrency = yield* select(getLocalCurrencyCode)
   const localCurrencyExchangeRate = yield* select(usdToLocalCurrencyRateSelector)
@@ -243,7 +243,9 @@ export function* sendJumpstartTransactions(
     }
 
     const createStandbyTxHandlers = []
-    const preparedTransactions = getPreparedTransactions(serializablePreparedTransactions)
+    const preparedTransactions = getPreparedTransactions(
+      serializablePreparedTransactions.filter((tx) => !isRegistrationTransaction(tx))
+    )
 
     // in this flow, there should only be 1 or 2 transactions. if there are 2
     // transactions, the first one should be an approval.
@@ -260,7 +262,6 @@ export function* sendJumpstartTransactions(
       ): BaseStandbyTransaction => {
         return {
           context: newTransactionContext(TAG, 'Approve jumpstart transaction'),
-          __typename: 'TokenApproval',
           networkId,
           type: TokenTransactionTypeV2.Approval,
           transactionHash: txHash,
@@ -276,7 +277,6 @@ export function* sendJumpstartTransactions(
       hash: string,
       feeCurrencyId?: string
     ): BaseStandbyTransaction => ({
-      __typename: 'TokenTransferV3',
       type: TokenTransactionTypeV2.Sent,
       context: newTransactionContext(TAG, 'Send jumpstart transaction'),
       networkId,
@@ -297,7 +297,7 @@ export function* sendJumpstartTransactions(
       'Executing send transaction',
       sendToken.tokenId
     )
-    ValoraAnalytics.track(JumpstartEvents.jumpstart_send_start, trackedProperties)
+    AppAnalytics.track(JumpstartEvents.jumpstart_send_start, trackedProperties)
 
     const txHashes = yield* call(
       sendPreparedTransactions,
@@ -327,12 +327,21 @@ export function* sendJumpstartTransactions(
       throw new Error(`Jumpstart transaction reverted: ${jumpstartTxReceipt.transactionHash}`)
     }
 
-    ValoraAnalytics.track(JumpstartEvents.jumpstart_send_succeeded, trackedProperties)
-    yield* put(depositTransactionSucceeded())
+    AppAnalytics.track(JumpstartEvents.jumpstart_send_succeeded, trackedProperties)
+    yield* put(
+      depositTransactionSucceeded({
+        liveLinkType: 'erc20',
+        beneficiaryAddress,
+        transactionHash: jumpstartTxReceipt.transactionHash,
+        networkId,
+        tokenId: sendToken.tokenId,
+        amount: sendAmount,
+      })
+    )
   } catch (err) {
     if (err === CANCELLED_PIN_INPUT) {
       Logger.info(TAG, 'Transaction cancelled by user')
-      ValoraAnalytics.track(JumpstartEvents.jumpstart_send_cancelled, trackedProperties)
+      AppAnalytics.track(JumpstartEvents.jumpstart_send_cancelled, trackedProperties)
       yield* put(depositTransactionCancelled())
       return
     }
@@ -344,7 +353,7 @@ export function* sendJumpstartTransactions(
       error
     )
 
-    ValoraAnalytics.track(JumpstartEvents.jumpstart_send_failed, trackedProperties)
+    AppAnalytics.track(JumpstartEvents.jumpstart_send_failed, trackedProperties)
     yield* put(depositTransactionFailed())
     vibrateError()
   }
@@ -359,7 +368,6 @@ export function* jumpstartReclaim(action: PayloadAction<JumpstarReclaimAction>) 
     ): BaseStandbyTransaction => {
       return {
         context: newTransactionContext(TAG, 'Reclaim transaction'),
-        __typename: 'TokenTransferV3',
         networkId,
         type: TokenTransactionTypeV2.Received,
         transactionHash: transactionHash,
@@ -392,14 +400,14 @@ export function* jumpstartReclaim(action: PayloadAction<JumpstarReclaimAction>) 
     }
 
     yield* put(jumpstartReclaimSucceeded())
-    ValoraAnalytics.track(JumpstartEvents.jumpstart_reclaim_succeeded, {
+    AppAnalytics.track(JumpstartEvents.jumpstart_reclaim_succeeded, {
       networkId,
       depositTxHash,
       reclaimTxHash: txHash,
     })
   } catch (err) {
     Logger.warn(TAG, 'Error reclaiming jumpstart transaction', err)
-    ValoraAnalytics.track(JumpstartEvents.jumpstart_reclaim_failed, { networkId, depositTxHash })
+    AppAnalytics.track(JumpstartEvents.jumpstart_reclaim_failed, { networkId, depositTxHash })
     yield* put(jumpstartReclaimFailed())
   }
 }

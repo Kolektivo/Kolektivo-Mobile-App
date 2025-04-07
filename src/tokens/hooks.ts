@@ -2,9 +2,8 @@ import BigNumber from 'bignumber.js'
 import { TIME_UNTIL_TOKEN_INFO_BECOMES_STALE } from 'src/config'
 import { usdToLocalCurrencyRateSelector } from 'src/localCurrency/selectors'
 import { useSelector } from 'src/redux/hooks'
-import { getDynamicConfigParams, getFeatureGate } from 'src/statsig'
-import { DynamicConfigs } from 'src/statsig/constants'
-import { StatsigDynamicConfigs, StatsigFeatureGates } from 'src/statsig/types'
+import { getFeatureGate } from 'src/statsig'
+import { StatsigFeatureGates } from 'src/statsig/types'
 import {
   cashInTokensByNetworkIdSelector,
   cashOutTokensByNetworkIdSelector,
@@ -21,16 +20,13 @@ import {
   totalTokenBalanceSelector,
 } from 'src/tokens/selectors'
 import { TokenBalance } from 'src/tokens/slice'
-import {
-  convertLocalToTokenAmount,
-  convertTokenToLocalAmount,
-  getSupportedNetworkIdsForTokenBalances,
-} from 'src/tokens/utils'
+import { convertLocalToTokenAmount, convertTokenToLocalAmount } from 'src/tokens/utils'
 import { NetworkId } from 'src/transactions/types'
 import { Currency } from 'src/utils/currencies'
 import { deterministicShuffle } from 'src/utils/random'
 import networkConfig from 'src/web3/networkConfig'
 import { walletAddressSelector } from 'src/web3/selectors'
+import { getSupportedNetworkIds } from 'src/web3/utils'
 
 /**
  * @deprecated use useTokenInfo and select using tokenId
@@ -45,12 +41,12 @@ export function useTokensWithUsdValue(networkIds: NetworkId[]) {
 }
 
 export function useTotalTokenBalance() {
-  const supportedNetworkIds = getSupportedNetworkIdsForTokenBalances()
+  const supportedNetworkIds = getSupportedNetworkIds()
   return useSelector((state) => totalTokenBalanceSelector(state, supportedNetworkIds))
 }
 
 export function useTokensWithTokenBalance() {
-  const supportedNetworkIds = getSupportedNetworkIdsForTokenBalances()
+  const supportedNetworkIds = getSupportedNetworkIds()
   return useSelector((state) => tokensWithTokenBalanceSelector(state, supportedNetworkIds))
 }
 
@@ -83,9 +79,7 @@ export function useTokenPricesAreStale(networkIds: NetworkId[]) {
 }
 
 export function useSwappableTokens() {
-  const networkIdsForSwap = getDynamicConfigParams(
-    DynamicConfigs[StatsigDynamicConfigs.MULTI_CHAIN_FEATURES]
-  ).showSwap
+  const networkIdsForSwap = getSupportedNetworkIds()
   const shouldShuffleTokens = getFeatureGate(StatsigFeatureGates.SHUFFLE_SWAP_TOKENS_ORDER)
 
   const walletAddress = useSelector(walletAddressSelector)
@@ -112,32 +106,36 @@ export function useSwappableTokens() {
 }
 
 export function useCashInTokens() {
-  const networkIdsForCico = getDynamicConfigParams(
-    DynamicConfigs[StatsigDynamicConfigs.MULTI_CHAIN_FEATURES]
-  ).showCico
+  const networkIdsForCico = getSupportedNetworkIds()
   return useSelector((state) => cashInTokensByNetworkIdSelector(state, networkIdsForCico))
 }
 
 export function useCashOutTokens(showZeroBalanceTokens: boolean = false) {
-  const networkIdsForCico = getDynamicConfigParams(
-    DynamicConfigs[StatsigDynamicConfigs.MULTI_CHAIN_FEATURES]
-  ).showCico
+  const networkIdsForCico = getSupportedNetworkIds()
   return useSelector((state) =>
     cashOutTokensByNetworkIdSelector(state, networkIdsForCico, showZeroBalanceTokens)
   )
 }
 
 export function useSpendTokens() {
-  const networkIdsForCico = getDynamicConfigParams(
-    DynamicConfigs[StatsigDynamicConfigs.MULTI_CHAIN_FEATURES]
-  ).showCico
+  const networkIdsForCico = getSupportedNetworkIds()
   return useSelector((state) => spendTokensByNetworkIdSelector(state, networkIdsForCico))
 }
 
 export function useTokenInfo(tokenId?: string): TokenBalance | undefined {
   const networkIds = Object.values(networkConfig.networkToNetworkId)
-  const tokens = useSelector((state) => tokensByIdSelector(state, networkIds))
+  const tokens = useSelector((state) =>
+    tokensByIdSelector(state, { networkIds, includePositionTokens: true })
+  )
   return tokenId ? tokens[tokenId] : undefined
+}
+
+export function useTokensInfo(tokenIds: string[]): (TokenBalance | undefined)[] {
+  const networkIds = Object.values(networkConfig.networkToNetworkId)
+  const tokens = useSelector((state) =>
+    tokensByIdSelector(state, { networkIds, includePositionTokens: true })
+  )
+  return tokenIds.map((tokenId) => tokens[tokenId])
 }
 
 /**
@@ -185,27 +183,4 @@ export function useAmountAsUsd(amount: BigNumber, tokenId: string | undefined) {
     return null
   }
   return amount.multipliedBy(tokenInfo.priceUsd)
-}
-
-export function useUsdToTokenAmount(amount: BigNumber, tokenAddress?: string) {
-  const tokenInfo = useTokenInfoByAddress(tokenAddress)
-  if (!tokenInfo?.priceUsd) {
-    return null
-  }
-  return amount.div(tokenInfo.priceUsd)
-}
-
-export function useConvertBetweenTokens(
-  amount: BigNumber | undefined,
-  tokenAddress: string = '',
-  newTokenAddress: string
-) {
-  const tokenBalances = useSelector(tokensByAddressSelector)
-
-  const tokenPriceUsd = tokenBalances[tokenAddress ?? '']?.priceUsd
-  const newTokenPriceUsd = tokenBalances[newTokenAddress]?.priceUsd
-  if (!amount || !tokenPriceUsd || !newTokenPriceUsd) {
-    return null
-  }
-  return amount.multipliedBy(tokenPriceUsd).dividedBy(newTokenPriceUsd)
 }

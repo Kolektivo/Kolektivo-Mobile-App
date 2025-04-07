@@ -3,12 +3,16 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { useAsyncCallback } from 'react-async-hook'
 import { useTranslation } from 'react-i18next'
 import { useDispatch } from 'react-redux'
+import AppAnalytics from 'src/analytics/AppAnalytics'
 import { JumpstartEvents } from 'src/analytics/Events'
-import ValoraAnalytics from 'src/analytics/ValoraAnalytics'
 import InLineNotification, { NotificationVariant } from 'src/components/InLineNotification'
 import { createJumpstartLink } from 'src/firebase/dynamicLinks'
 import { currentLanguageSelector } from 'src/i18n/selectors'
-import { jumpstartSendStatusSelector } from 'src/jumpstart/selectors'
+import JumpstartIntro from 'src/jumpstart/JumpstartIntro'
+import {
+  jumpstartIntroHasBeenSeenSelector,
+  jumpstartSendStatusSelector,
+} from 'src/jumpstart/selectors'
 import { depositTransactionFlowStarted } from 'src/jumpstart/slice'
 import { usePrepareJumpstartTransactions } from 'src/jumpstart/usePrepareJumpstartTransactions'
 import { convertDollarsToLocalAmount } from 'src/localCurrency/convert'
@@ -49,6 +53,8 @@ function JumpstartEnterAmount() {
   const locale = useSelector(currentLanguageSelector)
   const jumpstartSendStatus = useSelector(jumpstartSendStatusSelector)
   const walletAddress = useSelector(walletAddressSelector)
+
+  const introSeen = useSelector(jumpstartIntroHasBeenSeenSelector)
   const tokens = useSelector(jumpstartSendTokensSelector)
 
   const jumpstartLink = useMemo(() => {
@@ -104,9 +110,10 @@ function JumpstartEnterAmount() {
           serializablePreparedTransactions: getSerializablePreparedTransactions(
             prepareJumpstartTransactions.result.transactions
           ),
+          beneficiaryAddress: jumpstartLink.publicKey,
         })
 
-        ValoraAnalytics.track(JumpstartEvents.jumpstart_send_amount_continue, {
+        AppAnalytics.track(JumpstartEvents.jumpstart_send_amount_continue, {
           localCurrency: localCurrencyCode,
           localCurrencyExchangeRate: usdToLocalRate,
           tokenSymbol: token.symbol,
@@ -140,7 +147,7 @@ function JumpstartEnterAmount() {
     const sendAmountExceedsMax = sendAmountUsd.isGreaterThan(jumpstartSendThreshold)
     setSendAmountExceedsThreshold(sendAmountExceedsMax)
     if (sendAmountExceedsMax) {
-      ValoraAnalytics.track(JumpstartEvents.jumpstart_send_amount_exceeds_threshold, {
+      AppAnalytics.track(JumpstartEvents.jumpstart_send_amount_exceeds_threshold, {
         amountInUsd: sendAmountUsd.toFixed(2),
         tokenId: token.tokenId,
         thresholdUsd: jumpstartSendThreshold,
@@ -165,10 +172,15 @@ function JumpstartEnterAmount() {
     jumpstartSendStatus === 'success' ||
     jumpstartSendStatus === 'loading'
 
+  if (tokens.length === 0 || !introSeen) {
+    return <JumpstartIntro />
+  }
+
   return (
     <EnterAmount
       tokens={tokens}
       prepareTransactionsResult={prepareJumpstartTransactions.result}
+      prepareTransactionsLoading={prepareJumpstartTransactions.loading}
       onClearPreparedTransactions={prepareJumpstartTransactions.reset}
       onRefreshPreparedTransactions={handleRefreshPreparedTransactions}
       prepareTransactionError={prepareJumpstartTransactions.error}

@@ -41,7 +41,6 @@ exports[`renders correctly 1`] = `
     accessible={true}
     collapsable={false}
     focusable={true}
-    forwardedRef={[Function]}
     onClick={[Function]}
     onResponderGrant={[Function]}
     onResponderMove={[Function]}
@@ -67,7 +66,6 @@ exports[`renders correctly 1`] = `
     collapsable={false}
     deviceHeight={1334}
     deviceWidth={null}
-    forwardedRef={[Function]}
     hideModalContentWhileAnimating={false}
     onBackdropPress={[Function]}
     onModalHide={[Function]}
@@ -152,6 +150,7 @@ exports[`renders correctly 1`] = `
             <Text
               style={
                 {
+                  "color": "#2E3338",
                   "fontFamily": "Inter-Bold",
                   "fontSize": 20,
                   "lineHeight": 28,
@@ -165,6 +164,7 @@ exports[`renders correctly 1`] = `
             <Text
               style={
                 {
+                  "color": "#2E3338",
                   "fontFamily": "Inter-Regular",
                   "fontSize": 16,
                   "lineHeight": 24,

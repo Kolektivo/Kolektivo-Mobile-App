@@ -4,7 +4,7 @@ import { StyleProp, StyleSheet, Text, View, ViewStyle } from 'react-native'
 import Toast from 'react-native-simple-toast'
 import Touchable from 'src/components/Touchable'
 import CopyIcon from 'src/icons/CopyIcon'
-import { Colors } from 'src/styles/colors'
+import Colors from 'src/styles/colors'
 import { typeScale } from 'src/styles/fonts'
 import { vibrateInformative } from 'src/styles/hapticFeedback'
 import { Spacing } from 'src/styles/styles'
@@ -42,7 +42,7 @@ function DataFieldWithCopy({ label, value, copySuccessMessage, testID, onCopy, s
           {value}
         </Text>
         <Touchable hitSlop={variables.iconHitslop} onPress={handleCopy} testID={`${testID}/Copy`}>
-          <CopyIcon color={Colors.gray4} />
+          <CopyIcon color={Colors.contentSecondary} />
         </Touchable>
       </View>
     </View>
@@ -52,7 +52,7 @@ function DataFieldWithCopy({ label, value, copySuccessMessage, testID, onCopy, s
 const styles = StyleSheet.create({
   container: {
     padding: Spacing.Regular16,
-    backgroundColor: Colors.gray1,
+    backgroundColor: Colors.backgroundSecondary,
     marginTop: Spacing.Smallest8,
     marginBottom: Spacing.Large32,
   },
@@ -64,12 +64,10 @@ const styles = StyleSheet.create({
   },
   transactionDataLabel: {
     ...typeScale.labelXSmall,
-    color: Colors.black,
     marginBottom: Spacing.Smallest8,
   },
   transactionData: {
     ...typeScale.bodyMedium,
-    color: Colors.black,
     flex: 1,
   },
 })

@@ -1,8 +1,9 @@
 import React, { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, Text, View } from 'react-native'
+import AppAnalytics from 'src/analytics/AppAnalytics'
 import { AssetsEvents } from 'src/analytics/Events'
-import ValoraAnalytics from 'src/analytics/ValoraAnalytics'
+import GradientBlock from 'src/components/GradientBlock'
 import Touchable from 'src/components/Touchable'
 import Colors from 'src/styles/colors'
 import { typeScale } from 'src/styles/fonts'
@@ -37,7 +38,7 @@ export default function TabBar({
   }, [t, displayPositions])
 
   const handleSelectOption = (index: AssetTabType) => () => {
-    ValoraAnalytics.track(
+    AppAnalytics.track(
       [
         AssetsEvents.view_transactions,
         AssetsEvents.view_wallet_assets,
@@ -65,9 +66,16 @@ export default function TabBar({
           onPress={handleSelectOption(index)}
           style={styles.touchable}
         >
-          <Text style={[index === activeTab ? styles.itemSelected : styles.item]} numberOfLines={1}>
-            {value}
-          </Text>
+          <>
+            <Text
+              style={[index === activeTab ? styles.itemSelected : styles.item]}
+              numberOfLines={1}
+            >
+              {value}
+            </Text>
+
+            {index === activeTab && <GradientBlock style={styles.activeTabUnderline} />}
+          </>
         </Touchable>
       ))}
     </View>
@@ -84,10 +92,13 @@ const styles = StyleSheet.create({
   },
   item: {
     ...typeScale.bodyMedium,
-    color: Colors.gray4,
+    color: Colors.contentSecondary,
   },
   itemSelected: {
     ...typeScale.labelMedium,
-    color: Colors.black,
+  },
+  activeTabUnderline: {
+    height: 2,
+    marginTop: 4,
   },
 })

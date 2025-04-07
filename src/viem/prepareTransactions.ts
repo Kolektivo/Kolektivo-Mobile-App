@@ -1,7 +1,9 @@
 import BigNumber from 'bignumber.js'
-import erc20 from 'src/abis/IERC20'
-import stableToken from 'src/abis/StableToken'
+import AppAnalytics from 'src/analytics/AppAnalytics'
+import { TransactionEvents } from 'src/analytics/Events'
+import { TransactionOrigin } from 'src/analytics/types'
 import { STATIC_GAS_PADDING } from 'src/config'
+import { createRegistrationTransactionIfNeeded } from 'src/divviProtocol/registerReferral'
 import {
   NativeTokenBalance,
   TokenBalance,
@@ -11,7 +13,7 @@ import {
 import { getTokenId } from 'src/tokens/utils'
 import { NetworkId } from 'src/transactions/types'
 import Logger from 'src/utils/Logger'
-import { publicClient, valoraPublicClient } from 'src/viem'
+import { appPublicClient, publicClient } from 'src/viem'
 import { estimateFeesPerGas } from 'src/viem/estimateFeesPerGas'
 import { networkIdToNetwork } from 'src/web3/networkConfig'
 import {
@@ -21,9 +23,9 @@ import {
   ExecutionRevertedError,
   InsufficientFundsError,
   InvalidInputRpcError,
-  TransactionRequestBase,
   TransactionRequestEIP1559,
   encodeFunctionData,
+  erc20Abi,
 } from 'viem'
 import { estimateGas } from 'viem/actions'
 import { TransactionRequestCIP64 } from 'viem/chains'
@@ -34,7 +36,7 @@ const TAG = 'viem/prepareTransactions'
 export type TransactionRequest = (TransactionRequestCIP64 | TransactionRequestEIP1559) & {
   // Custom fields needed for showing the user the estimated gas fee
   // underscored to denote that they are not part of the TransactionRequest fields from viem
-  // and only intended for internal use in Valora
+  // and only intended for internal use
   _estimatedGasUse?: bigint
   _baseFeePerGas?: bigint
 }
@@ -163,7 +165,7 @@ export async function tryEstimateTransaction({
   // TODO maybe cache this? and add static padding when using non-native fee currency
   try {
     tx.gas = await estimateGas(client, {
-      ...(tx as TransactionRequestBase),
+      ...(tx as any), // TODO: fix type, probably related to the generic client type
       account: tx.from,
     })
     tx._baseFeePerGas = baseFeePerGas
@@ -197,18 +199,18 @@ export async function tryEstimateTransaction({
 export async function tryEstimateTransactions(
   baseTransactions: TransactionRequest[],
   feeCurrency: TokenBalance,
-  useValoraTransport: boolean = false
+  useAppTransport: boolean = false
 ) {
   const transactions: TransactionRequest[] = []
 
   const network = networkIdToNetwork[feeCurrency.networkId]
 
-  if (useValoraTransport && !(network in valoraPublicClient)) {
-    throw new Error(`Valora transport not available for network ${network}`)
+  if (useAppTransport && !(network in appPublicClient)) {
+    throw new Error(`App transport not available for network ${network}`)
   }
 
-  const client = useValoraTransport
-    ? valoraPublicClient[network as keyof typeof valoraPublicClient]
+  const client = useAppTransport
+    ? appPublicClient[network as keyof typeof appPublicClient]
     : publicClient[network]
   const feeCurrencyAddress = getFeeCurrencyAddress(feeCurrency)
   const { maxFeePerGas, maxPriorityFeePerGas, baseFeePerGas } = await estimateFeesPerGas(
@@ -265,7 +267,7 @@ export async function tryEstimateTransactions(
  *
  * @param feeCurrencies
  * @param spendToken
- * @param spendTokenAmount
+ * @param spendTokenAmount BigNumber in smallest unit
  * @param decreasedAmountGasFeeMultiplier
  * @param baseTransactions
  * @param throwOnSpendTokenAmountExceedsBalance
@@ -279,6 +281,7 @@ export async function prepareTransactions({
   baseTransactions,
   throwOnSpendTokenAmountExceedsBalance = true,
   isGasSubsidized = false,
+  origin,
 }: {
   feeCurrencies: TokenBalance[]
   spendToken?: TokenBalance
@@ -287,7 +290,15 @@ export async function prepareTransactions({
   baseTransactions: (TransactionRequest & { gas?: bigint })[]
   throwOnSpendTokenAmountExceedsBalance?: boolean
   isGasSubsidized?: boolean
+  origin: TransactionOrigin
 }): Promise<PreparedTransactionsResult> {
+  const registrationTx = await createRegistrationTransactionIfNeeded({
+    networkId: feeCurrencies[0].networkId,
+  })
+  if (registrationTx) {
+    baseTransactions.push(registrationTx)
+  }
+
   if (!spendToken && spendTokenAmount.isGreaterThan(0)) {
     throw new Error(
       `prepareTransactions requires a spendToken if spendTokenAmount is greater than 0. spendTokenAmount: ${spendTokenAmount.toString()}`
@@ -352,6 +363,14 @@ export async function prepareTransactions({
     } satisfies PreparedTransactionsPossible
   }
 
+  if (feeCurrencies.length > 0) {
+    // there should always be at least one fee currency, the if is just a safeguard
+    AppAnalytics.track(TransactionEvents.transaction_prepare_insufficient_gas, {
+      origin,
+      networkId: feeCurrencies[0].networkId,
+    })
+  }
+
   // So far not enough balance to pay for gas
   // let's see if we can decrease the spend amount, if provided
   // if no spend amount is provided, we conclude that the user does not have enough balance to pay for gas
@@ -413,7 +432,7 @@ export async function prepareERC20TransferTransaction(
     from: fromWalletAddress as Address,
     to: sendToken.address as Address,
     data: encodeFunctionData({
-      abi: erc20.abi,
+      abi: erc20Abi,
       functionName: 'transfer',
       args: [toWalletAddress as Address, amount],
     }),
@@ -424,54 +443,7 @@ export async function prepareERC20TransferTransaction(
     spendTokenAmount: new BigNumber(amount.toString()),
     decreasedAmountGasFeeMultiplier: 1,
     baseTransactions: [baseSendTx],
-  })
-}
-
-/**
- * Prepare a transaction for sending an ERC-20 token with the 'transfer' method.
- *
- * @param fromWalletAddress the address of the wallet sending the transaction
- * @param toWalletAddress the address of the wallet receiving the token
- * @param sendToken the token to send. MUST support transferWithComment method
- * @param amount the amount of the token to send, denominated in the smallest units for that token
- * @param feeCurrencies the balances of the currencies to consider using for paying the transaction fee
- * @param comment the comment to include with the token transfer. Defaults to empty string if not provided
- *
- * @param prepareTxs a function that prepares the transactions (for unit testing-- should use default everywhere else)
- */
-export async function prepareTransferWithCommentTransaction(
-  {
-    fromWalletAddress,
-    toWalletAddress,
-    sendToken,
-    amount,
-    feeCurrencies,
-    comment,
-  }: {
-    fromWalletAddress: string
-    toWalletAddress: string
-    sendToken: TokenBalanceWithAddress
-    amount: bigint
-    feeCurrencies: TokenBalance[]
-    comment?: string
-  },
-  prepareTxs = prepareTransactions // for unit testing
-): Promise<PreparedTransactionsResult> {
-  const baseSendTx: TransactionRequest = {
-    from: fromWalletAddress as Address,
-    to: sendToken.address as Address,
-    data: encodeFunctionData({
-      abi: stableToken.abi,
-      functionName: 'transferWithComment',
-      args: [toWalletAddress as Address, amount, comment ?? ''],
-    }),
-  }
-  return prepareTxs({
-    feeCurrencies,
-    spendToken: sendToken,
-    spendTokenAmount: new BigNumber(amount.toString()),
-    decreasedAmountGasFeeMultiplier: 1,
-    baseTransactions: [baseSendTx],
+    origin: 'send',
   })
 }
 
@@ -513,6 +485,7 @@ export function prepareSendNativeAssetTransaction(
     spendTokenAmount: new BigNumber(amount.toString()),
     decreasedAmountGasFeeMultiplier: 1,
     baseTransactions: [baseSendTx],
+    origin: 'send',
   })
 }
 

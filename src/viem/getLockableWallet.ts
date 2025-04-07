@@ -1,51 +1,35 @@
 import { Network } from 'src/transactions/types'
 import Logger from 'src/utils/Logger'
-import { valoraViemTransports, viemTransports } from 'src/viem'
-import { KeychainLock } from 'src/web3/KeychainLock'
+import { appViemTransports, viemTransports } from 'src/viem'
+import { KeychainAccounts } from 'src/web3/KeychainAccounts'
 import networkConfig from 'src/web3/networkConfig'
 import {
   Account,
   Address,
   Chain,
   Client,
-  PrivateKeyAccount,
   Transport,
   WalletActions,
   WalletRpcSchema,
   createWalletClient,
 } from 'viem'
-import { privateKeyToAccount } from 'viem/accounts'
-import {
-  sendRawTransaction,
-  sendTransaction,
-  signMessage,
-  signTransaction,
-  signTypedData,
-  writeContract,
-} from 'viem/actions'
 import { Prettify } from 'viem/chains'
 
 const TAG = 'viem/getLockableWallet'
 
-export function getTransport({
-  chain,
-  useValora,
-}: {
-  chain: Chain
-  useValora?: boolean
-}): Transport {
+export function getTransport({ chain, useApp }: { chain: Chain; useApp?: boolean }): Transport {
   const result = Object.entries(networkConfig.viemChain).find(
     ([_, viemChain]) => chain === viemChain
   )
   if (!result) {
     throw new Error(`No network defined for viem chain ${chain}, cannot create wallet`)
   }
-  if (useValora) {
-    const valoraTransport = valoraViemTransports[result[0] as keyof typeof valoraViemTransports]
-    if (!valoraTransport) {
-      throw new Error(`No valora transport defined for network ${result[0]}, cannot create wallet`)
+  if (useApp) {
+    const appTransport = appViemTransports[result[0] as keyof typeof appViemTransports]
+    if (!appTransport) {
+      throw new Error(`No app transport defined for network ${result[0]}, cannot create wallet`)
     }
-    return valoraTransport
+    return appTransport
   }
   return viemTransports[result[0] as Network]
 }
@@ -60,65 +44,30 @@ export type ViemWallet<
 type Actions<
   chain extends Chain | undefined = Chain | undefined,
   account extends Account | undefined = Account | undefined,
-> = Pick<
-  WalletActions<chain, account>,
-  | 'sendRawTransaction'
-  | 'sendTransaction'
-  | 'signTransaction'
-  | 'signTypedData'
-  | 'signMessage'
-  | 'writeContract'
-> & { unlockAccount: (passphrase: string, duration: number) => Promise<boolean> }
+> = WalletActions<chain, account> & {
+  unlockAccount: (passphrase: string, duration: number) => Promise<boolean>
+}
 
 export default function getLockableViemWallet(
-  lock: KeychainLock,
+  accounts: KeychainAccounts,
   chain: Chain,
-  privateKey: Address,
-  useValoraTransport: boolean = false
+  address: Address,
+  useAppTransport: boolean = false
 ): ViemWallet {
-  const account = privateKeyToAccount(privateKey)
-  Logger.debug(TAG, `getting viem wallet for ${account.address} on ${chain.name}`)
-  const checkLock = () => {
-    if (!lock.isUnlocked(account.address)) {
-      throw new Error('authentication needed: password or unlock')
-    }
+  Logger.debug(TAG, `Getting viem wallet for ${address} on ${chain.name}`)
+  const account = accounts.getViemAccount(address)
+  if (!account) {
+    throw new Error(`Account ${address} not found in KeychainAccounts`)
   }
 
   return createWalletClient({
     chain,
-    transport: getTransport({ chain, useValora: useValoraTransport }),
+    transport: getTransport({ chain, useApp: useAppTransport }),
     account,
-  }).extend((client): Actions<Chain, PrivateKeyAccount> => {
+  }).extend((client) => {
     return {
-      // All wallet functions that we want our ViemWallet to have must go here
-      // For instance we will later need prepareTransactionRequest which we can add here by
-      // importing the prepareTransactionRequest action and blocking it with the checkLock function
-      // Introduction to wallet actions: https://viem.sh/docs/actions/wallet/introduction.html
       unlockAccount: (passphrase: string, duration: number) =>
-        lock.unlock(account.address, passphrase, duration),
-      writeContract: (args) => {
-        checkLock()
-        return writeContract(client, args)
-      },
-      signTransaction: (args) => {
-        checkLock()
-        return signTransaction(client, args)
-      },
-      sendRawTransaction: (args) => {
-        return sendRawTransaction(client, args)
-      },
-      sendTransaction: (args) => {
-        checkLock()
-        return sendTransaction(client, args)
-      },
-      signTypedData: (args) => {
-        checkLock()
-        return signTypedData(client, args)
-      },
-      signMessage: (args) => {
-        checkLock()
-        return signMessage(client, args)
-      },
+        accounts.unlock(account.address, passphrase, duration),
     }
   })
 }

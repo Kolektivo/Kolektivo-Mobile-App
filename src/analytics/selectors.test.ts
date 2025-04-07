@@ -39,19 +39,8 @@ const mockEthTokens = {
 }
 
 const mockState = {
-  web3: { mtwAddress: '0x123' },
   account: { defaultCountryCode: '+33', pincodeType: PincodeType.CustomPin },
   app: {
-    superchargeTokenConfigByToken: {
-      '0xcusd': {
-        minBalance: 10,
-        maxBalance: 1000,
-      },
-      '0xceur': {
-        minBalance: 10,
-        maxBalance: 1000,
-      },
-    },
     phoneNumberVerified: true,
   },
   tokens: {
@@ -241,6 +230,13 @@ const mockState = {
         displayProps: {
           title: 'Title A',
         },
+        tokens: [
+          {
+            tokenId: 'celo-alfajores:0xa',
+            balance: '1',
+            priceUsd: '10',
+          },
+        ],
         balanceUsd: '10',
       },
       {
@@ -251,6 +247,13 @@ const mockState = {
         displayProps: {
           title: 'Title B',
         },
+        tokens: [
+          {
+            tokenId: 'celo-alfajores:0xb',
+            balance: '1',
+            priceUsd: '1.11',
+          },
+        ],
         balanceUsd: '1.11',
       },
       {
@@ -261,6 +264,13 @@ const mockState = {
         displayProps: {
           title: 'Title C',
         },
+        tokens: [
+          {
+            tokenId: 'celo-alfajores:0xc',
+            balance: '1',
+            priceUsd: '2.22',
+          },
+        ],
         balanceUsd: '2.22',
       },
       {
@@ -271,6 +281,13 @@ const mockState = {
         displayProps: {
           title: 'Title D which is really long and should be truncated',
         },
+        tokens: [
+          {
+            tokenId: 'celo-alfajores:0xd',
+            balance: '1',
+            priceUsd: '0.01234',
+          },
+        ],
         balanceUsd: '0.01234',
       },
       {
@@ -281,97 +298,67 @@ const mockState = {
         displayProps: {
           title: 'Title E',
         },
+        tokens: [
+          {
+            tokenId: 'celo-alfajores:0xe',
+            balance: '10',
+            priceUsd: '7',
+          },
+        ],
         balanceUsd: '70',
       },
     ],
   },
+  points: {
+    pointsBalance: '50',
+  },
+}
+
+const expectedTraitsForAllNetworks = {
+  accountAddress: '0x0000000000000000000000000000000000007E57',
+  appBuildNumber: '1',
+  appBundleId: 'org.celo.mobile.debug',
+  appVersion: '0.0.1',
+  celoBalance: 0,
+  ceurBalance: 21,
+  countryCodeAlpha2: 'US',
+  cusdBalance: 10,
+  deviceId: 'abc-def-123',
+  deviceLanguage: 'en-US',
+  ethBalance: 10,
+  hasCompletedBackup: false,
+  hasVerifiedNumberCPV: true,
+  hooksPreviewEnabled: false,
+  language: 'es-419',
+  localCurrencyCode: 'PHP',
+  netWorthUsd: 20914.979123945,
+  otherTenTokens: 'I:1000,K:80,L:15.003,0xj:11.003,G:10,H:9.12345,E:7,F:6,B:3,C:2',
+  phoneCountryCallingCode: '+33',
+  phoneCountryCodeAlpha2: 'FR',
+  pincodeType: 'CustomPin',
+  positionsAppsCount: 4,
+  positionsCount: 5,
+  positionsTopTenApps: 'b:71.11,a:10.00,c:2.22,d:0.01',
+  tokenCount: 15,
+  topTenPositions:
+    'b-Title E:70.00,a-Title A:10.00,c-Title C:2.22,b-Title B:1.11,d-Title D which is rea:0.01',
+  totalBalanceUsd: 20831.636783945,
+  totalCeloAlfajoresBalanceUsd: 5681.606783945,
+  totalEthereumSepoliaBalanceUsd: 15150.03,
+  totalPositionsBalanceUsd: 83.34234,
+  walletAddress: '0x0000000000000000000000000000000000007e57',
+  hasTokenBalance: true,
+  hasCeloAlfajoresTokenBalance: true,
+  hasEthereumSepoliaTokenBalance: true,
+  pointsBalance: '50',
 }
 
 describe('getCurrentUserTraits', () => {
-  it('returns the current user traits with tokens from single network', () => {
-    const state = getMockStoreData(mockState)
-    expect(getCurrentUserTraits(state, [NetworkId['celo-alfajores']])).toStrictEqual({
-      accountAddress: '0x123',
-      appBuildNumber: '1',
-      appBundleId: 'org.celo.mobile.debug',
-      appVersion: '0.0.1',
-      celoBalance: 0,
-      ceurBalance: 21,
-      countryCodeAlpha2: 'US',
-      cusdBalance: 10,
-      deviceId: 'abc-def-123',
-      deviceLanguage: 'en-US',
-      hasCompletedBackup: false,
-      hasVerifiedNumber: false,
-      hasVerifiedNumberCPV: true,
-      hooksPreviewEnabled: false,
-      language: 'es-419',
-      localCurrencyCode: 'PHP',
-      netWorthUsd: 5764.949123945,
-      otherTenTokens: 'I:1000,K:80,0xj:11.003,G:10,H:9.12345,E:7,F:6,B:3,C:2,A:1',
-      phoneCountryCallingCode: '+33',
-      phoneCountryCodeAlpha2: 'FR',
-      pincodeType: 'CustomPin',
-      positionsAppsCount: 4,
-      positionsCount: 5,
-      positionsTopTenApps: 'b:71.11,a:10.00,c:2.22,d:0.01',
-      tokenCount: 13,
-      topTenPositions:
-        'b-Title E:70.00,a-Title A:10.00,c-Title C:2.22,b-Title B:1.11,d-Title D which is rea:0.01',
-      totalBalanceUsd: 5681.606783945,
-      totalCeloAlfajoresBalanceUsd: 5681.606783945,
-      totalPositionsBalanceUsd: 83.34234,
-      walletAddress: '0x0000000000000000000000000000000000007e57',
-      superchargingToken: 'cEUR',
-      superchargingAmountInUsd: 25.9245,
-      hasTokenBalance: true,
-      hasCeloAlfajoresTokenBalance: true,
-    })
-  })
   it('returns the current user traits with tokens from multiple networks', () => {
     const state = getMockStoreData(mockState)
     expect(
       getCurrentUserTraits(state, [NetworkId['celo-alfajores'], NetworkId['ethereum-sepolia']])
-    ).toStrictEqual({
-      accountAddress: '0x123',
-      appBuildNumber: '1',
-      appBundleId: 'org.celo.mobile.debug',
-      appVersion: '0.0.1',
-      celoBalance: 0,
-      ceurBalance: 21,
-      countryCodeAlpha2: 'US',
-      cusdBalance: 10,
-      deviceId: 'abc-def-123',
-      deviceLanguage: 'en-US',
-      ethBalance: 10,
-      hasCompletedBackup: false,
-      hasVerifiedNumber: false,
-      hasVerifiedNumberCPV: true,
-      hooksPreviewEnabled: false,
-      language: 'es-419',
-      localCurrencyCode: 'PHP',
-      netWorthUsd: 20914.979123945,
-      otherTenTokens: 'I:1000,K:80,L:15.003,0xj:11.003,G:10,H:9.12345,E:7,F:6,B:3,C:2',
-      phoneCountryCallingCode: '+33',
-      phoneCountryCodeAlpha2: 'FR',
-      pincodeType: 'CustomPin',
-      positionsAppsCount: 4,
-      positionsCount: 5,
-      positionsTopTenApps: 'b:71.11,a:10.00,c:2.22,d:0.01',
-      tokenCount: 15,
-      topTenPositions:
-        'b-Title E:70.00,a-Title A:10.00,c-Title C:2.22,b-Title B:1.11,d-Title D which is rea:0.01',
-      totalBalanceUsd: 20831.636783945,
-      totalCeloAlfajoresBalanceUsd: 5681.606783945,
-      totalEthereumSepoliaBalanceUsd: 15150.03,
-      totalPositionsBalanceUsd: 83.34234,
-      walletAddress: '0x0000000000000000000000000000000000007e57',
-      superchargingToken: 'cEUR',
-      superchargingAmountInUsd: 25.9245,
-      hasTokenBalance: true,
-      hasCeloAlfajoresTokenBalance: true,
-      hasEthereumSepoliaTokenBalance: true,
-    })
+    ).toStrictEqual(expectedTraitsForAllNetworks)
   })
   it('sets correct hasTokenBalance fields if all tokens in one network have no balance', () => {
     const mockTokenBalances = {
@@ -389,52 +376,14 @@ describe('getCurrentUserTraits', () => {
     expect(
       getCurrentUserTraits(state, [NetworkId['celo-alfajores'], NetworkId['ethereum-sepolia']])
     ).toStrictEqual({
-      accountAddress: '0x123',
-      appBuildNumber: '1',
-      appBundleId: 'org.celo.mobile.debug',
-      appVersion: '0.0.1',
-      celoBalance: 0,
-      ceurBalance: 21,
-      countryCodeAlpha2: 'US',
-      cusdBalance: 10,
-      deviceId: 'abc-def-123',
-      deviceLanguage: 'en-US',
+      ...expectedTraitsForAllNetworks,
       ethBalance: 0,
-      hasCompletedBackup: false,
-      hasVerifiedNumber: false,
-      hasVerifiedNumberCPV: true,
-      hooksPreviewEnabled: false,
-      language: 'es-419',
-      localCurrencyCode: 'PHP',
       netWorthUsd: 5764.949123945,
       otherTenTokens: 'I:1000,K:80,0xj:11.003,G:10,H:9.12345,E:7,F:6,B:3,C:2,A:1',
-      phoneCountryCallingCode: '+33',
-      phoneCountryCodeAlpha2: 'FR',
-      pincodeType: 'CustomPin',
-      positionsAppsCount: 4,
-      positionsCount: 5,
-      positionsTopTenApps: 'b:71.11,a:10.00,c:2.22,d:0.01',
       tokenCount: 13,
-      topTenPositions:
-        'b-Title E:70.00,a-Title A:10.00,c-Title C:2.22,b-Title B:1.11,d-Title D which is rea:0.01',
       totalBalanceUsd: 5681.606783945,
-      totalCeloAlfajoresBalanceUsd: 5681.606783945,
       totalEthereumSepoliaBalanceUsd: 0,
-      totalPositionsBalanceUsd: 83.34234,
-      walletAddress: '0x0000000000000000000000000000000000007e57',
-      superchargingToken: 'cEUR',
-      superchargingAmountInUsd: 25.9245,
-      hasTokenBalance: true,
-      hasCeloAlfajoresTokenBalance: true,
       hasEthereumSepoliaTokenBalance: false,
     })
-  })
-  it('uses wallet address as fallback for accountAddress if MTW is null', () => {
-    const state = getMockStoreData({
-      web3: { mtwAddress: null },
-    })
-    expect(getCurrentUserTraits(state, [NetworkId['celo-alfajores']]).accountAddress).toEqual(
-      '0x0000000000000000000000000000000000007E57' // intentionally using non-lower-cased version here (important for backwards compatibility)
-    )
   })
 })

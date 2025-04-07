@@ -1,11 +1,11 @@
 import * as React from 'react'
 import { PixelRatio } from 'react-native'
 import Svg, { Circle, Path } from 'react-native-svg'
-import colors from 'src/styles/colors'
+import colors, { ColorValue } from 'src/styles/colors'
 
 interface Props {
   size?: number
-  color?: colors
+  color?: ColorValue
   scaledSize?: number
   testID?: string
 }
@@ -19,7 +19,7 @@ const getSizing = (baseSize: number = 16, maxSize: number = 28) => {
 function InfoIcon({
   size = 16,
   scaledSize = getSizing(size),
-  color = colors.black,
+  color = colors.contentPrimary,
   testID,
 }: Props) {
   return (

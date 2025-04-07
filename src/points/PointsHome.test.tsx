@@ -1,15 +1,19 @@
 import { fireEvent, render, waitFor } from '@testing-library/react-native'
 import * as React from 'react'
 import { Provider } from 'react-redux'
+import AppAnalytics from 'src/analytics/AppAnalytics'
 import { PointsEvents } from 'src/analytics/Events'
-import ValoraAnalytics from 'src/analytics/ValoraAnalytics'
 import { navigate } from 'src/navigator/NavigationService'
 import { Screens } from 'src/navigator/Screens'
 import PointsHome from 'src/points/PointsHome'
-import { getHistoryStarted, getPointsConfigRetry } from 'src/points/slice'
+import { getPointsConfigRetry, pointsDataRefreshStarted } from 'src/points/slice'
 import { RootState } from 'src/redux/store'
+import { getDynamicConfigParams, getFeatureGate } from 'src/statsig'
+import { NetworkId } from 'src/transactions/types'
 import { RecursivePartial, createMockStore, getMockStackScreenProps } from 'test/utils'
+import { mockEarnPositions } from 'test/values'
 
+jest.mock('src/statsig')
 jest.mock('src/points/PointsHistoryBottomSheet')
 
 const mockScreenProps = () => getMockStackScreenProps(Screens.PointsHome)
@@ -23,12 +27,32 @@ const renderPointsHome = (storeOverrides?: RecursivePartial<RootState>) => {
             swap: {
               pointsAmount: 50,
             },
+            'create-live-link': {
+              pointsAmount: 50,
+            },
             'create-wallet': {
               pointsAmount: 20,
+            },
+            'deposit-earn': {
+              pointsAmount: 50,
             },
           },
         },
         pointsConfigStatus: 'success',
+      },
+      tokens: {
+        tokenBalances: {
+          ['celo-alfajores:0xusd']: {
+            tokenId: 'celo-alfajores:0xabcd',
+            address: '0xabcd',
+            networkId: NetworkId['celo-alfajores'],
+            balance: '10',
+          },
+        },
+      },
+      positions: {
+        positions: mockEarnPositions,
+        earnPositionIds: mockEarnPositions.map((p) => p.positionId),
       },
     }
   )
@@ -47,6 +71,10 @@ const renderPointsHome = (storeOverrides?: RecursivePartial<RootState>) => {
 describe(PointsHome, () => {
   beforeEach(() => {
     jest.clearAllMocks()
+    jest.mocked(getFeatureGate).mockReturnValue(false)
+    jest
+      .mocked(getDynamicConfigParams)
+      .mockReturnValue({ jumpstartContracts: { 'celo-alfajores': '0x1234' } })
   })
 
   it('renders a loading state while loading config', async () => {
@@ -77,7 +105,7 @@ describe(PointsHome, () => {
   })
 
   it('refreshes the balance and history on mount and on pull to refresh', async () => {
-    const refreshPointsAndHistoryAction = getHistoryStarted({ getNextPage: false })
+    const refreshPointsAndHistoryAction = pointsDataRefreshStarted()
     const { store, getByTestId } = renderPointsHome()
 
     await waitFor(() => expect(store.getActions()).toEqual([refreshPointsAndHistoryAction]))
@@ -108,9 +136,7 @@ describe(PointsHome, () => {
     store.clearActions()
     fireEvent.press(getByText('points.fetchBalanceError.retryCta'))
 
-    await waitFor(() =>
-      expect(store.getActions()).toEqual([getHistoryStarted({ getNextPage: false })])
-    )
+    await waitFor(() => expect(store.getActions()).toEqual([pointsDataRefreshStarted()]))
   })
 
   it('opens activity bottom sheet', async () => {
@@ -118,26 +144,32 @@ describe(PointsHome, () => {
 
     fireEvent.press(getByTestId('PointsActivityButton'))
     await waitFor(() =>
-      expect(ValoraAnalytics.track).toHaveBeenCalledWith(PointsEvents.points_screen_activity_press)
+      expect(AppAnalytics.track).toHaveBeenCalledWith(PointsEvents.points_screen_activity_press)
     )
-    expect(store.getActions()).toEqual([getHistoryStarted({ getNextPage: false })])
+    expect(store.getActions()).toEqual([pointsDataRefreshStarted()])
   })
 
   it('renders multiple sections', async () => {
-    const { getByTestId, queryByTestId, queryByText } = renderPointsHome()
+    const { getByText, queryByText } = renderPointsHome()
 
-    expect(getByTestId('PointsActivitySection-50')).toBeTruthy()
-    expect(getByTestId('PointsActivitySection-20')).toBeTruthy()
+    expect(getByText('points.activityCards.createWallet.title')).toBeTruthy()
+    expect(getByText('points.activityCards.swap.title')).toBeTruthy()
+    expect(getByText('points.activityCards.createLiveLink.title')).toBeTruthy()
+    expect(getByText('points.activityCards.depositEarn.title')).toBeTruthy()
 
-    expect(getByTestId('PointsActivityCard-swap-50')).toBeTruthy()
-    expect(queryByTestId('PointsActivityCard-create-wallet-50')).toBeFalsy()
-
-    expect(queryByTestId('PointsActivityCard-swap-20')).toBeFalsy()
-    expect(getByTestId('PointsActivityCard-more-coming-20')).toBeTruthy()
-    expect(getByTestId('PointsActivityCard-create-wallet-20')).toBeTruthy()
+    expect(getByText('points.activityCards.moreComing.title')).toBeTruthy()
 
     expect(queryByText('points.loading.title')).toBeFalsy()
     expect(queryByText('points.error.title')).toBeFalsy()
+  })
+
+  it('renders disclaimer cta and information', () => {
+    const { getByText } = renderPointsHome()
+
+    fireEvent.press(getByText('points.disclaimer.learnMoreCta'))
+
+    expect(AppAnalytics.track).toHaveBeenCalledWith(PointsEvents.points_screen_disclaimer_press)
+    expect(getByText('points.disclaimer.body')).toBeTruthy()
   })
 
   it('renders only the balance if there are no supported activities', async () => {
@@ -159,28 +191,44 @@ describe(PointsHome, () => {
   })
 
   it('opens Swap bottom sheet', async () => {
-    const { getByTestId } = renderPointsHome()
-    fireEvent.press(getByTestId('PointsActivityCard-swap-50'))
+    const { getByText } = renderPointsHome()
+    fireEvent.press(getByText('points.activityCards.swap.title'))
     await waitFor(() =>
-      expect(ValoraAnalytics.track).toHaveBeenCalledWith(PointsEvents.points_screen_card_press, {
+      expect(AppAnalytics.track).toHaveBeenCalledWith(PointsEvents.points_screen_card_press, {
         activityId: 'swap',
       })
     )
   })
 
   it('navigates to Swap screen on CTA press', async () => {
-    const { getByTestId } = renderPointsHome()
-    fireEvent.press(getByTestId('PointsActivityCard-swap-50'))
+    const { getByText } = renderPointsHome()
+    fireEvent.press(getByText('points.activityCards.swap.title'))
     await waitFor(() =>
-      expect(ValoraAnalytics.track).toHaveBeenCalledWith(PointsEvents.points_screen_card_press, {
+      expect(AppAnalytics.track).toHaveBeenCalledWith(PointsEvents.points_screen_card_press, {
         activityId: 'swap',
       })
     )
 
-    fireEvent.press(getByTestId('PointsHomeBottomSheetCtaButton'))
+    fireEvent.press(getByText('points.activityCards.swap.bottomSheet.cta'))
     await waitFor(() => expect(navigate).toHaveBeenCalledWith(Screens.SwapScreenWithBack))
-    expect(ValoraAnalytics.track).toHaveBeenCalledWith(PointsEvents.points_screen_card_cta_press, {
+    expect(AppAnalytics.track).toHaveBeenCalledWith(PointsEvents.points_screen_card_cta_press, {
       activityId: 'swap',
+    })
+  })
+
+  it('navigates to Earn home screen on earn CTA press', async () => {
+    const { getByText } = renderPointsHome()
+    fireEvent.press(getByText('points.activityCards.depositEarn.title'))
+    await waitFor(() =>
+      expect(AppAnalytics.track).toHaveBeenCalledWith(PointsEvents.points_screen_card_press, {
+        activityId: 'deposit-earn',
+      })
+    )
+
+    fireEvent.press(getByText('points.activityCards.depositEarn.bottomSheet.cta'))
+    await waitFor(() => expect(navigate).toHaveBeenCalledWith(Screens.EarnHome))
+    expect(AppAnalytics.track).toHaveBeenCalledWith(PointsEvents.points_screen_card_cta_press, {
+      activityId: 'deposit-earn',
     })
   })
 })

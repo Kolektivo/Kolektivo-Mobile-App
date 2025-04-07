@@ -1,13 +1,13 @@
-import { trimLeading0x } from '@celo/utils/lib/address'
+import { WalletKitTypes } from '@reown/walletkit'
 import { SessionTypes } from '@walletconnect/types'
-import { Web3WalletTypes } from '@walletconnect/web3wallet'
 import React, { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
+import AppAnalytics from 'src/analytics/AppAnalytics'
 import { WalletConnectEvents } from 'src/analytics/Events'
-import ValoraAnalytics from 'src/analytics/ValoraAnalytics'
 import DataFieldWithCopy from 'src/components/DataFieldWithCopy'
 import { activeDappSelector } from 'src/dapps/selectors'
 import { useSelector } from 'src/redux/hooks'
+import { trimLeading0x } from 'src/utils/address'
 import { SerializableTransactionRequest } from 'src/viem/preparedTransactionSerialization'
 import {
   getDefaultRequestTrackedProperties,
@@ -17,7 +17,7 @@ import { SupportedActions } from 'src/walletConnect/constants'
 
 type Props = {
   session: SessionTypes.Struct
-  request: Web3WalletTypes.EventArguments['session_request']
+  request: WalletKitTypes.EventArguments['session_request']
   preparedTransaction?: SerializableTransactionRequest
 }
 
@@ -49,7 +49,7 @@ function ActionRequestPayload(props: Props) {
       ...getDefaultRequestTrackedProperties(props.request),
     }
 
-    ValoraAnalytics.track(WalletConnectEvents.wc_copy_request_payload, defaultTrackedProps)
+    AppAnalytics.track(WalletConnectEvents.wc_copy_request_payload, defaultTrackedProps)
   }
 
   if (!moreInfoString) {

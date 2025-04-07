@@ -9,17 +9,23 @@ interface Props {
   onPress?: () => void
   disabled?: boolean
   testID?: string
+  borderless?: boolean
 }
 
-export default function ListItem({ children, onPress, disabled, testID }: Props) {
+export default function ListItem({ children, onPress, disabled, testID, borderless }: Props) {
+  const innerViewStyle = {
+    ...styles.innerView,
+    borderBottomWidth: borderless ? 0 : 1,
+  }
+
   return (
     <View style={styles.container}>
       {onPress ? (
         <Touchable onPress={onPress} borderless={true} disabled={disabled} testID={testID}>
-          <View style={styles.innerView}>{children}</View>
+          <View style={innerViewStyle}>{children}</View>
         </Touchable>
       ) : (
-        <View style={styles.innerView}>{children}</View>
+        <View style={innerViewStyle}>{children}</View>
       )}
     </View>
   )
@@ -27,12 +33,12 @@ export default function ListItem({ children, onPress, disabled, testID }: Props)
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: colors.white,
+    backgroundColor: colors.backgroundPrimary,
   },
   innerView: {
     paddingVertical: variables.contentPadding,
     borderBottomWidth: 1,
-    borderBottomColor: colors.gray2,
-    marginLeft: variables.contentPadding,
+    borderBottomColor: colors.borderPrimary,
+    marginHorizontal: variables.contentPadding,
   },
 })

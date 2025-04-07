@@ -1,187 +1,281 @@
 import BigNumber from 'bignumber.js'
-import { useAsyncCallback } from 'react-async-hook'
-import aaveIncentivesV3Abi from 'src/abis/AaveIncentivesV3'
-import aavePool from 'src/abis/AavePoolV3'
-import erc20 from 'src/abis/IERC20'
-import { simulateTransactions } from 'src/earn/simulateTransactions'
-import { RewardsInfo } from 'src/earn/types'
-import { getDynamicConfigParams, getFeatureGate } from 'src/statsig'
+import { EarnActiveMode } from 'src/earn/types'
+import { isGasSubsidizedForNetwork } from 'src/earn/utils'
+import { triggerShortcutRequest } from 'src/positions/saga'
+import { RawShortcutTransaction } from 'src/positions/slice'
+import { rawShortcutTransactionsToTransactionRequests } from 'src/positions/transactions'
+import { EarnPosition, Position } from 'src/positions/types'
+import { getDynamicConfigParams } from 'src/statsig'
 import { DynamicConfigs } from 'src/statsig/constants'
-import { StatsigDynamicConfigs, StatsigFeatureGates } from 'src/statsig/types'
+import { StatsigDynamicConfigs } from 'src/statsig/types'
+import { SwapTransaction } from 'src/swap/types'
 import { TokenBalance } from 'src/tokens/slice'
 import Logger from 'src/utils/Logger'
-import { ensureError } from 'src/utils/ensureError'
-import { publicClient } from 'src/viem'
-import { TransactionRequest, prepareTransactions } from 'src/viem/prepareTransactions'
-import networkConfig, { networkIdToNetwork } from 'src/web3/networkConfig'
-import { Address, encodeFunctionData, isAddress, parseUnits } from 'viem'
+import { prepareTransactions } from 'src/viem/prepareTransactions'
+import { Address } from 'viem'
 
 const TAG = 'earn/prepareTransactions'
 
-export async function prepareSupplyTransactions({
+// Used on EarnEnterAmount.tsx
+export async function prepareDepositTransactions({
   amount,
   token,
   walletAddress,
   feeCurrencies,
-  poolContractAddress,
+  pool,
+  hooksApiUrl,
+  shortcutId,
 }: {
   amount: string
   token: TokenBalance
   walletAddress: Address
   feeCurrencies: TokenBalance[]
-  poolContractAddress: Address
+  pool: EarnPosition
+  hooksApiUrl: string
+  shortcutId: Extract<EarnActiveMode, 'deposit' | 'swap-deposit'>
 }) {
-  const baseTransactions: TransactionRequest[] = []
+  const { appId, networkId } = pool
+  const { enableAppFee } = getDynamicConfigParams(DynamicConfigs[StatsigDynamicConfigs.SWAP_CONFIG])
+  const args =
+    shortcutId === 'deposit'
+      ? {
+          tokens: [
+            {
+              tokenId: token.tokenId,
+              amount,
+            },
+          ],
+        }
+      : {
+          swapFromToken: {
+            tokenId: token.tokenId,
+            amount,
+            decimals: token.decimals,
+            address: token.address,
+            isNative: token.isNative ?? false,
+            networkId: token.networkId,
+          },
+          enableAppFee,
+        }
 
-  // amount in smallest unit
-  const amountToSupply = parseUnits(amount, token.decimals)
-
-  if (!token.address || !isAddress(token.address)) {
-    // should never happen
-    throw new Error(`Cannot use a token without address. Token id: ${token.tokenId}`)
-  }
-
-  const approvedAllowanceForSpender = await publicClient[
-    networkIdToNetwork[token.networkId]
-  ].readContract({
-    address: token.address,
-    abi: erc20.abi,
-    functionName: 'allowance',
-    args: [walletAddress, poolContractAddress],
-  })
-
-  if (approvedAllowanceForSpender < amountToSupply) {
-    const data = encodeFunctionData({
-      abi: erc20.abi,
-      functionName: 'approve',
-      args: [poolContractAddress, amountToSupply],
+  const {
+    transactions,
+    dataProps,
+  }: { transactions: RawShortcutTransaction[]; dataProps?: { swapTransaction: SwapTransaction } } =
+    await triggerShortcutRequest(hooksApiUrl, {
+      address: walletAddress,
+      appId,
+      networkId,
+      shortcutId,
+      ...args,
+      ...pool.shortcutTriggerArgs?.[shortcutId],
     })
 
-    const approveTx: TransactionRequest = {
-      from: walletAddress,
-      to: token.address,
-      data,
-    }
-    baseTransactions.push(approveTx)
+  if (shortcutId === 'swap-deposit' && !dataProps?.swapTransaction) {
+    Logger.error(
+      `${TAG}/prepareDepositTransactions`,
+      'Swap transaction not found in swap-deposit shortcut response',
+      { dataProps }
+    )
+    throw new Error('Swap transaction not found in swap-deposit shortcut response')
   }
 
-  const supplyTx: TransactionRequest = {
-    from: walletAddress,
-    to: poolContractAddress,
-    data: encodeFunctionData({
-      abi: aavePool,
-      functionName: 'supply',
-      args: [token.address, amountToSupply, walletAddress, 0],
+  return {
+    prepareTransactionsResult: await prepareTransactions({
+      feeCurrencies,
+      baseTransactions: rawShortcutTransactionsToTransactionRequests(transactions),
+      spendToken: token,
+      spendTokenAmount: new BigNumber(amount).shiftedBy(token.decimals),
+      isGasSubsidized: isGasSubsidizedForNetwork(token.networkId),
+      origin: `earn-${shortcutId}`,
     }),
+    swapTransaction: dataProps?.swapTransaction,
   }
-
-  baseTransactions.push(supplyTx)
-
-  const simulatedTransactions = await simulateTransactions({
-    baseTransactions,
-    networkId: token.networkId,
-  })
-
-  const supplySimulatedTx = simulatedTransactions[simulatedTransactions.length - 1]
-
-  const { depositGasPadding } = getDynamicConfigParams(
-    DynamicConfigs[StatsigDynamicConfigs.EARN_STABLECOIN_CONFIG]
-  )
-
-  baseTransactions[baseTransactions.length - 1].gas = BigInt(
-    supplySimulatedTx.gasNeeded + depositGasPadding
-  )
-  baseTransactions[baseTransactions.length - 1]._estimatedGasUse = BigInt(supplySimulatedTx.gasUsed)
-
-  const isGasSubsidized = getFeatureGate(StatsigFeatureGates.SUBSIDIZE_STABLECOIN_EARN_GAS_FEES)
-
-  return prepareTransactions({
-    feeCurrencies,
-    baseTransactions,
-    spendToken: token,
-    spendTokenAmount: new BigNumber(amount),
-    isGasSubsidized,
-  })
 }
 
-/**
- * Hook to prepare transactions for supplying crypto.
- */
-export function usePrepareSupplyTransactions() {
-  const prepareTransactions = useAsyncCallback(prepareSupplyTransactions, {
-    onError: (err) => {
-      const error = ensureError(err)
-      Logger.error(TAG, 'usePrepareSupplyTransactions', error)
-    },
+// Used on EarnEnterAmount.tsx and the usePrepareEnterAmountTransactionsCallback hook expects a swapTransaction even if it's undefined
+export async function prepareWithdrawTransactionsWithSwap({
+  amount,
+  walletAddress,
+  feeCurrencies,
+  pool,
+  hooksApiUrl,
+  useMax,
+}: {
+  amount: string
+  walletAddress: Address
+  feeCurrencies: TokenBalance[]
+  pool: EarnPosition
+  hooksApiUrl: string
+  useMax: boolean
+}) {
+  const prepareTransactionsResult = await prepareWithdrawTransactions({
+    amount,
+    walletAddress,
+    feeCurrencies,
+    pool,
+    hooksApiUrl,
+    useMax,
+  })
+
+  Logger.debug(TAG, 'prepareWithdrawTransactionsWithSwap', {
+    prepareTransactionsResult,
+    pool,
   })
 
   return {
-    prepareTransactionsResult: prepareTransactions.result,
-    refreshPreparedTransactions: prepareTransactions.execute,
-    clearPreparedTransactions: prepareTransactions.reset,
-    prepareTransactionError: prepareTransactions.error,
-    isPreparingTransactions: prepareTransactions.loading,
+    prepareTransactionsResult,
+    swapTransaction: undefined,
   }
 }
 
+// Used on the EarnConfirmationScreen.tsx
 export async function prepareWithdrawAndClaimTransactions({
-  amount,
-  token,
   walletAddress,
   feeCurrencies,
-  rewards,
-  poolTokenAddress,
+  pool,
+  hooksApiUrl,
+  rewardsPositions,
 }: {
-  amount: string
-  token: TokenBalance
-  poolTokenAddress: Address
   walletAddress: Address
   feeCurrencies: TokenBalance[]
-  rewards: RewardsInfo[]
+  pool: EarnPosition
+  hooksApiUrl: string
+  rewardsPositions: Position[]
 }) {
-  const baseTransactions: TransactionRequest[] = []
-
-  if (!token.address || !isAddress(token.address)) {
-    // should never happen
-    throw new Error(`Cannot use a token without address. Token id: ${token.tokenId}`)
-  }
-
-  const amountToWithdraw = parseUnits(amount, token.decimals)
-
-  baseTransactions.push({
-    from: walletAddress,
-    to: networkConfig.arbAavePoolV3ContractAddress,
-    data: encodeFunctionData({
-      abi: aavePool,
-      functionName: 'withdraw',
-      args: [token.address, amountToWithdraw, walletAddress],
-    }),
-  })
-
-  rewards.forEach(({ amount, tokenInfo }) => {
-    const amountToClaim = parseUnits(amount, tokenInfo.decimals)
-
-    if (!tokenInfo.address || !isAddress(tokenInfo.address)) {
-      // should never happen
-      throw new Error(`Cannot use a token without address. Token id: ${token.tokenId}`)
-    }
-
-    baseTransactions.push({
-      from: walletAddress,
-      to: networkConfig.arbAaveIncentivesV3ContractAddress,
-      data: encodeFunctionData({
-        abi: aaveIncentivesV3Abi,
-        functionName: 'claimRewardsToSelf',
-        args: [[poolTokenAddress], amountToClaim, tokenInfo.address],
-      }),
+  const { appId, balance, dataProps, networkId, shortcutTriggerArgs } = pool
+  const { transactions: withdrawTransactions }: { transactions: RawShortcutTransaction[] } =
+    await triggerShortcutRequest(hooksApiUrl, {
+      address: walletAddress,
+      appId,
+      networkId,
+      shortcutId: 'withdraw',
+      tokens: [
+        {
+          tokenId: dataProps.withdrawTokenId,
+          amount: balance,
+          useMax: true,
+        },
+      ],
+      ...shortcutTriggerArgs?.withdraw,
     })
-  })
 
-  const isGasSubsidized = getFeatureGate(StatsigFeatureGates.SUBSIDIZE_STABLECOIN_EARN_GAS_FEES)
+  // Conditionally populate claimTransactions based on withdrawalIncludesClaim
+  const claimTransactions = dataProps.withdrawalIncludesClaim
+    ? []
+    : await Promise.all(
+        rewardsPositions.map(async (position): Promise<RawShortcutTransaction[]> => {
+          const { transactions }: { transactions?: RawShortcutTransaction[] } =
+            await triggerShortcutRequest(hooksApiUrl, {
+              address: walletAddress,
+              appId,
+              networkId,
+              shortcutId: 'claim-rewards',
+              ...position.shortcutTriggerArgs?.['claim-rewards'],
+            })
+          return transactions ?? [] // Default to an empty array if rewardsPositions is undefined
+        })
+      )
+
+  Logger.debug(TAG, 'prepareWithdrawAndClaimTransactions', {
+    withdrawTransactions,
+    claimTransactions,
+    pool,
+  })
 
   return prepareTransactions({
     feeCurrencies,
-    baseTransactions,
-    isGasSubsidized,
+    baseTransactions: rawShortcutTransactionsToTransactionRequests([
+      ...withdrawTransactions,
+      ...claimTransactions.flat(),
+    ]),
+    isGasSubsidized: isGasSubsidizedForNetwork(networkId),
+    origin: 'earn-withdraw',
+  })
+}
+
+export async function prepareWithdrawTransactions({
+  amount,
+  walletAddress,
+  feeCurrencies,
+  pool,
+  hooksApiUrl,
+  useMax,
+}: {
+  amount: string
+  walletAddress: Address
+  feeCurrencies: TokenBalance[]
+  pool: EarnPosition
+  hooksApiUrl: string
+  useMax: boolean
+}) {
+  const { appId, balance, dataProps, networkId, shortcutTriggerArgs } = pool
+  const { transactions: withdrawTransactions }: { transactions: RawShortcutTransaction[] } =
+    await triggerShortcutRequest(hooksApiUrl, {
+      address: walletAddress,
+      appId,
+      networkId,
+      shortcutId: 'withdraw',
+      tokens: [
+        {
+          tokenId: dataProps.withdrawTokenId,
+          amount: useMax ? balance : amount,
+          useMax,
+        },
+      ],
+      ...shortcutTriggerArgs?.withdraw,
+    })
+  Logger.debug(TAG, 'prepareWithdrawTransactions', {
+    withdrawTransactions,
+    pool,
+  })
+
+  return prepareTransactions({
+    feeCurrencies,
+    baseTransactions: rawShortcutTransactionsToTransactionRequests(withdrawTransactions),
+    isGasSubsidized: isGasSubsidizedForNetwork(networkId),
+    origin: 'earn-withdraw',
+  })
+}
+
+export async function prepareClaimTransactions({
+  pool,
+  walletAddress,
+  feeCurrencies,
+  hooksApiUrl,
+  rewardsPositions = [],
+}: {
+  pool: EarnPosition
+  walletAddress: Address
+  feeCurrencies: TokenBalance[]
+  hooksApiUrl: string
+  rewardsPositions?: Position[]
+}) {
+  const { appId, networkId } = pool
+
+  const claimTransactions = await Promise.all(
+    rewardsPositions.map(async (position): Promise<RawShortcutTransaction[]> => {
+      const { transactions }: { transactions?: RawShortcutTransaction[] } =
+        await triggerShortcutRequest(hooksApiUrl, {
+          address: walletAddress,
+          appId,
+          networkId,
+          shortcutId: 'claim-rewards',
+          ...position.shortcutTriggerArgs?.['claim-rewards'],
+        })
+      return transactions ?? []
+    })
+  )
+
+  Logger.debug(TAG, 'prepareClaimTransactions', {
+    claimTransactions,
+    pool,
+  })
+
+  return prepareTransactions({
+    feeCurrencies,
+    baseTransactions: rawShortcutTransactionsToTransactionRequests(claimTransactions.flat()),
+    isGasSubsidized: isGasSubsidizedForNetwork(networkId),
+    origin: 'earn-claim-rewards',
   })
 }

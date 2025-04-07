@@ -1,7 +1,6 @@
-import { Countries } from '@celo/phone-utils'
 import { useHeaderHeight } from '@react-navigation/elements'
 import { NativeStackScreenProps } from '@react-navigation/native-stack'
-import React, { useEffect, useLayoutEffect, useMemo, useState } from 'react'
+import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useAsync } from 'react-async-hook'
 import { useTranslation } from 'react-i18next'
 import { ActivityIndicator, BackHandler, StyleSheet, Text, View } from 'react-native'
@@ -14,17 +13,16 @@ import {
   e164NumberSelector,
 } from 'src/account/selectors'
 import { getPhoneNumberDetails } from 'src/account/utils'
+import AppAnalytics from 'src/analytics/AppAnalytics'
 import { PhoneVerificationEvents } from 'src/analytics/Events'
-import ValoraAnalytics from 'src/analytics/ValoraAnalytics'
 import BackButton from 'src/components/BackButton'
+import BottomSheet, { BottomSheetModalRefType } from 'src/components/BottomSheet'
 import Button, { BtnSizes, BtnTypes } from 'src/components/Button'
-import InfoBottomSheet from 'src/components/InfoBottomSheet'
 import KeyboardAwareScrollView from 'src/components/KeyboardAwareScrollView'
 import KeyboardSpacer from 'src/components/KeyboardSpacer'
 import PhoneNumberInput from 'src/components/PhoneNumberInput'
 import TextButton from 'src/components/TextButton'
 import i18n from 'src/i18n'
-import { setHasSeenVerificationNux } from 'src/identity/actions'
 import { HeaderTitleWithSubtitle } from 'src/navigator/Headers'
 import { navigate } from 'src/navigator/NavigationService'
 import { Screens } from 'src/navigator/Screens'
@@ -38,15 +36,15 @@ import {
 import { retrieveSignedMessage } from 'src/pincode/authentication'
 import { useDispatch, useSelector } from 'src/redux/hooks'
 import colors from 'src/styles/colors'
-import fontStyles from 'src/styles/fonts'
+import { typeScale } from 'src/styles/fonts'
 import { Spacing } from 'src/styles/styles'
+import { Countries } from 'src/utils/Countries'
 import { walletAddressSelector } from 'src/web3/selectors'
 
 function VerificationStartScreen({
   route,
   navigation,
 }: NativeStackScreenProps<StackParamList, Screens.VerificationStartScreen>) {
-  const [showLearnMoreDialog, setShowLearnMoreDialog] = useState(false)
   const [phoneNumberInfo, setPhoneNumberInfo] = useState(() =>
     getPhoneNumberDetails(
       cachedNumber || '',
@@ -56,6 +54,7 @@ function VerificationStartScreen({
   )
   const [signedMessageCreated, setSignedMessageCreated] = useState(false)
 
+  const infoBottomSheetRef = useRef<BottomSheetModalRefType>(null)
   const { t } = useTranslation()
   const dispatch = useDispatch()
   const headerHeight = useHeaderHeight()
@@ -78,22 +77,21 @@ function VerificationStartScreen({
     : undefined
 
   const onPressStart = () => {
-    ValoraAnalytics.track(PhoneVerificationEvents.phone_verification_start, {
+    AppAnalytics.track(PhoneVerificationEvents.phone_verification_start, {
       country: country?.displayNameNoDiacritics || '',
       countryCallingCode: country?.countryCallingCode || '',
     })
 
-    dispatch(setHasSeenVerificationNux(true))
     navigate(Screens.VerificationCodeInputScreen, {
       registrationStep: showSteps ? { step, totalSteps } : undefined,
       e164Number: phoneNumberInfo.e164Number,
       countryCallingCode: country?.countryCallingCode || '',
+      hasOnboarded: route.params?.hasOnboarded,
     })
   }
 
   const onPressSkip = () => {
-    dispatch(setHasSeenVerificationNux(true))
-    ValoraAnalytics.track(PhoneVerificationEvents.phone_verification_skip_confirm)
+    AppAnalytics.track(PhoneVerificationEvents.phone_verification_skip_confirm)
     goToNextOnboardingScreen({
       firstScreenInCurrentStep: Screens.VerificationStartScreen,
       onboardingProps,
@@ -101,18 +99,17 @@ function VerificationStartScreen({
   }
 
   const onPressLearnMore = () => {
-    ValoraAnalytics.track(PhoneVerificationEvents.phone_verification_learn_more)
-    setShowLearnMoreDialog(true)
+    AppAnalytics.track(PhoneVerificationEvents.phone_verification_learn_more)
+    infoBottomSheetRef.current?.snapToIndex(0)
   }
 
   const onPressLearnMoreDismiss = () => {
-    setShowLearnMoreDialog(false)
+    infoBottomSheetRef.current?.close()
   }
 
   useLayoutEffect(() => {
     const title = () => (
       <HeaderTitleWithSubtitle
-        title={t('phoneVerificationScreen.screenTitle')}
         subTitle={showSteps && t('registrationSteps', { step, totalSteps })}
       />
     )
@@ -125,7 +122,7 @@ function VerificationStartScreen({
             title={t('skip')}
             testID="PhoneVerificationSkipHeader"
             onPress={onPressSkip}
-            titleStyle={{ color: colors.onboardingBrownLight }}
+            titleStyle={{ color: colors.navigationTopPrimary }}
           />
         ),
       headerLeft: () => route.params?.hasOnboarded && <BackButton />,
@@ -206,7 +203,7 @@ function VerificationStartScreen({
   if (!account) {
     return (
       <SafeAreaView style={styles.container}>
-        <ActivityIndicator size="large" color={colors.primary} />
+        <ActivityIndicator size="large" color={colors.loadingIndicator} />
       </SafeAreaView>
     )
   }
@@ -222,12 +219,12 @@ function VerificationStartScreen({
         </Text>
         <Text style={styles.body}>{t('phoneVerificationScreen.description')}</Text>
         <PhoneNumberInput
-          label={t('phoneNumber')}
           style={styles.phoneNumber}
           country={country}
           internationalPhoneNumber={phoneNumberInfo.internationalPhoneNumber}
           onPressCountry={onPressCountry}
           onChange={onChangePhoneNumberInput}
+          countryFlagStyle={styles.countryFlag}
         />
         <Button
           text={t('phoneVerificationScreen.startButtonLabel')}
@@ -250,13 +247,20 @@ function VerificationStartScreen({
         </TextButton>
       </View>
       <KeyboardSpacer />
-      <InfoBottomSheet
-        isVisible={showLearnMoreDialog}
+      <BottomSheet
+        forwardedRef={infoBottomSheetRef}
         title={t('phoneVerificationScreen.learnMore.title')}
-        body={t('phoneVerificationScreen.learnMore.body')}
-        onDismiss={onPressLearnMoreDismiss}
-        testID="PhoneVerificationLearnMoreDialog"
-      />
+        description={t('phoneVerificationScreen.learnMore.body')}
+        testId="PhoneVerificationLearnMoreDialog"
+      >
+        <Button
+          text={t('dismiss')}
+          onPress={onPressLearnMoreDismiss}
+          size={BtnSizes.FULL}
+          type={BtnTypes.SECONDARY}
+          style={styles.dismissHelpButton}
+        />
+      </BottomSheet>
     </SafeAreaView>
   )
 }
@@ -264,7 +268,6 @@ function VerificationStartScreen({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.onboardingBackground,
     justifyContent: 'center',
   },
   scrollContainer: {
@@ -273,12 +276,12 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   header: {
-    ...fontStyles.h1,
+    ...typeScale.titleMedium,
     marginBottom: Spacing.Regular16,
     textAlign: 'center',
   },
   body: {
-    ...fontStyles.regular,
+    ...typeScale.bodyMedium,
     marginBottom: 32,
     textAlign: 'center',
   },
@@ -293,7 +296,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   learnMore: {
-    color: colors.onboardingBrownLight,
+    color: colors.textLink,
+  },
+  countryFlag: {
+    backgroundColor: colors.buttonSecondaryBackground,
+    borderWidth: 1,
+    borderColor: colors.borderSecondary,
+  },
+  dismissHelpButton: {
+    marginTop: Spacing.Thick24,
   },
 })
 

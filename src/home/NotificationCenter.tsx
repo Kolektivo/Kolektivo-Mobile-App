@@ -1,26 +1,19 @@
 import { NativeStackScreenProps } from '@react-navigation/native-stack'
-import CleverTap from 'clevertap-react-native'
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { LayoutChangeEvent, StyleSheet, Text, View, ViewToken } from 'react-native'
 import Animated, { useAnimatedScrollHandler, useSharedValue } from 'react-native-reanimated'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import AppAnalytics from 'src/analytics/AppAnalytics'
 import { HomeEvents } from 'src/analytics/Events'
-import ValoraAnalytics from 'src/analytics/ValoraAnalytics'
-import { openUrl } from 'src/app/actions'
-import { CallToAction } from 'src/components/CallToActionsBar'
 import SimpleMessagingCard from 'src/components/SimpleMessagingCard'
-import EscrowedPaymentListItem from 'src/escrow/EscrowedPaymentListItem'
-import { getReclaimableEscrowPayments } from 'src/escrow/reducer'
-import { CLEVERTAP_PRIORITY, INVITES_PRIORITY, useSimpleActions } from 'src/home/NotificationBox'
+import { CLEVERTAP_PRIORITY, useSimpleActions } from 'src/home/NotificationBox'
 import { Notification, NotificationBannerCTATypes, NotificationType } from 'src/home/types'
 import ThumbsUpIllustration from 'src/icons/ThumbsUpIllustration'
 import { Screens } from 'src/navigator/Screens'
 import useScrollAwareHeader from 'src/navigator/ScrollAwareHeader'
 import { StackParamList } from 'src/navigator/types'
-import { useDispatch, useSelector } from 'src/redux/hooks'
-import colors from 'src/styles/colors'
-import fontStyles from 'src/styles/fonts'
+import { typeScale } from 'src/styles/fonts'
 import { Spacing } from 'src/styles/styles'
 
 type NotificationsProps = NativeStackScreenProps<StackParamList, Screens.NotificationCenter>
@@ -106,23 +99,6 @@ function useCleverTapNotifications() {
 export function useNotifications() {
   const notifications: Notification[] = []
 
-  // Pending outgoing invites in escrow
-  const reclaimableEscrowPayments = useSelector(getReclaimableEscrowPayments)
-  if (reclaimableEscrowPayments && reclaimableEscrowPayments.length) {
-    for (const payment of reclaimableEscrowPayments) {
-      const itemPriority = Number(`${INVITES_PRIORITY}.${payment.timestamp.toString()}`)
-
-      notifications.push({
-        renderElement: (params?: { index?: number }) => (
-          <EscrowedPaymentListItem payment={payment} index={params?.index} />
-        ),
-        priority: !Number.isNaN(itemPriority) ? itemPriority : INVITES_PRIORITY,
-        id: `${NotificationType.escrow_tx_summary}/${payment.paymentID}`,
-        type: NotificationType.escrow_tx_summary,
-      })
-    }
-  }
-
   const simpleActions = useSimpleActions()
   notifications.push(
     ...simpleActions.map((notification) => ({
@@ -135,9 +111,6 @@ export function useNotifications() {
       type: notification.type,
     }))
   )
-
-  const cleverTapNotifications = useCleverTapNotifications()
-  notifications.push(...cleverTapNotifications)
 
   return (
     notifications
@@ -166,7 +139,7 @@ export default function Notifications({ navigation }: NotificationsProps) {
   const seenNotifications = useRef(new Set())
 
   useEffect(() => {
-    ValoraAnalytics.track(HomeEvents.notification_center_opened, {
+    AppAnalytics.track(HomeEvents.notification_center_opened, {
       notificationsCount: notifications.length,
     })
   }, [])
@@ -199,7 +172,7 @@ export default function Notifications({ navigation }: NotificationsProps) {
         if (!seenNotifications.current.has(item.id)) {
           seenNotifications.current.add(item.id)
 
-          ValoraAnalytics.track(HomeEvents.notification_impression, {
+          AppAnalytics.track(HomeEvents.notification_impression, {
             notificationId: item.id,
             notificationType: item.type,
             notificationPositionInList: notificationsRef.current.findIndex(
@@ -269,10 +242,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   title: {
-    ...fontStyles.large600,
-    fontSize: 24,
-    lineHeight: 32,
-    color: colors.black,
+    ...typeScale.titleMedium,
     margin: Spacing.Thick24,
     marginTop: Spacing.Smallest8,
   },
@@ -287,8 +257,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   emptyStateLabel: {
-    ...fontStyles.regular600,
-    lineHeight: 24,
+    ...typeScale.labelSemiBoldMedium,
     marginTop: Spacing.Regular16,
   },
 })

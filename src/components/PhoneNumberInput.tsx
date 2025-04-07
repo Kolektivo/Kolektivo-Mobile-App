@@ -1,5 +1,3 @@
-import { LocalizedCountry, parsePhoneNumber } from '@celo/phone-utils'
-import { ValidatorKind } from '@celo/utils/lib/inputValidation'
 import React, { useEffect, useRef } from 'react'
 import { Platform, StyleProp, StyleSheet, Text, View, ViewStyle } from 'react-native'
 import SmsRetriever from 'react-native-sms-retriever'
@@ -9,6 +7,10 @@ import FormTextInput from 'src/components/FormTextInput'
 import Touchable from 'src/components/Touchable'
 import ValidatedTextInput from 'src/components/ValidatedTextInput'
 import colors from 'src/styles/colors'
+import { Spacing } from 'src/styles/styles'
+import { type LocalizedCountry } from 'src/utils/Countries'
+import { ValidatorKind } from 'src/utils/inputValidation'
+import { parsePhoneNumber } from 'src/utils/phoneNumbers'
 
 const TAG = 'PhoneNumberInput'
 
@@ -29,7 +31,7 @@ async function requestPhoneNumber() {
 }
 
 interface Props {
-  label: string
+  label?: string
   countryFlagStyle?: StyleProp<ViewStyle>
   style?: StyleProp<ViewStyle>
   country: LocalizedCountry | undefined
@@ -106,6 +108,7 @@ export default function PhoneNumberInput({
               isExpandable={editable}
               isExpanded={false}
               containerStyle={styles.countryFlagContainer}
+              arrowColor={colors.contentSecondary}
             >
               <Text style={styles.flag} testID={'countryCodeFlag'}>
                 {flagEmoji}
@@ -138,13 +141,14 @@ const styles = StyleSheet.create({
   container: {},
   phoneNumberContainer: {
     flexDirection: 'row',
-    alignItems: 'stretch',
+    alignItems: 'center',
   },
   countryCodeContainer: {
     width: 80,
+    height: Spacing.XLarge48,
     paddingHorizontal: 12,
     alignItems: 'stretch',
-    backgroundColor: colors.white,
+    backgroundColor: colors.backgroundPrimary,
     borderRadius: 8,
   },
   countryFlagContainer: {
@@ -158,7 +162,10 @@ const styles = StyleSheet.create({
     fontSize: 20,
   },
   phoneNumberInput: {
-    flex: 1,
-    marginLeft: 7,
+    // flex: 1,
+    marginLeft: Spacing.Regular16,
+    backgroundColor: colors.backgroundPrimary,
+    borderBottomWidth: 1,
+    borderColor: colors.borderPrimary,
   },
 })

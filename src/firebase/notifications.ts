@@ -1,13 +1,9 @@
 import { FirebaseMessagingTypes } from '@react-native-firebase/messaging'
 import BigNumber from 'bignumber.js'
 import { showMessage } from 'src/alert/actions'
+import AppAnalytics from 'src/analytics/AppAnalytics'
 import { AppEvents } from 'src/analytics/Events'
-import ValoraAnalytics from 'src/analytics/ValoraAnalytics'
 import { openUrl } from 'src/app/actions'
-import {
-  RewardsScreenOrigin,
-  trackRewardsScreenOpenEvent,
-} from 'src/consumerIncentives/analyticsEventsTracker'
 import { navigate } from 'src/navigator/NavigationService'
 import { Screens } from 'src/navigator/Screens'
 import {
@@ -16,11 +12,11 @@ import {
   NotificationTypes,
   TransferNotificationData,
 } from 'src/notifications/types'
+import { getTokenId } from 'src/tokens/utils'
 import { TokenTransactionTypeV2, TransactionStatus } from 'src/transactions/types'
 import Logger from 'src/utils/Logger'
-import { put } from 'typed-redux-saga'
 import networkConfig from 'src/web3/networkConfig'
-import { getTokenId } from 'src/tokens/utils'
+import { put } from 'typed-redux-saga'
 
 const TAG = 'FirebaseNotifications'
 
@@ -29,7 +25,6 @@ function handlePaymentReceived(transferNotification: TransferNotificationData) {
 
   navigate(Screens.TransactionDetailsScreen, {
     transaction: {
-      __typename: 'TokenTransferV3',
       networkId: networkConfig.defaultNetworkId,
       type: TokenTransactionTypeV2.Received,
       transactionHash: transferNotification.txHash,
@@ -44,7 +39,6 @@ function handlePaymentReceived(transferNotification: TransferNotificationData) {
       metadata: {
         title: transferNotification.name,
         image: transferNotification.imageUrl,
-        comment: transferNotification.comment,
       },
       fees: [],
       status: TransactionStatus.Complete,
@@ -66,16 +60,13 @@ export function* handleNotification(
     return
   }
 
-  ValoraAnalytics.track(AppEvents.push_notification_opened, {
+  AppAnalytics.track(AppEvents.push_notification_opened, {
     id: message.data?.id,
     state: notificationState,
     type: message.data?.type,
   })
   // See if this is a notification with an open url or webview action (`ou` prop in the data)
   const urlToOpen = message.data?.ou
-  if (urlToOpen) {
-    trackRewardsScreenOpenEvent(urlToOpen, RewardsScreenOrigin.PushNotification)
-  }
   const openExternal = message.data?.openExternal === 'true'
   const openUrlAction = urlToOpen ? openUrl(urlToOpen, openExternal, true) : null
 

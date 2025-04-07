@@ -1,8 +1,9 @@
 import { parseUri } from '@walletconnect/utils'
+import AppAnalytics from 'src/analytics/AppAnalytics'
 import { WalletConnectEvents } from 'src/analytics/Events'
 import { WalletConnectPairingOrigin } from 'src/analytics/types'
-import ValoraAnalytics from 'src/analytics/ValoraAnalytics'
 import { getDappRequestOrigin } from 'src/app/utils'
+import { DEEP_LINK_URL_SCHEME, WALLETCONNECT_UNIVERSAL_LINK } from 'src/config'
 import { activeDappSelector } from 'src/dapps/selectors'
 import { ActiveDapp } from 'src/dapps/types'
 import { navigate } from 'src/navigator/NavigationService'
@@ -14,9 +15,7 @@ import { WalletConnectRequestType } from 'src/walletConnect/types'
 import { call, delay, fork, race, select, take } from 'typed-redux-saga'
 
 const WC_PREFIX = 'wc:'
-const DEEPLINK_PREFIX = 'celo://wallet/wc?uri='
-const UNIVERSAL_LINK_PREFIX = 'https://valoraapp.com/wc?uri='
-const UNIVERSAL_LINK_PREFIX_WITHOUT_URI = 'https://valoraapp.com/wc'
+const APP_DEEPLINK_PREFIX = `${DEEP_LINK_URL_SCHEME}://wallet/wc?uri=`
 const CONNECTION_TIMEOUT = 45_000
 
 /**
@@ -30,12 +29,13 @@ const CONNECTION_TIMEOUT = 45_000
  */
 export function* handleWalletConnectDeepLink(deepLink: string) {
   let link = deepLink
-  if (link.startsWith(DEEPLINK_PREFIX)) {
-    link = deepLink.substring(DEEPLINK_PREFIX.length)
+  if (link.startsWith(APP_DEEPLINK_PREFIX)) {
+    link = deepLink.substring(APP_DEEPLINK_PREFIX.length)
   }
 
-  if (link.startsWith(UNIVERSAL_LINK_PREFIX)) {
-    link = deepLink.substring(UNIVERSAL_LINK_PREFIX.length)
+  const wcLinkWithUri = `${WALLETCONNECT_UNIVERSAL_LINK}?uri=`
+  if (link.startsWith(wcLinkWithUri)) {
+    link = deepLink.substring(wcLinkWithUri.length)
   }
 
   link = decodeURIComponent(link)
@@ -58,7 +58,7 @@ export function* handleWalletConnectDeepLink(deepLink: string) {
 }
 
 export function isWalletConnectDeepLink(deepLink: string) {
-  return [WC_PREFIX, DEEPLINK_PREFIX, UNIVERSAL_LINK_PREFIX_WITHOUT_URI].some((prefix) =>
+  return [WC_PREFIX, APP_DEEPLINK_PREFIX, WALLETCONNECT_UNIVERSAL_LINK].some((prefix) =>
     decodeURIComponent(deepLink).startsWith(prefix)
   )
 }
@@ -77,7 +77,7 @@ export function* handleLoadingWithTimeout(origin: WalletConnectPairingOrigin) {
 
   if (timedOut) {
     const activeDapp: ActiveDapp | null = yield* select(activeDappSelector)
-    ValoraAnalytics.track(WalletConnectEvents.wc_pairing_error, {
+    AppAnalytics.track(WalletConnectEvents.wc_pairing_error, {
       dappRequestOrigin: getDappRequestOrigin(activeDapp),
       error: 'timed out while waiting for a session',
     })

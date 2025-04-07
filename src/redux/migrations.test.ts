@@ -1,6 +1,13 @@
 import BigNumber from 'bignumber.js'
 import _ from 'lodash'
-import { FinclusiveKycStatus } from 'src/account/reducer'
+import {
+  FinclusiveKycStatus,
+  PincodeType,
+  RecoveryPhraseInOnboardingStatus,
+} from 'src/account/reducer'
+import { DEEP_LINK_URL_SCHEME, ONBOARDING_FEATURES_ENABLED } from 'src/config'
+import { Screens } from 'src/navigator/Screens'
+import { ToggleableOnboardingFeatures } from 'src/onboarding/types'
 import { exchangeInitialState, migrations } from 'src/redux/migrations'
 import {
   Network,
@@ -50,7 +57,14 @@ import {
   v201Schema,
   v203Schema,
   v214Schema,
+  v216Schema,
   v21Schema,
+  v222Schema,
+  v227Schema,
+  v228Schema,
+  v230Schema,
+  v233Schema,
+  v235Schema,
   v28Schema,
   v2Schema,
   v35Schema,
@@ -80,10 +94,11 @@ import {
   vNeg1Schema,
 } from 'test/schemas'
 import {
+  mockEarnDepositTransaction,
   mockInvitableRecipient,
   mockInvitableRecipient2,
-  mockPositions,
   mockPositionsLegacy,
+  mockPositionsLegacy2,
   mockRecipient,
   mockRecipient2,
   mockShortcuts,
@@ -91,6 +106,18 @@ import {
 } from 'test/values'
 
 describe('Redux persist migrations', () => {
+  beforeEach(() => {
+    jest.replaceProperty(
+      ONBOARDING_FEATURES_ENABLED,
+      ToggleableOnboardingFeatures.CloudBackup,
+      false
+    )
+    jest.replaceProperty(
+      ONBOARDING_FEATURES_ENABLED,
+      ToggleableOnboardingFeatures.PhoneVerification,
+      false
+    )
+  })
   it('works for v-1 to v0', () => {
     const mockNumber = '+111111111111'
     const mockAddress = '0x00000000000000000000'
@@ -771,7 +798,7 @@ describe('Redux persist migrations', () => {
           {
             name: 'Moola',
             description: 'Lend, borrow, or add to a pool to earn rewards',
-            dappUrl: 'celo://wallet/moolaScreen',
+            dappUrl: `${DEEP_LINK_URL_SCHEME}://wallet/moolaScreen`,
             categoryId: 'lend',
             iconUrl: 'https://raw.githubusercontent.com/valora-inc/dapp-list/main/assets/moola.png',
             isFeatured: false,
@@ -1591,8 +1618,8 @@ describe('Redux persist migrations', () => {
       },
     }
     const expectedSchema = _.cloneDeep(oldSchema)
-    expectedSchema.positions.positions = mockPositions
-    expectedSchema.positions.shortcuts = mockShortcuts
+    expectedSchema.positions.positions = mockPositionsLegacy2
+    expectedSchema.positions.shortcuts = [mockShortcuts[0]]
     const migratedSchema = migrations[204](oldSchema)
 
     expect(migratedSchema).toStrictEqual(expectedSchema)
@@ -1603,7 +1630,7 @@ describe('Redux persist migrations', () => {
     const oldSchema = {
       ...v203Schema,
       positions: {
-        positions: mockPositions,
+        positions: mockPositionsLegacy2,
         shortcuts: mockShortcuts,
       },
     }
@@ -1617,6 +1644,270 @@ describe('Redux persist migrations', () => {
     const migratedSchema = migrations[215](oldSchema)
     const expectedSchema: any = _.cloneDeep(oldSchema)
     expectedSchema.points.introHasBeenDismissed = false
+    expect(migratedSchema).toStrictEqual(expectedSchema)
+  })
+
+  it('works from 216 to 217', () => {
+    const oldSchema = v216Schema
+    const migratedSchema = migrations[217](oldSchema)
+    const expectedSchema: any = _.cloneDeep(oldSchema)
+    expectedSchema.points.trackOnceActivities = {
+      'create-wallet': false,
+    }
+    expect(migratedSchema).toStrictEqual(expectedSchema)
+  })
+
+  it('works from 222 to 223', () => {
+    const oldSchema = v222Schema
+    const migratedSchema = migrations[223](oldSchema)
+    const expectedSchema: any = _.cloneDeep(oldSchema)
+    expectedSchema.recipients = {
+      ..._.omit(oldSchema.recipients, 'valoraRecipientCache'),
+      appRecipientCache: {},
+    }
+    expect(migratedSchema).toStrictEqual(expectedSchema)
+  })
+
+  it('works from 227 to 228', () => {
+    const oldSchema = v227Schema
+    const migratedSchema = migrations[228](oldSchema)
+    const expectedSchema: any = _.cloneDeep(oldSchema)
+    ;(expectedSchema.identity = _.omit(
+      oldSchema.identity,
+      'walletToAccountAddress',
+      'e164NumberToSalt',
+      'addressToDataEncryptionKey'
+    )),
+      (expectedSchema.web3 = _.omit(
+        oldSchema.web3,
+        'accountInWeb3Keystore',
+        'dataEncryptionKey',
+        'isDekRegistered',
+        'mtwAddress'
+      ))
+    expect(migratedSchema).toStrictEqual(expectedSchema)
+  })
+  it('works from 228 to 229', () => {
+    const oldSchema = {
+      ...v228Schema,
+      transactions: {
+        ...v228Schema.transactions,
+        transactionsByNetworkId: {
+          ...v228Schema.transactions.transactionsByNetworkId,
+          [NetworkId['arbitrum-sepolia']]: [
+            { ...mockEarnDepositTransaction, providerId: 'aave-v3' },
+          ],
+        },
+        standbyTransactions: [
+          {
+            ...mockEarnDepositTransaction,
+            providerId: 'aave-v3',
+            status: TransactionStatus.Pending,
+          },
+          ...v228Schema.transactions.standbyTransactions,
+        ],
+      },
+    }
+    const migratedSchema = migrations[229](oldSchema)
+    const expectedSchema: any = _.cloneDeep(oldSchema)
+    expectedSchema.transactions.transactionsByNetworkId[
+      NetworkId['arbitrum-sepolia']
+    ][0].providerId = 'aave'
+    expectedSchema.transactions.standbyTransactions[0].providerId = 'aave'
+    expect(migratedSchema).toStrictEqual(expectedSchema)
+  })
+  it('works from 230 to 231', () => {
+    const oldSchema = v230Schema
+    const migratedSchema = migrations[231](oldSchema)
+    const expectedSchema: any = _.cloneDeep(oldSchema)
+    expectedSchema.jumpstart.introHasBeenSeen = false
+    expect(migratedSchema).toStrictEqual(expectedSchema)
+  })
+
+  it('works from 233 to 234', () => {
+    const oldSchema = v233Schema
+    const migratedSchema = migrations[234](oldSchema)
+    const expectedSchema: any = _.cloneDeep(oldSchema)
+    expectedSchema.transactions.feedFirstPage = []
+    expect(migratedSchema).toStrictEqual(expectedSchema)
+  })
+
+  // N.B. The 236 -> 237 migration tests are adapted from the old initial route handler tests
+  it('works from 236 to 237: returns language', () => {
+    const oldSchema = {
+      ...v235Schema,
+      i18n: {
+        ...v235Schema.i18n,
+        language: undefined,
+      },
+    }
+    const migratedSchema = migrations[237](oldSchema)
+    const expectedSchema: any = _.cloneDeep(oldSchema)
+    expectedSchema.account.onboardingCompleted = false
+    expectedSchema.account.lastOnboardingStepScreen = Screens.Language
+    expectedSchema.identity = _.omit(oldSchema.identity, 'hasSeenVerificationNux')
+    expect(migratedSchema).toStrictEqual(expectedSchema)
+  })
+
+  it('works from 236 to 237: returns welcome if not accepted terms', () => {
+    const oldSchema = {
+      ...v235Schema,
+      account: {
+        ...v235Schema.account,
+        acceptedTerms: false,
+      },
+    }
+    const migratedSchema = migrations[237](oldSchema)
+    const expectedSchema: any = _.cloneDeep(oldSchema)
+    expectedSchema.account.onboardingCompleted = false
+    expectedSchema.account.lastOnboardingStepScreen = Screens.Welcome
+    expectedSchema.identity = _.omit(oldSchema.identity, 'hasSeenVerificationNux')
+    expect(migratedSchema).toStrictEqual(expectedSchema)
+  })
+
+  it('works from 236 to 237: returns welcome if no pincode', () => {
+    const oldSchema = {
+      ...v235Schema,
+      account: {
+        ...v235Schema.account,
+        pincodeType: PincodeType.Unset,
+      },
+    }
+    const migratedSchema = migrations[237](oldSchema)
+    const expectedSchema: any = _.cloneDeep(oldSchema)
+    expectedSchema.account.onboardingCompleted = false
+    expectedSchema.account.lastOnboardingStepScreen = Screens.Welcome
+    expectedSchema.identity = _.omit(oldSchema.identity, 'hasSeenVerificationNux')
+    expect(migratedSchema).toStrictEqual(expectedSchema)
+  })
+
+  it('works from 236 to 237: returns welcome if no account', () => {
+    const oldSchema = {
+      ...v235Schema,
+      web3: {
+        ...v235Schema.web3,
+        account: undefined,
+      },
+    }
+    const migratedSchema = migrations[237](oldSchema)
+    const expectedSchema: any = _.cloneDeep(oldSchema)
+    expectedSchema.account.onboardingCompleted = false
+    expectedSchema.account.lastOnboardingStepScreen = Screens.Welcome
+    expectedSchema.identity = _.omit(oldSchema.identity, 'hasSeenVerificationNux')
+    expect(migratedSchema).toStrictEqual(expectedSchema)
+  })
+
+  it('works from 236 to 237: returns import wallet if no account and restoring', () => {
+    const oldSchema = {
+      ...v235Schema,
+      account: {
+        ...v235Schema.account,
+        choseToRestoreAccount: true,
+        acceptedTerms: true,
+        pincodeType: PincodeType.CustomPin,
+      },
+      web3: {
+        ...v235Schema.web3,
+        account: undefined,
+      },
+    }
+    const migratedSchema = migrations[237](oldSchema)
+    const expectedSchema: any = _.cloneDeep(oldSchema)
+    expectedSchema.account.onboardingCompleted = false
+    expectedSchema.account.lastOnboardingStepScreen = Screens.ImportWallet
+    expectedSchema.identity = _.omit(oldSchema.identity, 'hasSeenVerificationNux')
+    expect(migratedSchema).toStrictEqual(expectedSchema)
+  })
+
+  it('works from 236 to 237: returns import select if no account and restoring and CAB enabled', () => {
+    jest.replaceProperty(
+      ONBOARDING_FEATURES_ENABLED,
+      ToggleableOnboardingFeatures.CloudBackup,
+      true
+    )
+    const oldSchema = {
+      ...v235Schema,
+      account: {
+        ...v235Schema.account,
+        choseToRestoreAccount: true,
+        acceptedTerms: true,
+        pincodeType: PincodeType.CustomPin,
+      },
+      web3: {
+        ...v235Schema.web3,
+        account: undefined,
+      },
+    }
+    const migratedSchema = migrations[237](oldSchema)
+    const expectedSchema: any = _.cloneDeep(oldSchema)
+    expectedSchema.account.onboardingCompleted = false
+    expectedSchema.account.lastOnboardingStepScreen = Screens.ImportSelect
+    expectedSchema.identity = _.omit(oldSchema.identity, 'hasSeenVerificationNux')
+    expect(migratedSchema).toStrictEqual(expectedSchema)
+  })
+
+  it('works from 236 to 237: returns protect wallet if recovery phrase seen but not saved', () => {
+    const oldSchema = {
+      ...v235Schema,
+      account: {
+        ...v235Schema.account,
+        acceptedTerms: true,
+        pincodeType: PincodeType.CustomPin,
+        recoveryPhraseInOnboardingStatus: RecoveryPhraseInOnboardingStatus.InProgress,
+      },
+    }
+    const migratedSchema = migrations[237](oldSchema)
+    const expectedSchema: any = _.cloneDeep(oldSchema)
+    expectedSchema.account.onboardingCompleted = false
+    expectedSchema.account.lastOnboardingStepScreen = Screens.ProtectWallet
+    expectedSchema.identity = _.omit(oldSchema.identity, 'hasSeenVerificationNux')
+    expect(migratedSchema).toStrictEqual(expectedSchema)
+  })
+
+  it('works from 236 to 237: returns PN verification if not seen and enabled', () => {
+    jest.replaceProperty(
+      ONBOARDING_FEATURES_ENABLED,
+      ToggleableOnboardingFeatures.PhoneVerification,
+      true
+    )
+    const oldSchema = {
+      ...v235Schema,
+      account: {
+        ...v235Schema.account,
+        acceptedTerms: true,
+        pincodeType: PincodeType.CustomPin,
+      },
+      identity: {
+        ...v235Schema.identity,
+        hasSeenVerificationNux: false,
+      },
+    }
+    const migratedSchema = migrations[237](oldSchema)
+    const expectedSchema: any = _.cloneDeep(oldSchema)
+    expectedSchema.account.onboardingCompleted = false
+    expectedSchema.account.lastOnboardingStepScreen = Screens.VerificationStartScreen
+    expectedSchema.identity = _.omit(oldSchema.identity, 'hasSeenVerificationNux')
+    expect(migratedSchema).toStrictEqual(expectedSchema)
+  })
+
+  it('works from 236 to 237: returns home if not seen verification but disabled', () => {
+    const oldSchema = {
+      ...v235Schema,
+      account: {
+        ...v235Schema.account,
+        acceptedTerms: true,
+        pincodeType: PincodeType.CustomPin,
+      },
+      identity: {
+        ...v235Schema.identity,
+        hasSeenVerificationNux: false,
+      },
+    }
+    const migratedSchema = migrations[237](oldSchema)
+    const expectedSchema: any = _.cloneDeep(oldSchema)
+    expectedSchema.account.onboardingCompleted = true
+    expectedSchema.account.lastOnboardingStepScreen = Screens.TabNavigator
+    expectedSchema.identity = _.omit(oldSchema.identity, 'hasSeenVerificationNux')
     expect(migratedSchema).toStrictEqual(expectedSchema)
   })
 })

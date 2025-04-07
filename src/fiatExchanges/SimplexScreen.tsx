@@ -5,14 +5,14 @@ import { useTranslation } from 'react-i18next'
 import { ActivityIndicator, StyleSheet, View } from 'react-native'
 import { e164NumberSelector } from 'src/account/selectors'
 import { showError } from 'src/alert/actions'
+import AppAnalytics from 'src/analytics/AppAnalytics'
 import { FiatExchangeEvents } from 'src/analytics/Events'
-import ValoraAnalytics from 'src/analytics/ValoraAnalytics'
 import { ErrorMessages } from 'src/app/ErrorMessages'
 import { phoneNumberVerifiedSelector } from 'src/app/selectors'
 import BackButton from 'src/components/BackButton'
 import Button, { BtnSizes } from 'src/components/Button'
 import WebView from 'src/components/WebView'
-import { SIMPLEX_FEES_URL } from 'src/config'
+import { DEEP_LINK_URL_SCHEME, SIMPLEX_FEES_URL } from 'src/config'
 import ReviewFees from 'src/fiatExchanges/ReviewFees'
 import { fetchSimplexPaymentData } from 'src/fiatExchanges/utils'
 import i18n from 'src/i18n'
@@ -58,13 +58,13 @@ function SimplexScreen({ route, navigation }: Props) {
   const onNavigationStateChange = ({ url }: any) => {
     if (url?.includes('/payments/new')) {
       setRedirected(true)
-    } else if (url?.startsWith('celo://wallet')) {
+    } else if (url?.startsWith(`${DEEP_LINK_URL_SCHEME}://wallet`)) {
       navigateToURI(url)
     }
   }
 
   const onButtonPress = () => {
-    ValoraAnalytics.track(FiatExchangeEvents.cico_simplex_open_webview, {
+    AppAnalytics.track(FiatExchangeEvents.cico_simplex_open_webview, {
       amount: simplexQuote.digital_money.amount,
       cryptoCurrency: symbol,
       feeInFiat: simplexQuote.fiat_money.total_amount - simplexQuote.fiat_money.base_amount,
@@ -110,7 +110,7 @@ function SimplexScreen({ route, navigation }: Props) {
     <View style={styles.container}>
       {loadSimplexCheckout && simplexPaymentRequest && !redirected && (
         <View style={[styles.container, styles.indicator]}>
-          <ActivityIndicator size="large" color={colors.primary} />
+          <ActivityIndicator size="large" color={colors.loadingIndicator} />
         </View>
       )}
       {!loadSimplexCheckout || !simplexPaymentRequest ? (
@@ -136,7 +136,6 @@ function SimplexScreen({ route, navigation }: Props) {
             onPress={onButtonPress}
             disabled={!simplexPaymentRequest?.paymentId}
             showLoading={asyncSimplexPaymentData.status === 'loading'}
-            loadingColor={colors.white}
           />
         </View>
       ) : (

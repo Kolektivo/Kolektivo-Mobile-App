@@ -3,8 +3,8 @@ import React, { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Image, StyleSheet, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
+import AppAnalytics from 'src/analytics/AppAnalytics'
 import { PointsEvents } from 'src/analytics/Events'
-import ValoraAnalytics from 'src/analytics/ValoraAnalytics'
 import BackButton from 'src/components/BackButton'
 import Button, { BtnSizes } from 'src/components/Button'
 import CustomHeader from 'src/components/header/CustomHeader'
@@ -14,7 +14,6 @@ import { Screens } from 'src/navigator/Screens'
 import { StackParamList } from 'src/navigator/types'
 import { pointsIntroDismissed } from 'src/points/slice'
 import { useDispatch } from 'src/redux/hooks'
-import { Colors } from 'src/styles/colors'
 import { typeScale } from 'src/styles/fonts'
 import { Spacing } from 'src/styles/styles'
 
@@ -27,14 +26,14 @@ export default function PointsHome({ route, navigation }: Props) {
 
   useEffect(() => {
     const unsubscribe = navigation.addListener('beforeRemove', () => {
-      ValoraAnalytics.track(PointsEvents.points_intro_back)
+      AppAnalytics.track(PointsEvents.points_intro_back)
     })
 
     return unsubscribe
   }, [navigation])
 
   const onIntroDismiss = () => {
-    ValoraAnalytics.track(PointsEvents.points_intro_dismiss)
+    AppAnalytics.track(PointsEvents.points_intro_dismiss)
     dispatch(pointsIntroDismissed())
     replace(Screens.PointsHome)
   }
@@ -71,16 +70,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   image: {
+    marginTop: 56,
     marginBottom: Spacing.Regular16,
   },
   title: {
     ...typeScale.titleLarge,
-    color: Colors.black,
     textAlign: 'center',
   },
   description: {
     ...typeScale.bodySmall,
-    color: Colors.black,
     marginTop: Spacing.Regular16,
     textAlign: 'center',
   },

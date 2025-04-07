@@ -6,7 +6,7 @@ import { Provider } from 'react-redux'
 import { FiatConnectQuoteSuccess } from 'src/fiatconnect'
 import FiatConnectLinkAccountScreen from 'src/fiatconnect/LinkAccountScreen'
 import FiatConnectQuote from 'src/fiatExchanges/quotes/FiatConnectQuote'
-import { CICOFlow } from 'src/fiatExchanges/utils'
+import { CICOFlow } from 'src/fiatExchanges/types'
 import { navigate } from 'src/navigator/NavigationService'
 import { Screens } from 'src/navigator/Screens'
 import { createMockStore, getMockStackScreenProps } from 'test/utils'
@@ -48,9 +48,9 @@ describe('LinkAccountScreen', () => {
 
   it.each`
     testId                      | uri
-    ${'providerNameText'}       | ${'https://fakewebsite.valorapp.com'}
-    ${'termsAndConditionsText'} | ${'https://fakewebsite.valorapp.com/terms'}
-    ${'privacyPolicyText'}      | ${'https://fakewebsite.valorapp.com/privacy'}
+    ${'providerNameText'}       | ${'https://fakewebsite.example.com'}
+    ${'termsAndConditionsText'} | ${'https://fakewebsite.example.com/terms'}
+    ${'privacyPolicyText'}      | ${'https://fakewebsite.example.com/privacy'}
   `('Navigate to $uri when tapping text with testId $testId', async ({ testId, uri }) => {
     const { getByTestId } = render(
       <Provider store={store}>

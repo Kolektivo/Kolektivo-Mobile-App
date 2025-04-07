@@ -2,11 +2,10 @@ import React from 'react'
 import { useTranslation } from 'react-i18next'
 import { Pressable, StyleSheet, Text, View } from 'react-native'
 import Modal from 'react-native-modal'
-import { Colors } from 'react-native/Libraries/NewAppScreen'
+import AppAnalytics from 'src/analytics/AppAnalytics'
 import { WebViewEvents } from 'src/analytics/Events'
-import ValoraAnalytics from 'src/analytics/ValoraAnalytics'
-import colors from 'src/styles/colors'
-import fontStyles from 'src/styles/fonts'
+import Colors from 'src/styles/colors'
+import { typeScale } from 'src/styles/fonts'
 import variables from 'src/styles/variables'
 import { navigateToURI } from 'src/utils/linking'
 
@@ -27,7 +26,7 @@ export function WebViewAndroidBottomSheet({
   const openExternalLink = () => {
     navigateToURI(currentUrl)
     toggleBottomSheet()
-    ValoraAnalytics.track(WebViewEvents.webview_open_in_browser, { currentUrl })
+    AppAnalytics.track(WebViewEvents.webview_open_in_browser, { currentUrl })
   }
 
   return (
@@ -45,12 +44,15 @@ export function WebViewAndroidBottomSheet({
         <Pressable
           style={styles.pressable}
           onPress={openExternalLink}
-          android_ripple={{ color: Colors.gray2, borderless: false }}
+          android_ripple={{ color: Colors.lightShadow, borderless: false }}
           testID="OpenInExternalBrowser"
         >
           <Text style={styles.bottomSheetText}>{t('webView.openExternal')}</Text>
         </Pressable>
-        <Pressable onPress={onClose} android_ripple={{ color: Colors.gray2, borderless: false }}>
+        <Pressable
+          onPress={onClose}
+          android_ripple={{ color: Colors.lightShadow, borderless: false }}
+        >
           <Text style={styles.bottomSheetText}>{t('dismiss')}</Text>
         </Pressable>
       </View>
@@ -64,7 +66,7 @@ const styles = StyleSheet.create({
     margin: 0,
   },
   centerContainer: {
-    backgroundColor: colors.white,
+    backgroundColor: Colors.backgroundPrimary,
   },
   // Needed to add icons in the pressable buttons
   pressable: {
@@ -72,7 +74,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   bottomSheetText: {
-    ...fontStyles.regular,
+    ...typeScale.bodyMedium,
     textAlign: 'left',
     padding: variables.contentPadding,
   },

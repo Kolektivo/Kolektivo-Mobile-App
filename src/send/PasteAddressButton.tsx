@@ -1,13 +1,13 @@
 import React from 'react'
-import { View, Text, StyleSheet } from 'react-native'
 import { useTranslation } from 'react-i18next'
-import { Spacing } from 'src/styles/styles'
+import { StyleSheet, Text, View } from 'react-native'
 import Touchable from 'src/components/Touchable'
 import { PasteAwareWrappedElementProps, withPasteAware } from 'src/components/WithPasteAware'
-import Clipboard from 'src/icons/Clipboard'
 import CircledIcon from 'src/icons/CircledIcon'
+import Clipboard from 'src/icons/Clipboard'
 import colors from 'src/styles/colors'
 import { typeScale } from 'src/styles/fonts'
+import { Spacing } from 'src/styles/styles'
 
 type Props = PasteAwareWrappedElementProps
 
@@ -28,7 +28,11 @@ function PasteAddressButton(props: Props) {
         onPress={onPressPaste}
       >
         <>
-          <CircledIcon radius={40} backgroundColor={colors.gray2}>
+          <CircledIcon
+            radius={40}
+            backgroundColor={colors.backgroundSecondary}
+            borderColor={colors.borderPrimary}
+          >
             <Clipboard />
           </CircledIcon>
           <View style={styles.textSection}>
@@ -46,9 +50,8 @@ export default Wrapper
 const styles = StyleSheet.create({
   wrapper: {
     borderRadius: 10,
-    backgroundColor: colors.gray1,
-    marginVertical: Spacing.Small12,
-    marginHorizontal: Spacing.Thick24,
+    backgroundColor: colors.backgroundSecondary,
+    marginHorizontal: Spacing.Regular16,
   },
   buttonContainer: {
     display: 'flex',
@@ -67,7 +70,7 @@ const styles = StyleSheet.create({
   },
   address: {
     ...typeScale.bodyXSmall,
-    color: colors.gray4,
+    color: colors.contentSecondary,
     flexWrap: 'wrap',
     flexShrink: 1,
     maxWidth: '100%',

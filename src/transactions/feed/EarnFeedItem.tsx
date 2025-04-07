@@ -2,44 +2,51 @@ import BigNumber from 'bignumber.js'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, Text, View } from 'react-native'
+import AppAnalytics from 'src/analytics/AppAnalytics'
 import { EarnEvents } from 'src/analytics/Events'
-import ValoraAnalytics from 'src/analytics/ValoraAnalytics'
 import TokenDisplay from 'src/components/TokenDisplay'
 import Touchable from 'src/components/Touchable'
+import { useEarnPositionProviderName } from 'src/earn/hooks'
 import { navigate } from 'src/navigator/NavigationService'
 import { Screens } from 'src/navigator/Screens'
-import { getDynamicConfigParams } from 'src/statsig'
-import { DynamicConfigs } from 'src/statsig/constants'
-import { StatsigDynamicConfigs } from 'src/statsig/types'
-import { Colors } from 'src/styles/colors'
+import Colors from 'src/styles/colors'
 import { typeScale } from 'src/styles/fonts'
 import { Spacing } from 'src/styles/styles'
 import variables from 'src/styles/variables'
 import TransactionFeedItemImage from 'src/transactions/feed/TransactionFeedItemImage'
-import { EarnClaimReward, EarnDeposit, EarnWithdraw } from 'src/transactions/types'
+import {
+  EarnClaimReward,
+  EarnDeposit,
+  EarnSwapDeposit,
+  EarnWithdraw,
+  TokenTransactionTypeV2,
+} from 'src/transactions/types'
 
 interface DescriptionProps {
-  transaction: EarnWithdraw | EarnDeposit | EarnClaimReward
+  transaction: EarnWithdraw | EarnDeposit | EarnClaimReward | EarnSwapDeposit
 }
 
 function Description({ transaction }: DescriptionProps) {
   const { t } = useTranslation()
-  const { providerName } = getDynamicConfigParams(
-    DynamicConfigs[StatsigDynamicConfigs.EARN_STABLECOIN_CONFIG]
+  const providerName = useEarnPositionProviderName(
+    transaction.type === TokenTransactionTypeV2.EarnSwapDeposit
+      ? transaction.deposit.providerId
+      : transaction.providerId
   )
   let title
   let subtitle
 
-  switch (transaction.__typename) {
-    case 'EarnDeposit':
+  switch (transaction.type) {
+    case TokenTransactionTypeV2.EarnSwapDeposit:
+    case TokenTransactionTypeV2.EarnDeposit:
       title = t('earnFlow.transactionFeed.earnDepositTitle')
       subtitle = t('earnFlow.transactionFeed.earnDepositSubtitle', { providerName })
       break
-    case 'EarnWithdraw':
+    case TokenTransactionTypeV2.EarnWithdraw:
       title = t('earnFlow.transactionFeed.earnWithdrawTitle')
       subtitle = t('earnFlow.transactionFeed.earnWithdrawSubtitle', { providerName })
       break
-    case 'EarnClaimReward':
+    case TokenTransactionTypeV2.EarnClaimReward:
       title = t('earnFlow.transactionFeed.earnClaimTitle')
       subtitle = t('earnFlow.transactionFeed.earnClaimSubtitle', { providerName })
       break
@@ -50,15 +57,17 @@ function Description({ transaction }: DescriptionProps) {
       <Text style={styles.title} testID={'EarnFeedItem/title'} numberOfLines={1}>
         {title}
       </Text>
-      <Text style={styles.subtitle} testID={'EarnFeedItem/subtitle'} numberOfLines={1}>
-        {subtitle}
-      </Text>
+      {!!providerName && (
+        <Text style={styles.subtitle} testID={'EarnFeedItem/subtitle'} numberOfLines={1}>
+          {subtitle}
+        </Text>
+      )}
     </View>
   )
 }
 
 interface AmountDisplayProps {
-  transaction: EarnWithdraw | EarnDeposit | EarnClaimReward
+  transaction: EarnWithdraw | EarnDeposit | EarnClaimReward | EarnSwapDeposit
   isLocal: boolean
 }
 
@@ -66,16 +75,20 @@ function AmountDisplay({ transaction, isLocal }: AmountDisplayProps) {
   let amountValue
   let tokenId
 
-  switch (transaction.__typename) {
-    case 'EarnDeposit':
-      amountValue = new BigNumber(-transaction.inAmount.value)
+  switch (transaction.type) {
+    case TokenTransactionTypeV2.EarnDeposit:
+      amountValue = new BigNumber(-transaction.outAmount.value)
       tokenId = transaction.outAmount.tokenId
       break
-    case 'EarnWithdraw':
-      amountValue = new BigNumber(transaction.outAmount.value)
+    case TokenTransactionTypeV2.EarnSwapDeposit:
+      amountValue = new BigNumber(-transaction.deposit.outAmount.value)
+      tokenId = transaction.deposit.outAmount.tokenId
+      break
+    case TokenTransactionTypeV2.EarnWithdraw:
+      amountValue = new BigNumber(transaction.inAmount.value)
       tokenId = transaction.inAmount.tokenId
       break
-    case 'EarnClaimReward':
+    case TokenTransactionTypeV2.EarnClaimReward:
       amountValue = new BigNumber(transaction.amount.value)
       tokenId = transaction.amount.tokenId
       break
@@ -83,7 +96,11 @@ function AmountDisplay({ transaction, isLocal }: AmountDisplayProps) {
 
   const textStyle = isLocal
     ? styles.amountSubtitle
-    : [styles.amountTitle, transaction.__typename !== 'EarnDeposit' && { color: Colors.primary }]
+    : [
+        styles.amountTitle,
+        transaction.type !== TokenTransactionTypeV2.EarnDeposit &&
+          transaction.type !== TokenTransactionTypeV2.EarnSwapDeposit && { color: Colors.accent },
+      ]
 
   return (
     <TokenDisplay
@@ -94,13 +111,13 @@ function AmountDisplay({ transaction, isLocal }: AmountDisplayProps) {
       showExplicitPositiveSign={!isLocal}
       hideSign={!!isLocal}
       style={textStyle}
-      testID={`EarnFeedItem/${transaction.__typename}-amount-${isLocal ? 'local' : 'crypto'}`}
+      testID={`EarnFeedItem/${transaction.type}-amount-${isLocal ? 'local' : 'crypto'}`}
     />
   )
 }
 
 interface AmountProps {
-  transaction: EarnWithdraw | EarnDeposit | EarnClaimReward
+  transaction: EarnWithdraw | EarnDeposit | EarnClaimReward | EarnSwapDeposit
 }
 
 function Amount({ transaction }: AmountProps) {
@@ -113,7 +130,7 @@ function Amount({ transaction }: AmountProps) {
 }
 
 interface Props {
-  transaction: EarnWithdraw | EarnDeposit | EarnClaimReward
+  transaction: EarnWithdraw | EarnDeposit | EarnClaimReward | EarnSwapDeposit
 }
 
 export default function EarnFeedItem({ transaction }: Props) {
@@ -121,14 +138,14 @@ export default function EarnFeedItem({ transaction }: Props) {
     <Touchable
       testID={`EarnFeedItem/${transaction.transactionHash}`}
       onPress={() => {
-        ValoraAnalytics.track(EarnEvents.earn_feed_item_select, { origin: transaction.__typename })
+        AppAnalytics.track(EarnEvents.earn_feed_item_select, { origin: transaction.type })
         navigate(Screens.TransactionDetailsScreen, { transaction })
       }}
     >
       <View style={styles.container}>
         <TransactionFeedItemImage
           status={transaction.status}
-          transactionType={transaction.__typename}
+          transactionType={transaction.type}
           networkId={transaction.networkId}
         />
         <Description transaction={transaction} />
@@ -151,24 +168,22 @@ const styles = StyleSheet.create({
   },
   title: {
     ...typeScale.labelMedium,
-    color: Colors.black,
   },
   subtitle: {
     ...typeScale.bodySmall,
-    color: Colors.gray4,
+    color: Colors.contentSecondary,
   },
   amountContainer: {
     maxWidth: '50%',
   },
   amountTitle: {
     ...typeScale.labelMedium,
-    color: Colors.black,
     flexWrap: 'wrap',
     textAlign: 'right',
   },
   amountSubtitle: {
     ...typeScale.bodySmall,
-    color: Colors.gray4,
+    color: Colors.contentSecondary,
     flexWrap: 'wrap',
     textAlign: 'right',
   },

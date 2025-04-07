@@ -1,3 +1,4 @@
+import { isEqual } from 'lodash'
 import React from 'react'
 import { FlatList, StyleProp, StyleSheet, Text, View, ViewStyle } from 'react-native'
 import RecipientItem from 'src/recipients/RecipientItemV2'
@@ -5,7 +6,6 @@ import { Recipient } from 'src/recipients/recipient'
 import Colors from 'src/styles/colors'
 import { typeScale } from 'src/styles/fonts'
 import { Spacing } from 'src/styles/styles'
-import { isEqual } from 'lodash'
 
 interface Props {
   testID?: string
@@ -52,9 +52,9 @@ const styles = StyleSheet.create({
   },
   title: {
     ...typeScale.labelSmall,
-    marginBottom: Spacing.Regular16,
-    marginHorizontal: Spacing.Thick24,
-    color: Colors.gray3,
+    marginBottom: Spacing.Smallest8,
+    marginHorizontal: Spacing.Regular16,
+    color: Colors.contentSecondary,
   },
 })
 

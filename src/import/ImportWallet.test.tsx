@@ -4,22 +4,32 @@ import 'react-native'
 import { Provider } from 'react-redux'
 import { cancelCreateOrRestoreAccount } from 'src/account/actions'
 import { OnboardingEvents } from 'src/analytics/Events'
-import ValoraAnalytics from 'src/analytics/ValoraAnalytics'
+import AppAnalytics from 'src/analytics/AppAnalytics'
 import { Actions } from 'src/import/actions'
 import ImportWallet from 'src/import/ImportWallet'
 import { navigate, navigateClearingStack } from 'src/navigator/NavigationService'
 import { Screens } from 'src/navigator/Screens'
-import { getFeatureGate } from 'src/statsig'
 import MockedNavigator from 'test/MockedNavigator'
 import { createMockStore } from 'test/utils'
 import { mockMnemonic } from 'test/values'
+import { ONBOARDING_FEATURES_ENABLED } from 'src/config'
+import { ToggleableOnboardingFeatures } from 'src/onboarding/types'
 
 const mockScreenProps = { clean: true }
 
 jest.mock('src/statsig')
+jest.mock('src/config', () => ({
+  ...jest.requireActual('src/config'),
+  ONBOARDING_FEATURES_ENABLED: { CloudBackup: false },
+}))
 
 describe('ImportWallet', () => {
   beforeEach(() => {
+    jest.replaceProperty(
+      ONBOARDING_FEATURES_ENABLED,
+      ToggleableOnboardingFeatures.CloudBackup,
+      false
+    )
     jest.clearAllMocks()
   })
 
@@ -30,7 +40,6 @@ describe('ImportWallet', () => {
       </Provider>
     )
 
-    expect(wrapper.getByTestId('HeaderTitle')).toHaveTextContent('importExistingKey.header')
     expect(wrapper.queryByTestId('HeaderSubTitle')).toBeFalsy()
     expect(wrapper.getByTestId('ImportWalletBackupKeyInputField')).toHaveTextContent('')
     expect(wrapper.getByTestId('ImportWalletButton')).toBeDisabled()
@@ -55,7 +64,6 @@ describe('ImportWallet', () => {
   })
 
   it('navigates to the welcome screen on cancel when cloud backup is disabled', () => {
-    jest.mocked(getFeatureGate).mockReturnValue(false)
     const store = createMockStore()
     const wrapper = render(
       <Provider store={store}>
@@ -66,12 +74,16 @@ describe('ImportWallet', () => {
     fireEvent.press(wrapper.getByText('cancel'))
 
     expect(navigateClearingStack).toHaveBeenCalledWith(Screens.Welcome)
-    expect(ValoraAnalytics.track).toHaveBeenCalledWith(OnboardingEvents.restore_account_cancel)
+    expect(AppAnalytics.track).toHaveBeenCalledWith(OnboardingEvents.restore_account_cancel)
     expect(store.getActions()).toEqual([cancelCreateOrRestoreAccount()])
   })
 
   it('navigates to the import select screen on cancel when cloud backup is enabled', () => {
-    jest.mocked(getFeatureGate).mockReturnValue(true)
+    jest.replaceProperty(
+      ONBOARDING_FEATURES_ENABLED,
+      ToggleableOnboardingFeatures.CloudBackup,
+      true
+    )
     const store = createMockStore()
     const wrapper = render(
       <Provider store={store}>
@@ -82,7 +94,7 @@ describe('ImportWallet', () => {
     fireEvent.press(wrapper.getByText('cancel'))
 
     expect(navigate).toHaveBeenCalledWith(Screens.ImportSelect)
-    expect(ValoraAnalytics.track).toHaveBeenCalledWith(OnboardingEvents.restore_account_cancel)
+    expect(AppAnalytics.track).toHaveBeenCalledWith(OnboardingEvents.restore_account_cancel)
     expect(store.getActions()).toEqual([])
   })
 })

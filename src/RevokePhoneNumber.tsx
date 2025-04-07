@@ -2,25 +2,23 @@ import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, Text, View } from 'react-native'
 import { defaultCountryCodeSelector, e164NumberSelector } from 'src/account/selectors'
+import AppAnalytics from 'src/analytics/AppAnalytics'
 import { SettingsEvents } from 'src/analytics/Events'
-import ValoraAnalytics from 'src/analytics/ValoraAnalytics'
-import BottomSheet, { BottomSheetRefType } from 'src/components/BottomSheet'
+import BottomSheet, { BottomSheetModalRefType } from 'src/components/BottomSheet'
 import Button, { BtnSizes, BtnTypes } from 'src/components/Button'
 import { NotificationVariant } from 'src/components/InLineNotification'
 import PhoneNumberWithFlag from 'src/components/PhoneNumberWithFlag'
 import Toast from 'src/components/Toast'
-import AttentionIcon from 'src/icons/Attention'
 import { navigate } from 'src/navigator/NavigationService'
 import { Screens } from 'src/navigator/Screens'
 import { useSelector } from 'src/redux/hooks'
-import { Colors } from 'src/styles/colors'
-import fontStyles from 'src/styles/fonts'
+import { typeScale } from 'src/styles/fonts'
 import { Spacing } from 'src/styles/styles'
 import Logger from 'src/utils/Logger'
 import { useRevokeCurrentPhoneNumber } from 'src/verify/hooks'
 
 interface Props {
-  forwardedRef: React.RefObject<BottomSheetRefType>
+  forwardedRef: React.RefObject<BottomSheetModalRefType>
 }
 
 const TOAST_DISMISS_TIMEOUT_MS = 5_000
@@ -56,7 +54,7 @@ export const RevokePhoneNumber = ({ forwardedRef }: Props) => {
   }
 
   const handleRevokePhoneNumber = async () => {
-    ValoraAnalytics.track(SettingsEvents.settings_revoke_phone_number_confirm)
+    AppAnalytics.track(SettingsEvents.settings_revoke_phone_number_confirm)
     try {
       await revokeNumberAsync.execute()
     } catch (error) {
@@ -74,15 +72,14 @@ export const RevokePhoneNumber = ({ forwardedRef }: Props) => {
         testId="RevokePhoneNumberBottomSheet"
       >
         {!!e164PhoneNumber && (
-          <PhoneNumberWithFlag
-            e164PhoneNumber={e164PhoneNumber}
-            defaultCountryCode={defaultCountryCode ?? undefined}
-          />
+          <View style={styles.phoneNumber}>
+            <PhoneNumberWithFlag
+              e164PhoneNumber={e164PhoneNumber}
+              defaultCountryCode={defaultCountryCode ?? undefined}
+            />
+          </View>
         )}
-        <View style={styles.container}>
-          <AttentionIcon />
-          <Text style={styles.warningText}>{t('revokePhoneNumber.description')}</Text>
-        </View>
+        <Text style={styles.warningText}>{t('revokePhoneNumber.description')}</Text>
         <Button
           text={t('revokePhoneNumber.confirmButton')}
           onPress={handleRevokePhoneNumber}
@@ -105,19 +102,15 @@ export const RevokePhoneNumber = ({ forwardedRef }: Props) => {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flexDirection: 'row',
-    backgroundColor: Colors.warningLight,
-    borderRadius: 4,
-    marginTop: Spacing.Regular16,
-    marginBottom: Spacing.Thick24,
-    padding: Spacing.Regular16,
-  },
   warningText: {
-    ...fontStyles.xsmall,
+    ...typeScale.bodySmall,
+    paddingTop: Spacing.Smallest8,
+    paddingBottom: Spacing.XLarge48,
     flex: 1,
     flexWrap: 'wrap',
-    marginLeft: Spacing.Small12,
+  },
+  phoneNumber: {
+    paddingTop: Spacing.Smallest8,
   },
 })
 

@@ -1,13 +1,13 @@
 import * as React from 'react'
 import Svg, { ClipPath, Defs, G, Path, Rect } from 'react-native-svg'
-import colors from 'src/styles/colors'
+import colors, { ColorValue } from 'src/styles/colors'
 
 interface Props {
-  color?: colors
+  color?: ColorValue
   size?: number
 }
 
-const ScanIcon = ({ color = colors.black, size = 24 }: Props) => (
+const ScanIcon = ({ color = colors.contentPrimary, size = 24 }: Props) => (
   <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
     <G clipPath="url(#clip0_116_49741)">
       <Path

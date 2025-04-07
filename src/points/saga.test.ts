@@ -5,7 +5,9 @@ import { expectSaga } from 'redux-saga-test-plan'
 import * as matchers from 'redux-saga-test-plan/matchers'
 import { throwError } from 'redux-saga-test-plan/providers'
 import { call, select, spawn } from 'redux-saga/effects'
-import { Actions as AppActions } from 'src/app/actions'
+import { depositSuccess } from 'src/earn/slice'
+import { Actions as HomeActions } from 'src/home/actions'
+import { depositTransactionSucceeded } from 'src/jumpstart/slice'
 import { retrieveSignedMessage } from 'src/pincode/authentication'
 import * as pointsSaga from 'src/points/saga'
 import {
@@ -16,7 +18,7 @@ import {
   getPointsConfig,
   sendPendingPointsEvents,
   sendPointsEvent,
-  watchAppMounted,
+  watchHomeScreenVisit,
 } from 'src/points/saga'
 import { pendingPointsEventsSelector, trackOnceActivitiesSelector } from 'src/points/selectors'
 import pointsReducer, {
@@ -35,6 +37,9 @@ import pointsReducer, {
   trackPointsEvent,
 } from 'src/points/slice'
 import { ClaimHistory, GetHistoryResponse, PointsEvent } from 'src/points/types'
+import { getFeatureGate } from 'src/statsig'
+import { StatsigFeatureGates } from 'src/statsig/types'
+import { swapSuccess } from 'src/swap/slice'
 import { NetworkId } from 'src/transactions/types'
 import Logger from 'src/utils/Logger'
 import * as fetchWithTimeout from 'src/utils/fetchWithTimeout'
@@ -43,8 +48,15 @@ import { walletAddressSelector } from 'src/web3/selectors'
 import { createMockStore } from 'test/utils'
 import { mockAccount } from 'test/values'
 import { v4 as uuidv4 } from 'uuid'
+import { Address, Hash } from 'viem'
 
 jest.mock('src/statsig')
+jest.mocked(getFeatureGate).mockImplementation((featureGate) => {
+  if (featureGate === StatsigFeatureGates.SHOW_POINTS) {
+    return true
+  }
+  throw new Error(`Unexpected feature gate: ${featureGate}`)
+})
 
 jest.mock('uuid')
 jest.mock('src/utils/Logger')
@@ -434,10 +446,36 @@ describe('sendPointsEvent', () => {
     expect(Logger.warn).toHaveBeenCalledWith(
       'Points/saga@sendPointsEvent',
       mockAction.payload.activityId,
-      mockServerErrorResponse.status,
-      mockServerErrorResponse.statusText,
-      mockServerErrorMessage
+      new Error('Failed to track points event create-wallet: 500 Error message from server')
     )
+  })
+
+  it('should not send the tracked event if the user does not have a signed message', async () => {
+    const mockAction = trackPointsEvent({ activityId: 'create-wallet' })
+
+    await expectSaga(sendPointsEvent, mockAction)
+      .provide([
+        [select(walletAddressSelector), '0xabc'],
+        [call(retrieveSignedMessage), null],
+        [select(trackOnceActivitiesSelector), { 'create-wallet': false }],
+        [select(pendingPointsEventsSelector), []],
+      ])
+      .put(
+        sendPointsEventStarted({
+          id: mockId,
+          timestamp: mockTime,
+          event: mockAction.payload,
+        })
+      )
+      .not.put(pointsEventProcessed({ id: mockId }))
+      .run()
+
+    expect(Logger.warn).toHaveBeenCalledWith(
+      'Points/saga@sendPointsEvent',
+      mockAction.payload.activityId,
+      new Error('No signed message found when tracking points event create-wallet')
+    )
+    expect(fetchWithTimeoutSpy).not.toHaveBeenCalled()
   })
 
   it('should ignore any track once activities that were already tracked', async () => {
@@ -579,16 +617,114 @@ describe('sendPendingPointsEvents', () => {
   })
 })
 
-describe('watchAppMounted', () => {
+describe('watchSwapSuccess', () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
+  })
+  it('should call sendPointsEvent with transformed payload', async () => {
+    const mockAction = swapSuccess({
+      swapId: 'some-id',
+      fromTokenId: 'some-from-token-id',
+      toTokenId: 'some-to-token-id',
+      networkId: NetworkId['celo-alfajores'],
+      transactionHash: '0x123' as Hash,
+    })
+
+    await expectSaga(pointsSaga.watchSwapSuccessTransformPayload, mockAction)
+      .provide([
+        [
+          matchers.call(
+            sendPointsEvent,
+            trackPointsEvent({
+              ...mockAction.payload,
+              activityId: 'swap',
+            })
+          ),
+          null,
+        ],
+      ])
+      .run()
+  })
+})
+
+describe('watchDepositSuccess', () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
+  })
+  it('should call sendPointsEvent with transformed payload', async () => {
+    const mockAction = depositSuccess({
+      tokenId: 'token-id',
+      networkId: NetworkId['arbitrum-sepolia'],
+      transactionHash: '0x123' as Hash,
+    })
+
+    await expectSaga(pointsSaga.watchDepositSuccessTransformPayload, mockAction)
+      .provide([
+        [
+          matchers.call(
+            sendPointsEvent,
+            trackPointsEvent({
+              ...mockAction.payload,
+              activityId: 'deposit-earn',
+            })
+          ),
+          null,
+        ],
+      ])
+      .run()
+  })
+})
+
+describe('watchLiveLinkCreated', () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
+  })
+  it('should call sendPointsEvent with transformed payload', async () => {
+    const mockAction = depositTransactionSucceeded({
+      liveLinkType: 'erc20' as const,
+      beneficiaryAddress: mockAccount as Address,
+      transactionHash: '0x456' as Hash,
+      networkId: NetworkId['celo-alfajores'],
+      tokenId: 'some-token-id',
+      amount: '10',
+    })
+
+    await expectSaga(pointsSaga.watchLiveLinkCreatedTransformPayload, mockAction)
+      .provide([
+        [
+          matchers.call(
+            sendPointsEvent,
+            trackPointsEvent({
+              ...mockAction.payload,
+              activityId: 'create-live-link',
+            })
+          ),
+          null,
+        ],
+      ])
+      .run()
+  })
+})
+
+describe('watchHomeScreenVisit', () => {
   beforeEach(() => {
     jest.clearAllMocks()
   })
 
   it('should spawn all sagas only once even if multiple "app mounted" actions are dispatched', async () => {
-    const mockAction = { type: AppActions.APP_MOUNTED }
+    const mockAction = { type: HomeActions.VISIT_HOME }
 
-    const result = await expectSaga(watchAppMounted)
+    const result = await expectSaga(watchHomeScreenVisit)
       .provide([
+        [
+          spawn(
+            sendPointsEvent,
+            trackPointsEvent({
+              activityId: 'create-wallet',
+            })
+          ),
+          null,
+        ],
         [spawn(getPointsConfig), null],
         [spawn(getPointsBalance, getHistoryStarted({ getNextPage: false })), null],
         [spawn(sendPendingPointsEvents), null],
@@ -598,6 +734,12 @@ describe('watchAppMounted', () => {
       .run()
 
     expect(result.effects.fork).toEqual([
+      spawn(
+        sendPointsEvent,
+        trackPointsEvent({
+          activityId: 'create-wallet',
+        })
+      ),
       spawn(getPointsConfig),
       spawn(getPointsBalance, getHistoryStarted({ getNextPage: false })),
       spawn(sendPendingPointsEvents),
@@ -621,9 +763,41 @@ describe('fetchTrackPointsEventsEndpoint', () => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        authorization: `Valora ${mockAccount}:someSignedMessage`,
+        authorization: `${networkConfig.authHeaderIssuer} ${mockAccount}:someSignedMessage`,
       },
       body: JSON.stringify(mockEvent),
     })
+  })
+})
+
+describe('pointsSaga', () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
+  })
+
+  it('should spawn appropriate sagas', async () => {
+    const result = await expectSaga(pointsSaga.pointsSaga)
+      .provide([
+        [spawn(pointsSaga.watchGetHistory), null],
+        [spawn(pointsSaga.watchGetConfig), null],
+        [spawn(pointsSaga.watchTrackPointsEvent), null],
+        [spawn(pointsSaga.watchHomeScreenVisit), null],
+        [spawn(pointsSaga.watchLiveLinkCreated), null],
+        [spawn(pointsSaga.watchSwapSuccess), null],
+        [spawn(pointsSaga.watchDepositSuccess), null],
+        [spawn(pointsSaga.watchPointsDataRefreshStarted), null],
+      ])
+      .run()
+
+    expect(result.effects.fork).toEqual([
+      spawn(pointsSaga.watchGetHistory),
+      spawn(pointsSaga.watchGetConfig),
+      spawn(pointsSaga.watchTrackPointsEvent),
+      spawn(pointsSaga.watchHomeScreenVisit),
+      spawn(pointsSaga.watchLiveLinkCreated),
+      spawn(pointsSaga.watchSwapSuccess),
+      spawn(pointsSaga.watchDepositSuccess),
+      spawn(pointsSaga.watchPointsDataRefreshStarted),
+    ])
   })
 })

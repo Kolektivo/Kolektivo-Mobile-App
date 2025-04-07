@@ -21,14 +21,7 @@ import {
   mockShortcuts,
 } from 'test/values'
 
-jest.mock('src/statsig', () => {
-  return {
-    getFeatureGate: jest.fn(),
-    getDynamicConfigParams: jest.fn(() => ({
-      showBalances: ['celo-alfajores'],
-    })),
-  }
-})
+jest.mock('src/statsig')
 
 const storeWithTokenBalances = {
   tokens: {

@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import {
   NativeScrollEvent,
   NativeSyntheticEvent,
+  RefreshControl,
   SectionList,
   SectionListData,
   SectionListProps,
@@ -11,10 +12,12 @@ import {
   View,
 } from 'react-native'
 import Animated from 'react-native-reanimated'
+import AppAnalytics from 'src/analytics/AppAnalytics'
 import { AssetsEvents } from 'src/analytics/Events'
-import ValoraAnalytics from 'src/analytics/ValoraAnalytics'
 import { hideWalletBalancesSelector } from 'src/app/selectors'
 import Touchable from 'src/components/Touchable'
+import { refreshAllBalances } from 'src/home/actions'
+import { balancesLoadingSelector } from 'src/home/selectors'
 import CircledIcon from 'src/icons/CircledIcon'
 import ImageErrorIcon from 'src/icons/ImageErrorIcon'
 import Add from 'src/icons/quick-actions/Add'
@@ -29,7 +32,7 @@ import {
 } from 'src/nfts/selectors'
 import { fetchNfts } from 'src/nfts/slice'
 import { NftOrigin, NftWithNetworkId } from 'src/nfts/types'
-import { positionsSelector } from 'src/positions/selectors'
+import { positionsWithBalanceSelector } from 'src/positions/selectors'
 import { Position } from 'src/positions/types'
 import { useDispatch, useSelector } from 'src/redux/hooks'
 import { getFeatureGate } from 'src/statsig'
@@ -43,8 +46,9 @@ import { TokenBalanceItem } from 'src/tokens/TokenBalanceItem'
 import { sortedTokensWithBalanceOrShowZeroBalanceSelector } from 'src/tokens/selectors'
 import { TokenBalance } from 'src/tokens/slice'
 import { AssetTabType } from 'src/tokens/types'
-import { getSupportedNetworkIdsForTokenBalances, getTokenAnalyticsProps } from 'src/tokens/utils'
+import { getTokenAnalyticsProps } from 'src/tokens/utils'
 import TransactionFeed from 'src/transactions/feed/TransactionFeed'
+import { getSupportedNetworkIds } from 'src/web3/utils'
 
 interface SectionData {
   appName?: string
@@ -91,14 +95,15 @@ export default function AssetList({
   const dispatch = useDispatch()
   const { t } = useTranslation()
 
-  const supportedNetworkIds = getSupportedNetworkIdsForTokenBalances()
+  const supportedNetworkIds = getSupportedNetworkIds()
   const tokens = useSelector((state) =>
     sortedTokensWithBalanceOrShowZeroBalanceSelector(state, supportedNetworkIds)
   )
 
   const hideWalletBalances = useSelector(hideWalletBalancesSelector)
+  const isRefreshingBalances = useSelector(balancesLoadingSelector)
 
-  const positions = useSelector(positionsSelector)
+  const positions = useSelector(positionsWithBalanceSelector)
   const positionSections = useMemo(() => {
     const positionsByDapp = new Map<string, Position[]>()
     positions.forEach((position) => {
@@ -130,6 +135,10 @@ export default function AssetList({
   useEffect(() => {
     dispatch(fetchNfts())
   }, [])
+
+  const onRefresh = () => {
+    dispatch(refreshAllBalances())
+  }
 
   const sections =
     activeTab === AssetTabType.Tokens
@@ -229,7 +238,7 @@ export default function AssetList({
           token={item}
           onPress={() => {
             navigate(Screens.TokenDetails, { tokenId: item.tokenId })
-            ValoraAnalytics.track(AssetsEvents.tap_asset, {
+            AppAnalytics.track(AssetsEvents.tap_asset, {
               ...getTokenAnalyticsProps(item),
               title: item.symbol,
               description: item.name,
@@ -283,6 +292,14 @@ export default function AssetList({
           nfts.length > 0 &&
           styles.nftsContentContainer,
       ]}
+      refreshControl={
+        <RefreshControl
+          refreshing={isRefreshingBalances}
+          onRefresh={onRefresh}
+          colors={[Colors.loadingIndicator]}
+          tintColor={Colors.loadingIndicator}
+        />
+      }
       // ensure header is above the scrollbar on ios overscroll
       scrollIndicatorInsets={{ top: listHeaderHeight }}
       // @ts-ignore can't get the SectionList to accept a union type :(
@@ -310,13 +327,13 @@ function ImportTokensItem() {
     <Touchable
       testID="AssetList/ImportTokens"
       onPress={() => {
-        ValoraAnalytics.track(AssetsEvents.import_token_screen_open)
+        AppAnalytics.track(AssetsEvents.import_token_screen_open)
         navigate(Screens.TokenImport)
       }}
     >
       <View style={styles.importTokenContainer}>
-        <CircledIcon radius={32} backgroundColor={Colors.successLight}>
-          <Add color={Colors.successDark} />
+        <CircledIcon radius={32} backgroundColor={Colors.successSecondary}>
+          <Add color={Colors.successPrimary} />
         </CircledIcon>
         <Text style={styles.importTokenText}>{t('assets.importTokens')}</Text>
       </View>
@@ -331,7 +348,6 @@ const styles = StyleSheet.create({
   },
   positionSectionHeaderText: {
     ...typeScale.labelXXSmall,
-    color: Colors.gray5,
   },
   nftsPairingContainer: {
     flexDirection: 'row',
@@ -347,7 +363,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Colors.gray2,
+    backgroundColor: Colors.backgroundTertiary,
     borderRadius: Spacing.Regular16,
   },
   nftsNoMetadataText: {
@@ -363,7 +379,7 @@ const styles = StyleSheet.create({
   },
   noNftsText: {
     ...typeScale.bodySmall,
-    color: Colors.gray3,
+    color: Colors.contentSecondary,
     textAlign: 'center',
   },
   noNftsTextContainer: {
@@ -379,6 +395,5 @@ const styles = StyleSheet.create({
   },
   importTokenText: {
     ...typeScale.labelMedium,
-    color: Colors.black,
   },
 })

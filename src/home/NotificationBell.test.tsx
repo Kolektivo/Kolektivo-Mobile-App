@@ -1,12 +1,12 @@
 import { fireEvent, render } from '@testing-library/react-native'
 import * as React from 'react'
 import { Provider } from 'react-redux'
+import AppAnalytics from 'src/analytics/AppAnalytics'
 import { HomeEvents } from 'src/analytics/Events'
-import ValoraAnalytics from 'src/analytics/ValoraAnalytics'
 import NotificationBell from 'src/home/NotificationBell'
 import { createMockStore } from 'test/utils'
 
-jest.mock('src/analytics/ValoraAnalytics')
+jest.mock('src/analytics/AppAnalytics')
 
 const testId = 'NotificationBell'
 
@@ -21,7 +21,6 @@ describe('NotificationBell', () => {
         backupCompleted: true,
         dismissedGetVerified: true,
         celoEducationCompleted: true,
-        dismissedStartSupercharging: true,
       },
     }
 
@@ -33,8 +32,8 @@ describe('NotificationBell', () => {
 
     expect(getByTestId(testId)).toBeTruthy()
     fireEvent.press(getByTestId(testId))
-    expect(ValoraAnalytics.track).toHaveBeenCalledTimes(1)
-    expect(ValoraAnalytics.track).toHaveBeenCalledWith(HomeEvents.notification_bell_pressed, {
+    expect(AppAnalytics.track).toHaveBeenCalledTimes(1)
+    expect(AppAnalytics.track).toHaveBeenCalledWith(HomeEvents.notification_bell_pressed, {
       hasNotifications: false,
     })
   })
@@ -48,8 +47,8 @@ describe('NotificationBell', () => {
 
     expect(getByTestId(testId)).toBeTruthy()
     fireEvent.press(getByTestId(testId))
-    expect(ValoraAnalytics.track).toHaveBeenCalledTimes(1)
-    expect(ValoraAnalytics.track).toHaveBeenCalledWith(HomeEvents.notification_bell_pressed, {
+    expect(AppAnalytics.track).toHaveBeenCalledTimes(1)
+    expect(AppAnalytics.track).toHaveBeenCalledWith(HomeEvents.notification_bell_pressed, {
       hasNotifications: true,
     })
   })

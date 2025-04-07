@@ -1,4 +1,3 @@
-import { parseInputAmount } from '@celo/utils/lib/parsing'
 import { RouteProp } from '@react-navigation/native'
 import { NativeStackScreenProps } from '@react-navigation/native-stack'
 import BigNumber from 'bignumber.js'
@@ -8,8 +7,8 @@ import { Platform, StyleSheet, Text, TextInput, View } from 'react-native'
 import { getNumberFormatSettings } from 'react-native-localize'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { showError } from 'src/alert/actions'
+import AppAnalytics from 'src/analytics/AppAnalytics'
 import { FiatExchangeEvents } from 'src/analytics/Events'
-import ValoraAnalytics from 'src/analytics/ValoraAnalytics'
 import { ErrorMessages } from 'src/app/ErrorMessages'
 import BackButton from 'src/components/BackButton'
 import Button, { BtnSizes, BtnTypes } from 'src/components/Button'
@@ -17,14 +16,14 @@ import Dialog from 'src/components/Dialog'
 import KeyboardAwareScrollView from 'src/components/KeyboardAwareScrollView'
 import KeyboardSpacer from 'src/components/KeyboardSpacer'
 import { ALERT_BANNER_DURATION, DOLLAR_ADD_FUNDS_MAX_AMOUNT } from 'src/config'
-import { useMaxSendAmount } from 'src/fees/hooks'
-import { FeeType } from 'src/fees/reducer'
 import { convertToFiatConnectFiatCurrency } from 'src/fiatconnect'
 import {
   attemptReturnUserFlowLoadingSelector,
   cachedFiatAccountUsesSelector,
 } from 'src/fiatconnect/selectors'
 import { attemptReturnUserFlow } from 'src/fiatconnect/slice'
+import { CICOFlow } from 'src/fiatExchanges/types'
+import { isUserInputCrypto } from 'src/fiatExchanges/utils'
 import i18n from 'src/i18n'
 import { LocalCurrencyCode, LocalCurrencySymbol } from 'src/localCurrency/consts'
 import { useLocalCurrencyCode } from 'src/localCurrency/hooks'
@@ -36,13 +35,13 @@ import { StackParamList } from 'src/navigator/types'
 import { useDispatch, useSelector } from 'src/redux/hooks'
 import DisconnectBanner from 'src/shared/DisconnectBanner'
 import colors from 'src/styles/colors'
-import fontStyles from 'src/styles/fonts'
+import { typeScale } from 'src/styles/fonts'
 import variables from 'src/styles/variables'
 import { useLocalToTokenAmount, useTokenInfo, useTokenToLocalAmount } from 'src/tokens/hooks'
 import { tokenSymbolToAnalyticsCurrency } from 'src/utils/currencies'
 import { roundUp } from 'src/utils/formatting'
+import { parseInputAmount } from 'src/utils/parsing'
 import networkConfig from 'src/web3/networkConfig'
-import { CICOFlow, isUserInputCrypto } from './utils'
 
 const { decimalSeparator } = getNumberFormatSettings()
 
@@ -61,6 +60,7 @@ function FiatExchangeAmount({ route }: Props) {
   const [inputAmount, setInputAmount] = useState('')
   const parsedInputAmount = parseInputAmount(inputAmount, decimalSeparator)
 
+  const tokenInfo = useTokenInfo(tokenId)
   const inputConvertedToCrypto =
     useLocalToTokenAmount(parsedInputAmount, tokenId) || new BigNumber(0)
   const inputConvertedToLocalCurrency =
@@ -77,8 +77,7 @@ function FiatExchangeAmount({ route }: Props) {
   const inputCryptoAmount = inputIsCrypto ? parsedInputAmount : inputConvertedToCrypto
   const inputLocalCurrencyAmount = inputIsCrypto ? inputConvertedToLocalCurrency : parsedInputAmount
 
-  const maxWithdrawAmount = useMaxSendAmount(tokenId, FeeType.SEND)
-
+  const maxWithdrawAmount = new BigNumber(tokenInfo?.balance ?? 0)
   const inputSymbol = inputIsCrypto ? '' : localCurrencySymbol
 
   const cUSDToken = useTokenInfo(networkConfig.cusdTokenId)!
@@ -93,7 +92,7 @@ function FiatExchangeAmount({ route }: Props) {
   const dispatch = useDispatch()
 
   function isNextButtonValid() {
-    return parsedInputAmount.isGreaterThan(0)
+    return !!tokenInfo && parsedInputAmount.isGreaterThan(0)
   }
 
   function onChangeExchangeAmount(amount: string) {
@@ -101,7 +100,7 @@ function FiatExchangeAmount({ route }: Props) {
   }
 
   function goToProvidersScreen() {
-    ValoraAnalytics.track(FiatExchangeEvents.cico_amount_chosen, {
+    AppAnalytics.track(FiatExchangeEvents.cico_amount_chosen, {
       amount: inputCryptoAmount.toNumber(),
       currency: tokenSymbolToAnalyticsCurrency(tokenSymbol),
       flow,
@@ -147,14 +146,14 @@ function FiatExchangeAmount({ route }: Props) {
     if (flow === CICOFlow.CashIn) {
       if (inputLocalCurrencyAmount.isGreaterThan(localCurrencyMaxAmount)) {
         setShowingInvalidAmountDialog(true)
-        ValoraAnalytics.track(FiatExchangeEvents.cico_amount_chosen_invalid, {
+        AppAnalytics.track(FiatExchangeEvents.cico_amount_chosen_invalid, {
           amount: inputCryptoAmount.toNumber(),
           currency: tokenSymbolToAnalyticsCurrency(tokenSymbol),
           flow,
         })
         return
       }
-    } else if (maxWithdrawAmount.isLessThan(inputCryptoAmount)) {
+    } else if (inputCryptoAmount.isGreaterThan(maxWithdrawAmount)) {
       dispatch(
         showError(ErrorMessages.CASH_OUT_LIMIT_EXCEEDED, ALERT_BANNER_DURATION, {
           balance: maxWithdrawAmount.toFixed(2),
@@ -199,7 +198,7 @@ function FiatExchangeAmount({ route }: Props) {
             keyboardType={'decimal-pad'}
             onChangeText={onChangeExchangeAmount}
             value={inputAmount.length > 0 ? `${inputSymbol}${inputAmount}` : undefined}
-            placeholderTextColor={colors.gray3}
+            placeholderTextColor={colors.inactive}
             placeholder={`${inputSymbol}0`}
             style={[styles.currencyInput, styles.fiatCurrencyColor]}
             testID="FiatExchangeInput"
@@ -286,10 +285,10 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
   },
   exchangeBodyText: {
-    ...fontStyles.regular500,
+    ...typeScale.labelMedium,
   },
   currencyInput: {
-    ...fontStyles.regular,
+    ...typeScale.bodyMedium,
     marginLeft: 10,
     flex: 1,
     textAlign: 'right',
@@ -298,7 +297,7 @@ const styles = StyleSheet.create({
     minHeight: 48, // setting height manually b.c. of bug causing text to jump on Android
   },
   fiatCurrencyColor: {
-    color: colors.primary,
+    color: colors.accent,
   },
   reviewBtn: {
     padding: variables.contentPadding,

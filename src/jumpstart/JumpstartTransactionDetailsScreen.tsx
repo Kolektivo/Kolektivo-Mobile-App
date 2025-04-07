@@ -6,10 +6,10 @@ import { Trans, useTranslation } from 'react-i18next'
 import { StyleSheet, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import walletJumpstart from 'src/abis/IWalletJumpstart'
+import AppAnalytics from 'src/analytics/AppAnalytics'
 import { JumpstartEvents } from 'src/analytics/Events'
-import ValoraAnalytics from 'src/analytics/ValoraAnalytics'
 import BackButton from 'src/components/BackButton'
-import BottomSheet, { BottomSheetRefType } from 'src/components/BottomSheet'
+import BottomSheet, { BottomSheetModalRefType } from 'src/components/BottomSheet'
 import Button, { BtnSizes, BtnTypes } from 'src/components/Button'
 import DataFieldWithCopy from 'src/components/DataFieldWithCopy'
 import { NotificationVariant } from 'src/components/InLineNotification'
@@ -19,7 +19,7 @@ import TokenDisplay from 'src/components/TokenDisplay'
 import TokenIcon, { IconSize } from 'src/components/TokenIcon'
 import CustomHeader from 'src/components/header/CustomHeader'
 import Checkmark from 'src/icons/Checkmark'
-import Logo from 'src/icons/Logo'
+import Logo from 'src/images/Logo'
 import { fetchClaimStatus } from 'src/jumpstart/fetchClaimStatus'
 import { jumpstartReclaimStatusSelector } from 'src/jumpstart/selectors'
 import { jumpstartReclaimErrorDismissed, jumpstartReclaimStarted } from 'src/jumpstart/slice'
@@ -34,8 +34,8 @@ import variables from 'src/styles/variables'
 import { useTokenInfo } from 'src/tokens/hooks'
 import { feeCurrenciesSelector } from 'src/tokens/selectors'
 import TransactionDetails from 'src/transactions/feed/TransactionDetails'
-import NetworkFeeRowItem from 'src/transactions/feed/detailContent/NetworkFeeRowItem'
-import { TokenTransactionTypeV2 } from 'src/transactions/types'
+import FeeRowItem from 'src/transactions/feed/detailContent/FeeRowItem'
+import { FeeType, TokenTransactionTypeV2 } from 'src/transactions/types'
 import Logger from 'src/utils/Logger'
 import { TransactionRequest, prepareTransactions } from 'src/viem/prepareTransactions'
 import { getSerializablePreparedTransaction } from 'src/viem/preparedTransactionSerialization'
@@ -63,7 +63,7 @@ function JumpstartTransactionDetailsScreen({ route }: Props) {
   const feeCurrencies = useSelector((state) => feeCurrenciesSelector(state, networkId))
   const reclaimStatus = useSelector(jumpstartReclaimStatusSelector)
 
-  const bottomSheetRef = useRef<BottomSheetRefType>(null)
+  const bottomSheetRef = useRef<BottomSheetModalRefType>(null)
 
   useEffect(() => {
     if (reclaimStatus === 'success' || reclaimStatus === 'error') {
@@ -99,6 +99,7 @@ function JumpstartTransactionDetailsScreen({ route }: Props) {
       const preparedTransactions = await prepareTransactions({
         feeCurrencies,
         baseTransactions: [reclaimTx],
+        origin: 'jumpstart-claim',
       })
 
       switch (preparedTransactions.type) {
@@ -118,7 +119,7 @@ function JumpstartTransactionDetailsScreen({ route }: Props) {
     {
       onSuccess: (result) => {
         if (result) {
-          ValoraAnalytics.track(JumpstartEvents.jumpstart_claim_status_fetch_success, {
+          AppAnalytics.track(JumpstartEvents.jumpstart_claim_status_fetch_success, {
             networkId,
             depositTxHash: transaction.transactionHash,
             claimed: result.claimed,
@@ -126,7 +127,7 @@ function JumpstartTransactionDetailsScreen({ route }: Props) {
         }
       },
       onError: (error) => {
-        ValoraAnalytics.track(JumpstartEvents.jumpstart_claim_status_fetch_error, {
+        AppAnalytics.track(JumpstartEvents.jumpstart_claim_status_fetch_error, {
           networkId,
           depositTxHash: transaction.transactionHash,
         })
@@ -136,7 +137,7 @@ function JumpstartTransactionDetailsScreen({ route }: Props) {
   )
 
   const handleReclaimPress = () => {
-    ValoraAnalytics.track(JumpstartEvents.jumpstart_reclaim_press, {
+    AppAnalytics.track(JumpstartEvents.jumpstart_reclaim_press, {
       networkId,
       depositTxHash: transaction.transactionHash,
     })
@@ -148,7 +149,7 @@ function JumpstartTransactionDetailsScreen({ route }: Props) {
   }
 
   const handleConfirmReclaim = () => {
-    ValoraAnalytics.track(JumpstartEvents.jumpstart_reclaim_start, {
+    AppAnalytics.track(JumpstartEvents.jumpstart_reclaim_start, {
       networkId,
       depositTxHash: transaction.transactionHash,
     })
@@ -168,12 +169,12 @@ function JumpstartTransactionDetailsScreen({ route }: Props) {
   }
 
   const handleContactSupport = () => {
-    ValoraAnalytics.track(JumpstartEvents.jumpstart_reclaim_contact_support)
+    AppAnalytics.track(JumpstartEvents.jumpstart_reclaim_contact_support)
     navigate(Screens.SupportContact)
   }
 
   const handleDismissReclaimError = () => {
-    ValoraAnalytics.track(JumpstartEvents.jumpstart_reclaim_dismiss_error, {
+    AppAnalytics.track(JumpstartEvents.jumpstart_reclaim_dismiss_error, {
       networkId,
       depositTxHash: transaction.transactionHash,
     })
@@ -231,12 +232,16 @@ function JumpstartTransactionDetailsScreen({ route }: Props) {
               type={BtnTypes.PRIMARY}
               text={isClaimed ? t('claimed') : t('reclaim')}
               size={BtnSizes.FULL}
-              icon={isClaimed ? <Checkmark height={Spacing.Thick24} color={Colors.white} /> : null}
+              icon={isClaimed ? <Checkmark height={Spacing.Thick24} /> : undefined}
               iconPositionLeft={false}
             />
           </View>
         )}
-        <NetworkFeeRowItem fees={transaction.fees} transactionStatus={transaction.status} />
+        <FeeRowItem
+          fees={transaction.fees}
+          feeType={FeeType.SecurityFee}
+          transactionStatus={transaction.status}
+        />
         <LineItemRow
           testID="JumpstartContent/TokenDetails"
           title={isDeposit ? t('amountSent') : t('amountReceived')}
@@ -290,7 +295,9 @@ function JumpstartTransactionDetailsScreen({ route }: Props) {
           copySuccessMessage={t('walletConnectRequest.transactionDataCopied')}
           testID="JumpstarReclaimBottomSheet/RequestPayload"
         />
-        {reclaimTx && <EstimatedNetworkFee networkId={networkId} transaction={reclaimTx} />}
+        {reclaimTx && (
+          <EstimatedNetworkFee isLoading={false} networkId={networkId} transactions={[reclaimTx]} />
+        )}
         <Button
           text={t('confirm')}
           showLoading={reclaimStatus === 'loading'}
@@ -343,12 +350,12 @@ const styles = StyleSheet.create({
   },
   tokenFiatValueText: {
     ...typeScale.bodySmall,
-    color: Colors.gray4,
+    color: Colors.contentSecondary,
   },
   amountContainer: {
-    backgroundColor: Colors.gray1,
+    backgroundColor: Colors.backgroundSecondary,
     borderWidth: 1,
-    borderColor: Colors.gray2,
+    borderColor: Colors.borderPrimary,
     borderRadius: 16,
     paddingHorizontal: Spacing.Regular16,
     paddingVertical: Spacing.Large32,
@@ -378,12 +385,10 @@ const styles = StyleSheet.create({
   },
   header: {
     ...typeScale.titleSmall,
-    color: Colors.black,
     paddingVertical: Spacing.Regular16,
   },
   description: {
     ...typeScale.bodySmall,
-    color: Colors.black,
     marginBottom: Spacing.Thick24,
   },
   errorNotification: {
@@ -399,7 +404,7 @@ const styles = StyleSheet.create({
     height: 40,
     width: 40,
     borderRadius: 100,
-    backgroundColor: Colors.white,
+    backgroundColor: Colors.backgroundPrimary,
   },
 })
 

@@ -1,11 +1,11 @@
+import { BIOMETRY_TYPE } from '@divvi/react-native-keychain'
 import { act, fireEvent, render } from '@testing-library/react-native'
 import * as React from 'react'
-import { BIOMETRY_TYPE } from 'react-native-keychain'
 import { Provider } from 'react-redux'
 import { setPincodeSuccess } from 'src/account/actions'
 import { PincodeType } from 'src/account/reducer'
+import AppAnalytics from 'src/analytics/AppAnalytics'
 import { OnboardingEvents } from 'src/analytics/Events'
-import ValoraAnalytics from 'src/analytics/ValoraAnalytics'
 import { Screens } from 'src/navigator/Screens'
 import EnableBiometry from 'src/onboarding/registration/EnableBiometry'
 import { goToNextOnboardingScreen } from 'src/onboarding/steps'
@@ -24,7 +24,7 @@ jest.mock('src/onboarding/steps', () => ({
 
 const mockedSetPincodeWithBiometry = jest.mocked(setPincodeWithBiometry)
 const loggerErrorSpy = jest.spyOn(Logger, 'error')
-const analyticsSpy = jest.spyOn(ValoraAnalytics, 'track')
+const analyticsSpy = jest.spyOn(AppAnalytics, 'track')
 
 const store = createMockStore({
   app: {
@@ -52,14 +52,13 @@ describe('EnableBiometry', () => {
 
   it('should render the correct elements', () => {
     const { getByText, getByTestId } = renderComponent()
-    expect(
-      getByText('enableBiometry.guideTitle, {"biometryType":"biometryType.FaceID"}')
-    ).toBeTruthy()
+    expect(getByText('enableBiometry.title')).toBeTruthy()
     expect(
       getByText('enableBiometry.guideDescription, {"biometryType":"biometryType.FaceID"}')
     ).toBeTruthy()
     expect(getByText('enableBiometry.cta, {"biometryType":"biometryType.FaceID"}')).toBeTruthy()
     expect(getByTestId('FaceIDBiometryIcon')).toBeTruthy()
+    expect(getByTestId('Image/FaceID')).toBeTruthy()
   })
 
   it('should enable biometry', async () => {
@@ -155,16 +154,15 @@ describe('EnableBiometry', () => {
         activeScreen: Screens.EnableBiometry,
       },
     })
-    const { getByText } = render(
+    const { getByText, getByTestId } = render(
       <Provider store={store}>
         <MockedNavigator component={EnableBiometry} />
       </Provider>
     )
-    expect(
-      getByText('enableBiometry.guideTitle, {"biometryType":"biometryType.FaceID"}')
-    ).toBeTruthy()
+    expect(getByText('enableBiometry.title')).toBeTruthy()
     expect(
       getByText('enableBiometry.guideDescription, {"biometryType":"biometryType.FaceID"}')
     ).toBeTruthy()
+    expect(getByTestId('Image/FaceID')).toBeTruthy()
   })
 })

@@ -148,8 +148,8 @@ exports[`Education renders correctly 1`] = `
                 style={
                   {
                     "color": "#2E3338",
-                    "fontFamily": "Jost-Medium",
-                    "fontSize": 22,
+                    "fontFamily": "Inter-Bold",
+                    "fontSize": 20,
                     "lineHeight": 28,
                     "marginTop": 24,
                     "textAlign": "center",
@@ -164,7 +164,7 @@ exports[`Education renders correctly 1`] = `
                     "color": "#2E3338",
                     "fontFamily": "Inter-Regular",
                     "fontSize": 16,
-                    "lineHeight": 22,
+                    "lineHeight": 24,
                     "marginBottom": 24,
                     "paddingTop": 16,
                     "textAlign": "center",
@@ -246,6 +246,9 @@ exports[`Education renders correctly 1`] = `
                 {
                   "alignItems": "center",
                   "backgroundColor": "#2E3338",
+                  "borderColor": "#2E3338",
+                  "borderRadius": 100,
+                  "borderWidth": 1,
                   "flexDirection": "row",
                   "flexGrow": 1,
                   "height": 48,

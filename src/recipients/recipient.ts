@@ -1,8 +1,7 @@
-import { parsePhoneNumber } from '@celo/phone-utils'
 import * as fuzzysort from 'fuzzysort'
 import { TFunction } from 'i18next'
 import { MinimalContact } from 'react-native-contacts'
-import { formatShortenedAddress } from 'src/components/ShortenedAddress'
+import { formatShortenedAddress } from 'src/account/utils'
 import {
   AddressToDisplayNameType,
   AddressToE164NumberType,
@@ -11,6 +10,7 @@ import {
 } from 'src/identity/reducer'
 import { RecipientVerificationStatus } from 'src/identity/types'
 import Logger from 'src/utils/Logger'
+import { parsePhoneNumber } from 'src/utils/phoneNumbers'
 
 const TAG = 'recipients/recipient'
 
@@ -133,9 +133,9 @@ export function contactsToRecipients(contacts: MinimalContact[], defaultCountryC
 export interface RecipientInfo {
   addressToE164Number: AddressToE164NumberType
   phoneRecipientCache: NumberToRecipient
-  valoraRecipientCache: AddressToRecipient
+  appRecipientCache: AddressToRecipient
   // this info comes from Firebase for known addresses (ex. Simplex, cUSD incentive programs)
-  // differentiated from valoraRecipients because they are not displayed in the RecipientPicker
+  // differentiated from appRecipients because they are not displayed in the RecipientPicker
   addressToDisplayName: AddressToDisplayNameType
 }
 
@@ -147,20 +147,16 @@ export function getRecipientFromAddress(
 ): Recipient {
   const e164PhoneNumber = info.addressToE164Number[address]
   const numberRecipient = e164PhoneNumber ? info.phoneRecipientCache[e164PhoneNumber] : undefined
-  const valoraRecipient = info.valoraRecipientCache[address]
+  const appRecipient = info.appRecipientCache[address]
   const displayInfo = info.addressToDisplayName[address]
 
   const recipient: Recipient = {
     address,
     name:
-      valoraRecipient?.name ||
-      numberRecipient?.name ||
-      displayInfo?.name ||
-      defaultName ||
-      undefined,
+      appRecipient?.name || numberRecipient?.name || displayInfo?.name || defaultName || undefined,
     thumbnailPath:
-      valoraRecipient?.thumbnailPath || displayInfo?.imageUrl || defaultImage || undefined,
-    contactId: valoraRecipient?.contactId || numberRecipient?.contactId,
+      appRecipient?.thumbnailPath || displayInfo?.imageUrl || defaultImage || undefined,
+    contactId: appRecipient?.contactId || numberRecipient?.contactId,
     e164PhoneNumber: e164PhoneNumber || undefined,
     displayNumber: numberRecipient?.displayNumber,
     recipientType: RecipientType.Address,

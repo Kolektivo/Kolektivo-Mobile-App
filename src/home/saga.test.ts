@@ -1,32 +1,10 @@
 import { expectSaga } from 'redux-saga-test-plan'
-import { call, put, select } from 'redux-saga/effects'
-import { refreshAllBalances, setLoading } from 'src/home/actions'
-import { autoRefreshSaga, refreshBalances, watchRefreshBalances, withLoading } from 'src/home/saga'
-import { fetchCurrentRate } from 'src/localCurrency/actions'
-import { shouldFetchCurrentRate } from 'src/localCurrency/selectors'
-import { shouldUpdateBalance } from 'src/redux/selectors'
-import { getConnectedAccount } from 'src/web3/saga'
+import { call, put } from 'redux-saga/effects'
+import { setLoading } from 'src/home/actions'
+import { withLoading } from 'src/home/saga'
 
 beforeAll(() => {
   jest.useRealTimers()
-})
-
-describe('refreshBalances', () => {
-  test('ask for balance when geth and account are ready', () =>
-    expectSaga(refreshBalances)
-      .provide([[call(getConnectedAccount), true]])
-      .run())
-})
-
-describe('watchRefreshBalances', () => {
-  test('reacts on REFRESH_BALANCES', async () => {
-    await expectSaga(watchRefreshBalances)
-      .put(setLoading(true))
-      .put(setLoading(false))
-      .provide([[call(getConnectedAccount), true]])
-      .dispatch(refreshAllBalances())
-      .run()
-  })
 })
 
 describe('withLoading Saga', () => {
@@ -52,30 +30,5 @@ describe('withLoading Saga', () => {
         .put(setLoading(false))
         .run()
     ).rejects.toEqual(expect.any(Error))
-  })
-})
-
-describe('autoRefreshSaga', () => {
-  it('dispatches the appropriate actions', async () => {
-    let delayCallCount = 0
-    // Workaround redux-saga-test-plan not supporting the new `yield delay(x)` syntax
-    // @ts-ignore
-    const provideDelayOnce = ({ fn }, next) => {
-      if (fn.name === 'delayP' && delayCallCount < 1) {
-        delayCallCount += 1
-        return null
-      }
-      return next()
-    }
-
-    await expectSaga(autoRefreshSaga)
-      .provide([
-        [select(shouldUpdateBalance), true],
-        [select(shouldFetchCurrentRate), true],
-        { call: provideDelayOnce },
-      ])
-      .put(refreshAllBalances())
-      .put(fetchCurrentRate())
-      .run()
   })
 })

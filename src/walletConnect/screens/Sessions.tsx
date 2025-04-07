@@ -8,7 +8,7 @@ import Touchable from 'src/components/Touchable'
 import { headerWithBackButton } from 'src/navigator/Headers'
 import { useDispatch, useSelector } from 'src/redux/hooks'
 import colors from 'src/styles/colors'
-import fontStyles from 'src/styles/fonts'
+import { typeScale } from 'src/styles/fonts'
 import { Spacing } from 'src/styles/styles'
 import variables from 'src/styles/variables'
 import { closeSession as closeSessionAction } from 'src/walletConnect/actions'
@@ -27,15 +27,17 @@ const Dapp = ({
   const { t } = useTranslation()
 
   return (
-    <Touchable onPress={onPress}>
-      <View style={styles.row}>
-        <Image source={{ uri: icon }} style={styles.icon} />
-        <View style={styles.rowContent}>
-          <Text style={styles.appName}>{metadata?.name}</Text>
-          <Text style={styles.disconnectButton}>{t('tapToDisconnect')}</Text>
+    <View style={styles.touchableContainer}>
+      <Touchable borderRadius={12} onPress={onPress} style={styles.rowContainer}>
+        <View style={styles.row}>
+          <Image source={{ uri: icon }} style={styles.icon} />
+          <View style={styles.rowContent}>
+            <Text style={styles.appName}>{metadata?.name}</Text>
+            <Text style={styles.disconnectButton}>{t('tapToDisconnect')}</Text>
+          </View>
         </View>
-      </View>
-    </Touchable>
+      </Touchable>
+    </View>
   )
 }
 
@@ -101,13 +103,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: variables.contentPadding,
   },
   title: {
-    ...fontStyles.h2,
-    paddingVertical: Spacing.Regular16,
+    ...typeScale.titleMedium,
+    paddingBottom: Spacing.Smallest8,
   },
   subTitle: {
-    ...fontStyles.regular,
-    color: colors.black,
-    paddingBottom: Spacing.Thick24,
+    ...typeScale.bodyMedium,
+    paddingBottom: Spacing.Small12,
   },
 
   // connected apps
@@ -115,19 +116,26 @@ const styles = StyleSheet.create({
     display: 'flex',
     flexDirection: 'row',
     alignItems: 'center',
+    padding: Spacing.Regular16,
+  },
+  touchableContainer: {
     paddingVertical: Spacing.Small12,
   },
-  icon: { height: 40, width: 40 },
+  rowContainer: {
+    borderColor: colors.borderPrimary,
+    borderWidth: 1,
+    borderRadius: Spacing.Small12,
+  },
+  icon: { height: 32, width: 32 },
   rowContent: {
     paddingLeft: 12,
   },
   appName: {
-    ...fontStyles.regular,
-    color: colors.black,
+    ...typeScale.labelSemiBoldSmall,
   },
   disconnectButton: {
-    ...fontStyles.small,
-    color: colors.gray4,
+    ...typeScale.bodySmall,
+    color: colors.contentSecondary,
   },
 })
 

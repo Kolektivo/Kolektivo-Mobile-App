@@ -1,60 +1,96 @@
+import { E2E_WALLET_PRIVATE_KEY, E2E_WALLET_SINGLE_VERIFIED_MNEMONIC } from 'react-native-dotenv'
+import { createWalletClient, encodeFunctionData, erc20Abi, http, publicActions } from 'viem'
+import { privateKeyToAccount } from 'viem/accounts'
+import { celo } from 'viem/chains'
 import {
-  SAMPLE_BACKUP_KEY_SINGLE_ADDRESS_VERIFIED,
-  SAMPLE_PRIVATE_KEY,
-  VERIFIED_PHONE_NUMBER,
-  SAMPLE_WALLET_ADDRESS_SINGLE_ADDRESS_VERIFIED,
-  SAMPLE_WALLET_ADDRESS_VERIFIED_2,
+  WALLET_MULTIPLE_VERIFIED_ADDRESS,
+  WALLET_MULTIPLE_VERIFIED_PHONE_NUMBER,
+  WALLET_SINGLE_VERIFIED_ADDRESS,
 } from '../utils/consts'
 import { launchApp } from '../utils/retries'
 import {
-  addComment,
   enterPinUiIfNecessary,
-  fundWallet,
-  inputNumberKeypad,
-  scrollIntoView,
   quickOnboarding,
-  waitForElementId,
-  waitForElementByIdAndTap,
-  confirmTransaction,
-  createCommentText,
+  scrollIntoView,
+  waitForElementById,
 } from '../utils/utils'
 
 const AMOUNT_TO_SEND = '0.01'
 const WALLET_FUNDING_MULTIPLIER = 2.2
 
+/**
+ * Fund a wallet, using some existing wallet.
+ *
+ * @param senderPrivateKey: private key for wallet with funds
+ * @param recipientAddress: wallet to receive funds
+ * @param stableToken: recognised token symbol (e.g. 'cUSD')
+ * @param amountEther: amount in "ethers" (as opposed to wei)
+ */
+const fundWallet = async (senderPrivateKey, recipientAddress, stableToken, amountEther) => {
+  const stableTokenSymbolToAddress = {
+    cUSD: '0x765de816845861e75a25fca122bb6898b8b1282a',
+  }
+  const tokenAddress = stableTokenSymbolToAddress[stableToken]
+  if (!tokenAddress) {
+    throw new Error(`Unsupported token symbol passed to fundWallet: ${stableToken}`)
+  }
+
+  const account = privateKeyToAccount(senderPrivateKey)
+  const senderAddress = account.address
+  console.log(`Sending ${amountEther} ${stableToken} from ${senderAddress} to ${recipientAddress}`)
+  const client = createWalletClient({
+    account,
+    chain: celo,
+    transport: http(),
+  }).extend(publicActions)
+
+  const fundingAmount = BigInt(amountEther * 10 ** 18)
+  const hash = await client.sendTransaction({
+    to: tokenAddress,
+    from: senderAddress,
+    data: encodeFunctionData({
+      abi: erc20Abi,
+      functionName: 'transfer',
+      args: [recipientAddress, fundingAmount],
+    }),
+  })
+  const receipt = await client.waitForTransactionReceipt({ hash })
+
+  console.log('Funding TX receipt', receipt)
+}
+
 export default SecureSend = () => {
   describe('Secure send flow with phone number lookup', () => {
     beforeAll(async () => {
-      // uninstall the app to remove secure send mapping
-      await device.uninstallApp()
-      await device.installApp()
       // fund wallet for send
       await fundWallet(
-        SAMPLE_PRIVATE_KEY,
-        SAMPLE_WALLET_ADDRESS_SINGLE_ADDRESS_VERIFIED,
+        E2E_WALLET_PRIVATE_KEY,
+        WALLET_SINGLE_VERIFIED_ADDRESS,
         'cUSD',
         `${AMOUNT_TO_SEND * WALLET_FUNDING_MULTIPLIER}`
       )
-      await launchApp({
-        newInstance: true,
-        permissions: { notifications: 'YES', contacts: 'YES' },
-      })
-      await quickOnboarding({ mnemonic: SAMPLE_BACKUP_KEY_SINGLE_ADDRESS_VERIFIED })
+      await launchApp({ delete: true })
+      await quickOnboarding({ mnemonic: E2E_WALLET_SINGLE_VERIFIED_MNEMONIC })
     })
 
     it('Send cUSD to phone number with multiple mappings', async () => {
-      await waitForElementByIdAndTap('HomeAction-Send', 30_000)
-      await waitForElementByIdAndTap('SendSelectRecipientSearchInput', 3000)
-      await element(by.id('SendSelectRecipientSearchInput')).replaceText(VERIFIED_PHONE_NUMBER)
+      await waitForElementById('HomeAction-Send', { timeout: 30_000, tap: true })
+      await waitForElementById('SendSelectRecipientSearchInput', {
+        timeout: 3000,
+        tap: true,
+      })
+      await element(by.id('SendSelectRecipientSearchInput')).replaceText(
+        WALLET_MULTIPLE_VERIFIED_PHONE_NUMBER
+      )
       await element(by.id('RecipientItem')).tap()
 
-      await waitForElementByIdAndTap('SendOrInviteButton', 30_000)
+      await waitForElementById('SendOrInviteButton', { timeout: 30_000, tap: true })
 
       // Use the last digits of the account to confirm the sender.
-      await waitForElementByIdAndTap('confirmAccountButton', 30_000)
+      await waitForElementById('confirmAccountButton', { timeout: 30_000, tap: true })
       for (let index = 0; index < 4; index++) {
-        const character = SAMPLE_WALLET_ADDRESS_VERIFIED_2.charAt(
-          SAMPLE_WALLET_ADDRESS_VERIFIED_2.length - (4 - index)
+        const character = WALLET_MULTIPLE_VERIFIED_ADDRESS.charAt(
+          WALLET_MULTIPLE_VERIFIED_ADDRESS.length - (4 - index)
         )
         await element(by.id(`SingleDigitInput/digit${index}`)).replaceText(character)
       }
@@ -64,8 +100,11 @@ export default SecureSend = () => {
       await element(by.id('ConfirmAccountButton')).tap()
 
       // Select the currency
-      await waitForElementByIdAndTap('SendEnterAmount/TokenSelect', 30_000)
-      await waitForElementByIdAndTap('cUSDSymbol', 30_000)
+      await waitForElementById('SendEnterAmount/TokenSelect', {
+        timeout: 30_000,
+        tap: true,
+      })
+      await waitForElementById('cUSDSymbol', { timeout: 30_000, tap: true })
 
       // Enter the amount and review
       await element(by.id('SendEnterAmount/TokenAmountInput')).tap()
@@ -73,18 +112,12 @@ export default SecureSend = () => {
       await element(by.id('SendEnterAmount/TokenAmountInput')).tapReturnKey()
       await element(by.id('SendEnterAmount/ReviewButton')).tap()
 
-      // Write a comment.
-      const commentText = createCommentText()
-      await addComment(commentText)
-
       // Confirm and input PIN if necessary.
       await element(by.id('ConfirmButton')).tap()
       await enterPinUiIfNecessary()
 
       // Return to home screen.
-      await waitForElementId('HomeAction-Send', 30_000)
-
-      await confirmTransaction(commentText)
+      await waitForElementById('HomeAction-Send', { timeout: 30_000 })
     })
   })
 }

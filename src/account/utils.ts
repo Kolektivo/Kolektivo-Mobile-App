@@ -1,4 +1,4 @@
-import { parsePhoneNumber } from '@celo/phone-utils'
+import { parsePhoneNumber } from 'src/utils/phoneNumbers'
 
 const ADDRESS_LENGTH = 42 // TODO(ACT-1173): see if this can be replaced with a viem helper
 
@@ -29,4 +29,8 @@ export function getPhoneNumberDetails(
       countryCodeAlpha2,
     }
   }
+}
+
+export function formatShortenedAddress(address: string): string {
+  return `${address.slice(0, 6)}...${address.slice(-4)}`
 }

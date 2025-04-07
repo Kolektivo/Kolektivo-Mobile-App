@@ -1,8 +1,8 @@
 import BigNumber from 'bignumber.js'
 import React from 'react'
 import { StyleSheet, Text, View } from 'react-native'
+import AppAnalytics from 'src/analytics/AppAnalytics'
 import { HomeEvents } from 'src/analytics/Events'
-import ValoraAnalytics from 'src/analytics/ValoraAnalytics'
 import TokenDisplay from 'src/components/TokenDisplay'
 import Touchable from 'src/components/Touchable'
 import { jumpstartReclaimFlowStarted } from 'src/jumpstart/slice'
@@ -38,7 +38,9 @@ function TransferFeedItem({ transfer }: Props) {
       navigate(Screens.TransactionDetailsScreen, { transaction: transfer })
     }
 
-    ValoraAnalytics.track(HomeEvents.transaction_feed_item_select)
+    AppAnalytics.track(HomeEvents.transaction_feed_item_select, {
+      itemType: transfer.type,
+    })
   }
 
   const tokenInfo = useTokenInfo(amount.tokenId)
@@ -49,7 +51,7 @@ function TransferFeedItem({ transfer }: Props) {
     isJumpstart
   )
 
-  const colorStyle = new BigNumber(amount.value).isPositive() ? { color: colors.primary } : {}
+  const colorStyle = new BigNumber(amount.value).isPositive() ? { color: colors.accent } : {}
 
   return (
     <Touchable testID="TransferFeedItem" onPress={openTransferDetails}>
@@ -57,7 +59,7 @@ function TransferFeedItem({ transfer }: Props) {
         <TransactionFeedItemImage
           recipient={recipient}
           status={transfer.status}
-          transactionType={transfer.__typename}
+          transactionType={transfer.type}
           isJumpstart={isJumpstart}
           networkId={transfer.networkId}
         />
@@ -128,17 +130,16 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     ...typeScale.bodySmall,
-    color: colors.gray4,
+    color: colors.contentSecondary,
   },
   amount: {
     ...typeScale.labelMedium,
-    color: colors.black,
     flexWrap: 'wrap',
     textAlign: 'right',
   },
   tokenAmount: {
     ...typeScale.bodySmall,
-    color: colors.gray4,
+    color: colors.contentSecondary,
     flexWrap: 'wrap',
     textAlign: 'right',
   },

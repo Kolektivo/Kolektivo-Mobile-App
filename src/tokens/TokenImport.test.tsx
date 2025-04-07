@@ -1,12 +1,11 @@
 import { fireEvent, render, waitFor } from '@testing-library/react-native'
 import React from 'react'
 import { Provider } from 'react-redux'
-import erc20 from 'src/abis/IERC20'
 import { Screens } from 'src/navigator/Screens'
 import { importToken } from 'src/tokens/slice'
-import { getSupportedNetworkIdsForTokenBalances } from 'src/tokens/utils'
 import { Network, NetworkId } from 'src/transactions/types'
 import { publicClient } from 'src/viem'
+import { getSupportedNetworkIds } from 'src/web3/utils'
 import { createMockStore, getMockStackScreenProps } from 'test/utils'
 import { mockCusdAddress, mockPoofAddress } from 'test/values'
 import {
@@ -15,6 +14,7 @@ import {
   GetContractReturnType,
   PublicClient,
   TimeoutError,
+  erc20Abi,
   getContract,
 } from 'viem'
 import TokenImportScreen from './TokenImport'
@@ -24,11 +24,11 @@ jest.mock('viem', () => ({
   ...jest.requireActual('viem'),
   getContract: jest.fn(),
 }))
-
-jest.mock('src/tokens/utils', () => ({
-  ...jest.requireActual('src/tokens/utils'),
-  getSupportedNetworkIdsForTokenBalances: jest.fn(),
+jest.mock('src/web3/utils', () => ({
+  ...jest.requireActual('src/web3/utils'),
+  getSupportedNetworkIds: jest.fn(),
 }))
+jest.mock('src/statsig')
 
 const mockScreenProps = getMockStackScreenProps(Screens.TokenImport)
 
@@ -48,12 +48,12 @@ describe('TokenImport', () => {
         name: jest.fn().mockResolvedValue('ABC Coin'),
         balanceOf: jest.fn().mockResolvedValue(BigInt('500000000000000000')),
       },
-    } as unknown as GetContractReturnType<typeof erc20.abi, PublicClient>)
+    } as unknown as GetContractReturnType<typeof erc20Abi, PublicClient>)
   })
 
   describe('when only Celo network is enabled', () => {
     beforeEach(() => {
-      mocked(getSupportedNetworkIdsForTokenBalances).mockReturnValue([NetworkId['celo-alfajores']])
+      mocked(getSupportedNetworkIds).mockReturnValue([NetworkId['celo-alfajores']])
     })
 
     it('renders correctly', () => {
@@ -217,7 +217,7 @@ describe('TokenImport', () => {
               const contractFunctionExecutionError = new ContractFunctionExecutionError(
                 callExecution,
                 {
-                  abi: erc20.abi,
+                  abi: erc20Abi,
                   args: [],
                   contractAddress: '0x7d91E51C8F218f7140188A155f5C75388630B6a8',
                   functionName: 'symbol',
@@ -254,7 +254,7 @@ describe('TokenImport', () => {
 
   describe('when more than one network is enabled', () => {
     beforeEach(() => {
-      mocked(getSupportedNetworkIdsForTokenBalances).mockReturnValue([
+      mocked(getSupportedNetworkIds).mockReturnValue([
         NetworkId['celo-alfajores'],
         NetworkId['ethereum-sepolia'],
       ])

@@ -6,8 +6,8 @@ import { StyleSheet, Text, View } from 'react-native'
 import { ScrollView } from 'react-native-gesture-handler'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useDispatch } from 'react-redux'
+import AppAnalytics from 'src/analytics/AppAnalytics'
 import { JumpstartEvents } from 'src/analytics/Events'
-import ValoraAnalytics from 'src/analytics/ValoraAnalytics'
 import Button, { BtnSizes } from 'src/components/Button'
 import InLineNotification, { NotificationVariant } from 'src/components/InLineNotification'
 import Toast from 'src/components/Toast'
@@ -31,7 +31,8 @@ type Props = NativeStackScreenProps<StackParamList, Screens.JumpstartSendConfirm
 const TAG = 'JumpstartSendConfirmation'
 
 function JumpstartSendConfirmation({ route }: Props) {
-  const { tokenId, sendAmount, serializablePreparedTransactions, link } = route.params
+  const { tokenId, sendAmount, serializablePreparedTransactions, link, beneficiaryAddress } =
+    route.params
   const parsedAmount = new BigNumber(sendAmount)
   const { t } = useTranslation()
   const dispatch = useDispatch()
@@ -64,10 +65,11 @@ function JumpstartSendConfirmation({ route }: Props) {
           sendToken: token,
           sendAmount,
           serializablePreparedTransactions,
+          beneficiaryAddress,
         })
       )
 
-      ValoraAnalytics.track(JumpstartEvents.jumpstart_send_confirm, {
+      AppAnalytics.track(JumpstartEvents.jumpstart_send_confirm, {
         localCurrency: localCurrencyCode,
         localCurrencyExchangeRate: usdToLocalRate,
         tokenSymbol: token.symbol,
@@ -150,9 +152,9 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.Thick24,
   },
   amountContainer: {
-    backgroundColor: Colors.gray1,
+    backgroundColor: Colors.backgroundSecondary,
     borderWidth: 1,
-    borderColor: Colors.gray2,
+    borderColor: Colors.borderPrimary,
     borderRadius: 16,
     padding: Spacing.Regular16,
     gap: Spacing.Regular16,

@@ -1,44 +1,43 @@
 import { BottomSheetBackdrop, BottomSheetBackdropProps } from '@gorhom/bottom-sheet'
+import { createBottomSheetNavigator } from '@interaxyz/react-navigation-bottom-sheet'
 import {
   NativeStackNavigationOptions,
   createNativeStackNavigator,
 } from '@react-navigation/native-stack'
-import { createBottomSheetNavigator } from '@th3rdwave/react-navigation-bottom-sheet'
 import * as React from 'react'
 import { Platform } from 'react-native'
 import SplashScreen from 'react-native-splash-screen'
 import AccountKeyEducation from 'src/account/AccountKeyEducation'
 import AccounSetupFailureScreen from 'src/account/AccountSetupFailureScreen'
 import GoldEducation from 'src/account/GoldEducation'
+import LegalSubmenu from 'src/account/LegalSubmenu'
 import Licenses from 'src/account/Licenses'
+import PreferencesSubmenu from 'src/account/PreferencesSubmenu'
 import Profile from 'src/account/Profile'
-import SettingsScreen from 'src/account/Settings'
+import ProfileSubmenu from 'src/account/ProfileSubmenu'
+import SecuritySubmenu from 'src/account/SecuritySubmenu'
 import StoreWipeRecoveryScreen from 'src/account/StoreWipeRecoveryScreen'
 import Support from 'src/account/Support'
 import SupportContact from 'src/account/SupportContact'
 import AppLoading from 'src/app/AppLoading'
-import Debug from 'src/app/Debug'
+import DebugImages from 'src/app/DebugImages'
 import ErrorScreen from 'src/app/ErrorScreen'
-import MultichainBeta from 'src/app/MultichainBeta'
 import SanctionedCountryErrorScreen from 'src/app/SanctionedCountryErrorScreen'
 import UpgradeScreen from 'src/app/UpgradeScreen'
 import BackupComplete from 'src/backup/BackupComplete'
 import BackupIntroduction from 'src/backup/BackupIntroduction'
 import BackupPhrase, { navOptionsForBackupPhrase } from 'src/backup/BackupPhrase'
 import BackupQuiz, { navOptionsForQuiz } from 'src/backup/BackupQuiz'
-import ConsumerIncentivesHomeScreen from 'src/consumerIncentives/ConsumerIncentivesHomeScreen'
-import DappKitAccountScreen from 'src/dappkit/DappKitAccountScreen'
-import DappKitSignTxScreen from 'src/dappkit/DappKitSignTxScreen'
 import DappShortcutTransactionRequest from 'src/dapps/DappShortcutTransactionRequest'
 import DappShortcutsRewards from 'src/dapps/DappShortcutsRewards'
-import EarnCollectScreen from 'src/earn/EarnCollectScreen'
+import DappsScreen from 'src/dapps/DappsScreen'
+import EarnConfirmationScreen from 'src/earn/EarnConfirmationScreen'
 import EarnEnterAmount from 'src/earn/EarnEnterAmount'
+import EarnHome from 'src/earn/EarnHome'
 import EarnInfoScreen from 'src/earn/EarnInfoScreen'
-import EscrowedPaymentListScreen from 'src/escrow/EscrowedPaymentListScreen'
-import ReclaimPaymentConfirmationScreen from 'src/escrow/ReclaimPaymentConfirmationScreen'
+import EarnPoolInfoScreen from 'src/earn/poolInfoScreen/EarnPoolInfoScreen'
 import BidaliScreen from 'src/fiatExchanges/BidaliScreen'
 import CashInSuccess from 'src/fiatExchanges/CashInSuccess'
-import CoinbasePayScreen from 'src/fiatExchanges/CoinbasePayScreen'
 import ExchangeQR from 'src/fiatExchanges/ExchangeQR'
 import ExternalExchanges, {
   externalExchangesScreenOptions,
@@ -73,25 +72,25 @@ import KeylessBackupProgress from 'src/keylessBackup/KeylessBackupProgress'
 import LinkPhoneNumber from 'src/keylessBackup/LinkPhoneNumber'
 import SignInWithEmail from 'src/keylessBackup/SignInWithEmail'
 import WalletSecurityPrimer from 'src/keylessBackup/WalletSecurityPrimer'
+import { KeylessBackupFlow, KeylessBackupOrigin } from 'src/keylessBackup/types'
 import ActivityDetailScreen from 'src/kolektivo/activities/ActivityDetailScreen'
 import QRKolektivoNavigator from 'src/kolektivo/qrcode/QRKolektivoNavigator'
 import Language from 'src/language/Language'
 import SelectLocalCurrency from 'src/localCurrency/SelectLocalCurrency'
+import DemoModeAuthBlock from 'src/navigator/DemoModeAuthBlock'
 import {
   emptyHeader,
-  headerTransparentWithBack,
   headerWithBackButton,
   noHeader,
   nuxNavigationOptions,
 } from 'src/navigator/Headers'
-import ProfileMenu from 'src/navigator/ProfileMenu'
 import QRNavigator from 'src/navigator/QRNavigator'
 import { Screens } from 'src/navigator/Screens'
+import SettingsMenu from 'src/navigator/SettingsMenu'
 import TabNavigator from 'src/navigator/TabNavigator'
 import { getInitialRoute } from 'src/navigator/initialRoute'
 import { StackParamList } from 'src/navigator/types'
 import NftsInfoCarousel from 'src/nfts/NftsInfoCarousel'
-import ChooseYourAdventure from 'src/onboarding/ChooseYourAdventure'
 import EnableBiometry from 'src/onboarding/registration/EnableBiometry'
 import ImportSelect from 'src/onboarding/registration/ImportSelect'
 import OnboardingRecoveryPhrase from 'src/onboarding/registration/OnboardingRecoveryPhrase'
@@ -115,7 +114,12 @@ import ValidateRecipientAccount, {
 import ValidateRecipientIntro, {
   validateRecipientIntroScreenNavOptions,
 } from 'src/send/ValidateRecipientIntro'
+import { getFeatureGate } from 'src/statsig'
+import { StatsigFeatureGates } from 'src/statsig/types'
+import styles from 'src/styles/styles'
+import variables from 'src/styles/variables'
 import SwapScreen from 'src/swap/SwapScreen'
+import SwapScreenV2 from 'src/swap/SwapScreenV2'
 import TokenDetailsScreen from 'src/tokens/TokenDetails'
 import TokenImportScreen from 'src/tokens/TokenImport'
 import TransactionDetailsScreen from 'src/transactions/feed/TransactionDetailsScreen'
@@ -142,7 +146,11 @@ const commonScreens = (Navigator: typeof Stack) => {
         component={UpgradeScreen}
         options={UpgradeScreen.navigationOptions}
       />
-      <Navigator.Screen name={Screens.Debug} component={Debug} options={Debug.navigationOptions} />
+      <Navigator.Screen
+        name={Screens.DebugImages}
+        component={DebugImages}
+        options={headerWithBackButton}
+      />
       <Navigator.Screen
         name={Screens.WebViewScreen}
         component={WebViewScreen}
@@ -156,7 +164,12 @@ const commonScreens = (Navigator: typeof Stack) => {
       <Navigator.Screen
         name={Screens.QRNavigator}
         component={QRNavigator}
-        options={QRNavigator.navigationOptions as NativeStackNavigationOptions}
+        options={QRNavigator.navigationOptions}
+      />
+      <Navigator.Screen
+        name={Screens.QRKolektivoNavigator}
+        component={QRKolektivoNavigator}
+        options={QRKolektivoNavigator.navigationOptions as NativeStackNavigationOptions}
       />
       <Navigator.Screen
         name={Screens.QRKolektivoNavigator}
@@ -178,7 +191,7 @@ const verificationScreens = (Navigator: typeof Stack) => {
       <Navigator.Screen
         name={Screens.VerificationCodeInputScreen}
         component={VerificationCodeInputScreen}
-        options={VerificationCodeInputScreen.navigationOptions}
+        options={nuxNavigationOptions}
       />
     </>
   )
@@ -252,16 +265,6 @@ const sendScreens = (Navigator: typeof Stack) => (
       options={validateRecipientAccountScreenNavOptions}
     />
     <Navigator.Screen
-      name={Screens.EscrowedPaymentListScreen}
-      component={EscrowedPaymentListScreen}
-      options={headerWithBackButton}
-    />
-    <Navigator.Screen
-      name={Screens.ReclaimPaymentConfirmationScreen}
-      component={ReclaimPaymentConfirmationScreen}
-      options={headerWithBackButton}
-    />
-    <Navigator.Screen
       name={Screens.SendEnterAmount}
       component={SendEnterAmount}
       options={noHeader}
@@ -287,13 +290,13 @@ const sendScreens = (Navigator: typeof Stack) => (
 const consumerIncentivesScreens = (Navigator: typeof Stack) => (
   <>
     <Navigator.Screen
-      name={Screens.ConsumerIncentivesHomeScreen}
-      component={ConsumerIncentivesHomeScreen}
-      options={ConsumerIncentivesHomeScreen.navOptions}
-    />
-    <Navigator.Screen
       name={Screens.DappShortcutsRewards}
       component={DappShortcutsRewards}
+      options={headerWithBackButton}
+    />
+    <Navigator.Screen
+      name={Screens.DappsScreen}
+      component={DappsScreen}
       options={headerWithBackButton}
     />
   </>
@@ -341,6 +344,18 @@ const settingsScreens = (Navigator: typeof Stack) => (
       options={Profile.navigationOptions}
       name={Screens.Profile}
       component={Profile}
+    />
+    <Navigator.Screen options={noHeader} name={Screens.ProfileSubmenu} component={ProfileSubmenu} />
+    <Navigator.Screen options={noHeader} name={Screens.LegalSubmenu} component={LegalSubmenu} />
+    <Navigator.Screen
+      options={noHeader}
+      name={Screens.PreferencesSubmenu}
+      component={PreferencesSubmenu}
+    />
+    <Navigator.Screen
+      name={Screens.SecuritySubmenu}
+      component={SecuritySubmenu}
+      options={noHeader}
     />
     <Navigator.Screen
       name={Screens.Language}
@@ -424,12 +439,6 @@ const settingsScreens = (Navigator: typeof Stack) => (
       component={BidaliScreen}
     />
     <Navigator.Screen
-      // @ts-expect-error component type in native-stack v6
-      name={Screens.CoinbasePayScreen}
-      component={CoinbasePayScreen}
-      options={emptyHeader}
-    />
-    <Navigator.Screen
       options={FiatConnectLinkAccountScreen.navigationOptions}
       name={Screens.FiatConnectLinkAccount}
       component={FiatConnectLinkAccountScreen}
@@ -471,22 +480,26 @@ const settingsScreens = (Navigator: typeof Stack) => (
     />
     <Navigator.Screen
       name={Screens.SignInWithEmail}
-      options={SignInWithEmail.navigationOptions}
+      options={noHeader}
       component={SignInWithEmail}
+      initialParams={{
+        keylessBackupFlow: KeylessBackupFlow.Setup,
+        origin: KeylessBackupOrigin.Onboarding,
+      }}
     />
     <Navigator.Screen
       name={Screens.KeylessBackupPhoneInput}
-      options={KeylessBackupPhoneInput.navigationOptions}
+      options={noHeader}
       component={KeylessBackupPhoneInput}
     />
     <Navigator.Screen
       name={Screens.KeylessBackupPhoneCodeInput}
-      options={{ headerStyle: {} }}
+      options={noHeader}
       component={KeylessBackupPhoneCodeInput}
     />
     <Navigator.Screen
       name={Screens.KeylessBackupProgress}
-      options={{ headerStyle: {} }}
+      options={noHeader}
       component={KeylessBackupProgress}
     />
     <Navigator.Screen
@@ -499,11 +512,6 @@ const settingsScreens = (Navigator: typeof Stack) => (
 
 const generalScreens = (Navigator: typeof Stack) => (
   <>
-    <Navigator.Screen
-      name={Screens.ChooseYourAdventure}
-      component={ChooseYourAdventure}
-      options={ChooseYourAdventure.navOptions}
-    />
     <Navigator.Screen
       name={Screens.TransactionDetailsScreen}
       component={TransactionDetailsScreen}
@@ -525,26 +533,21 @@ const generalScreens = (Navigator: typeof Stack) => (
       options={headerWithBackButton}
     />
     <Navigator.Screen
-      name={Screens.MultichainBeta}
-      component={MultichainBeta}
-      options={MultichainBeta.navigationOptions}
+      name={Screens.SettingsMenu}
+      component={SettingsMenu}
+      options={SettingsMenu.navigationOptions as NativeStackNavigationOptions}
     />
-    <Navigator.Screen
-      name={Screens.ProfileMenu}
-      component={ProfileMenu}
-      options={ProfileMenu.navigationOptions as NativeStackNavigationOptions}
-    />
-    <Navigator.Screen name={Screens.Settings} component={SettingsScreen} options={noHeader} />
     <Navigator.Screen name={Screens.Invite} component={Invite} options={noHeader} />
-    <Navigator.Screen name={Screens.Support} component={Support} options={headerWithBackButton} />
+    <Navigator.Screen name={Screens.Support} component={Support} options={noHeader} />
   </>
 )
 
 const earnScreens = (Navigator: typeof Stack) => (
   <>
+    <Navigator.Screen name={Screens.EarnHome} component={EarnHome} options={headerWithBackButton} />
     <Navigator.Screen
-      name={Screens.EarnCollectScreen}
-      component={EarnCollectScreen}
+      name={Screens.EarnConfirmationScreen}
+      component={EarnConfirmationScreen}
       options={headerWithBackButton}
     />
     <Navigator.Screen
@@ -557,21 +560,36 @@ const earnScreens = (Navigator: typeof Stack) => (
       component={EarnInfoScreen}
       options={EarnInfoScreen.navigationOptions}
     />
+    <Navigator.Screen
+      name={Screens.EarnPoolInfoScreen}
+      component={EarnPoolInfoScreen}
+      options={headerWithBackButton}
+    />
   </>
 )
 
-const swapScreens = (Navigator: typeof Stack) => (
-  <>
-    <Navigator.Screen name={Screens.SwapScreenWithBack} component={SwapScreen} options={noHeader} />
-  </>
-)
+const swapScreens = (Navigator: typeof Stack) => {
+  const showNewEnterAmountForSwap = getFeatureGate(
+    StatsigFeatureGates.SHOW_NEW_ENTER_AMOUNT_FOR_SWAP
+  )
+
+  return (
+    <>
+      <Navigator.Screen
+        name={Screens.SwapScreenWithBack}
+        component={showNewEnterAmountForSwap ? SwapScreenV2 : SwapScreen}
+        options={noHeader}
+      />
+    </>
+  )
+}
 
 const nftScreens = (Navigator: typeof Stack) => (
   <>
     <Navigator.Screen
       name={Screens.NftsInfoCarousel}
       component={NftsInfoCarousel}
-      options={headerTransparentWithBack}
+      options={NftsInfoCarousel.navigationOptions as NativeStackNavigationOptions}
     />
   </>
 )
@@ -599,44 +617,29 @@ const pointsScreens = (Navigator: typeof Stack) => (
 )
 const mapStateToProps = (state: RootState) => {
   return {
-    choseToRestoreAccount: state.account.choseToRestoreAccount,
     language: currentLanguageSelector(state),
     acceptedTerms: state.account.acceptedTerms,
     pincodeType: state.account.pincodeType,
-    account: state.web3.account,
-    hasSeenVerificationNux: state.identity.hasSeenVerificationNux,
-    askedContactsPermission: state.identity.askedContactsPermission,
-    recoveryPhraseInOnboardingStatus: state.account.recoveryPhraseInOnboardingStatus,
-    multichainBetaStatus: state.app.multichainBetaStatus,
+    lastOnboardingStepScreen: state.account.lastOnboardingStepScreen as keyof StackParamList,
+    onboardingCompleted: state.account.onboardingCompleted,
   }
 }
 
 type InitialRouteName = ExtractProps<typeof Stack.Navigator>['initialRouteName']
 
-export function MainStackScreen() {
+function MainStackScreen() {
   const [initialRouteName, setInitialRoute] = React.useState<InitialRouteName>(undefined)
 
   React.useEffect(() => {
-    const {
-      choseToRestoreAccount,
-      language,
-      acceptedTerms,
-      pincodeType,
-      account,
-      hasSeenVerificationNux,
-      recoveryPhraseInOnboardingStatus,
-      multichainBetaStatus,
-    } = mapStateToProps(store.getState())
+    const { language, acceptedTerms, pincodeType, onboardingCompleted, lastOnboardingStepScreen } =
+      mapStateToProps(store.getState())
 
     const initialRoute: InitialRouteName = getInitialRoute({
-      choseToRestoreAccount,
       language,
       acceptedTerms,
       pincodeType,
-      account,
-      hasSeenVerificationNux,
-      recoveryPhraseInOnboardingStatus,
-      multichainBetaStatus,
+      onboardingCompleted,
+      lastOnboardingStepScreen,
     })
 
     setInitialRoute(initialRoute)
@@ -684,6 +687,7 @@ const modalAnimatedScreens = (Navigator: typeof Stack) => (
     />
     <Navigator.Screen
       name={Screens.RegulatoryTerms}
+      // @ts-expect-error class component instead of functional component
       component={RegulatoryTerms}
       options={RegulatoryTerms.navigationOptions as NativeStackNavigationOptions}
     />
@@ -698,7 +702,7 @@ const modalAnimatedScreens = (Navigator: typeof Stack) => (
       options={SelectCountry.navigationOptions as NativeStackNavigationOptions}
     />
     <Navigator.Screen
-      name={Screens.SendConfirmationModal}
+      name={Screens.SendConfirmationFromExternal}
       component={SendConfirmation}
       options={sendConfirmationScreenNavOptions as NativeStackNavigationOptions}
     />
@@ -711,15 +715,12 @@ const mainScreenNavOptions = () => ({
 
 function nativeBottomSheets(BottomSheet: typeof RootStack) {
   // Note: scrolling views inside bottom sheet screens should use the relevant
-  // components from react-native-gesture-handler instead of directly from
+  // components from gorhom/react-native-bottom-sheet instead of directly from
   // react-native
-  // https://github.com/osdnk/react-native-reanimated-bottom-sheet/issues/264#issuecomment-674757545
 
   return (
     <>
       <BottomSheet.Screen name={Screens.WalletConnectRequest} component={WalletConnectRequest} />
-      <BottomSheet.Screen name={Screens.DappKitAccountScreen} component={DappKitAccountScreen} />
-      <BottomSheet.Screen name={Screens.DappKitSignTxScreen} component={DappKitSignTxScreen} />
       <BottomSheet.Screen
         name={Screens.DappShortcutTransactionRequest}
         component={DappShortcutTransactionRequest}
@@ -728,6 +729,7 @@ function nativeBottomSheets(BottomSheet: typeof RootStack) {
         name={Screens.FiatExchangeCurrencyBottomSheet}
         component={FiatExchangeCurrencyBottomSheet}
       />
+      <BottomSheet.Screen name={Screens.DemoModeAuthBlock} component={DemoModeAuthBlock} />
     </>
   )
 }
@@ -755,7 +757,13 @@ function ModalStackScreen() {
 function RootStackScreen() {
   const renderBackdrop = React.useCallback(
     (props: BottomSheetBackdropProps) => (
-      <BottomSheetBackdrop opacity={0.25} appearsOnIndex={0} disappearsOnIndex={-1} {...props} />
+      <BottomSheetBackdrop
+        {...props}
+        style={[props.style, styles.bottomSheetBackdrop]}
+        opacity={0.25}
+        appearsOnIndex={0}
+        disappearsOnIndex={-1}
+      />
     ),
     []
   )
@@ -765,7 +773,12 @@ function RootStackScreen() {
       screenOptions={{
         backdropComponent: renderBackdrop,
         enableDynamicSizing: true,
-        snapPoints: ['CONTENT_HEIGHT'], // prevent bottom sheets from having an extra snap point at the default of 66%
+        // use max height (similar as 90% snap point) for screens. when bottom sheets
+        // take up the whole screen, it is no longer obvious that they are a bottom
+        // sheet / how to navigate away
+        maxDynamicContentSize: variables.height * 0.9,
+        backgroundStyle: styles.bottomSheetBackground,
+        handleIndicatorStyle: styles.bottomSheetHandleIndicator,
       }}
     >
       <RootStack.Screen name={Screens.MainModal} component={ModalStackScreen} />

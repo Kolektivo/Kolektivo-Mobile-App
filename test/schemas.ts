@@ -4,12 +4,12 @@ import {
   PincodeType,
   RecoveryPhraseInOnboardingStatus,
 } from 'src/account/reducer'
-import { AppState, MultichainBetaStatus } from 'src/app/actions'
+import { AppState } from 'src/app/actions'
 import { Dapp } from 'src/dapps/types'
-import { FeeEstimates } from 'src/fees/reducer'
 import { SendingFiatAccountStatus } from 'src/fiatconnect/slice'
 import { KeylessBackupDeleteStatus, KeylessBackupStatus } from 'src/keylessBackup/types'
 import { LocalCurrencyCode } from 'src/localCurrency/consts'
+import { Screens } from 'src/navigator/Screens'
 import { updateCachedQuoteParams } from 'src/redux/migrations'
 import { RootState } from 'src/redux/store'
 import { Network, NetworkId, StandbyTransaction, TokenTransaction } from 'src/transactions/types'
@@ -21,6 +21,7 @@ import {
   mockCusdAddress,
   mockPositions,
   mockPositionsLegacy,
+  mockPositionsLegacy2,
   mockShortcuts,
   mockTestTokenAddress,
 } from 'test/values'
@@ -778,7 +779,6 @@ export const v23Schema = {
           error: false,
         },
         ['exchange']: undefined,
-        ['reclaim-escrow']: undefined,
         ['register-dek']: undefined,
       },
     },
@@ -1918,15 +1918,12 @@ export const v101Schema = {
   app: _.omit(v100Schema.app, 'inviteMethod', 'inviteModalVisible'),
   fees: {
     ...v100Schema.fees,
-    estimates: Object.entries(v100Schema.fees.estimates as FeeEstimates).reduce(
-      (acc, [address, estimate]) => {
-        return {
-          ...acc,
-          [address]: _.omit(estimate, 'invite'),
-        }
-      },
-      {}
-    ),
+    estimates: Object.entries(v100Schema.fees.estimates).reduce((acc, [address, estimate]) => {
+      return {
+        ...acc,
+        [address]: _.omit(estimate as any, 'invite'),
+      }
+    }, {}),
   },
 }
 
@@ -2822,7 +2819,7 @@ export const v171Schema = {
   },
   app: {
     ...v170Schema.app,
-    multichainBetaStatus: MultichainBetaStatus.NotSeen,
+    multichainBetaStatus: 'NotSeen',
   },
 }
 
@@ -3201,7 +3198,7 @@ export const v204Schema = {
   },
   positions: {
     ...v203Schema.positions,
-    positions: mockPositions,
+    positions: mockPositionsLegacy2,
     shortcuts: mockShortcuts,
   },
 }
@@ -3347,6 +3344,356 @@ export const v216Schema = {
   },
 }
 
+export const v217Schema = {
+  ...v216Schema,
+  _persist: {
+    ...v216Schema._persist,
+    version: 217,
+  },
+  points: {
+    ...v216Schema.points,
+    trackOnceActivities: {
+      'create-wallet': false,
+    },
+  },
+}
+
+export const v218Schema = {
+  ...v217Schema,
+  _persist: {
+    ...v217Schema._persist,
+    version: 218,
+  },
+  earn: {
+    ...v217Schema.earn,
+    poolInfoFetchStatus: 'idle',
+  },
+}
+
+export const v219Schema = {
+  ...v218Schema,
+  _persist: {
+    ...v218Schema._persist,
+    version: 219,
+  },
+  positions: {
+    ...v218Schema.positions,
+    positions: mockPositions,
+  },
+}
+
+export const v220Schema = {
+  ...v219Schema,
+  _persist: {
+    ...v219Schema._persist,
+    version: 220,
+  },
+  positions: {
+    ...v219Schema.positions,
+    positionsFetchedAt: undefined,
+  },
+}
+
+export const v221Schema = {
+  ...v220Schema,
+  _persist: {
+    ...v220Schema._persist,
+    version: 221,
+  },
+  keylessBackup: {
+    ..._.omit(v219Schema.keylessBackup, 'googleIdToken'),
+    auth0IdToken: null,
+  },
+}
+
+export const v222Schema = {
+  ...v221Schema,
+  _persist: {
+    ...v221Schema._persist,
+    version: 222,
+  },
+  positions: {
+    ...v221Schema.positions,
+    earnPositionIds: [],
+  },
+}
+
+export const v223Schema = {
+  ...v222Schema,
+  _persist: {
+    ...v222Schema._persist,
+    version: 223,
+  },
+  recipients: {
+    ..._.omit(v222Schema.recipients, 'valoraRecipientCache'),
+    appRecipientCache: v222Schema.recipients.valoraRecipientCache,
+  },
+  keylessBackup: {
+    ..._.omit(v222Schema.keylessBackup, 'valoraKeyshare'),
+    appKeyshare: null,
+  },
+}
+
+export const v224Schema = {
+  ..._.omit(v223Schema, 'supercharge'),
+  _persist: {
+    ...v223Schema._persist,
+    version: 224,
+  },
+  app: _.omit(v223Schema.app, 'superchargeApy', 'superchargeTokenConfigByToken'),
+  account: _.omit(v223Schema.account, 'dismissedKeepSupercharging', 'dismissedStartSupercharging'),
+}
+
+export const v225Schema = {
+  ..._.omit(v224Schema, 'escrow'),
+  _persist: {
+    ...v224Schema._persist,
+    version: 225,
+  },
+  transactions: _.omit(
+    v224Schema.transactions,
+    'recentTxRecipientsCache',
+    'inviteTransactions',
+    'knownFeedTransactions'
+  ),
+}
+
+export const v226Schema = {
+  ..._.omit(v225Schema, 'fees'),
+  _persist: {
+    ...v225Schema._persist,
+    version: 226,
+  },
+}
+
+export const v227Schema = {
+  ...v226Schema,
+  _persist: {
+    ...v226Schema._persist,
+    version: 227,
+  },
+  account: _.omit(v225Schema.account, 'pictureUri'),
+}
+
+export const v228Schema = {
+  ...v227Schema,
+  _persist: {
+    ...v227Schema._persist,
+    version: 228,
+  },
+  identity: _.omit(
+    v227Schema.identity,
+    'walletToAccountAddress',
+    'e164NumberToSalt',
+    'addressToDataEncryptionKey'
+  ),
+  web3: _.omit(
+    v227Schema.web3,
+    'accountInWeb3Keystore',
+    'dataEncryptionKey',
+    'isDekRegistered',
+    'mtwAddress'
+  ),
+}
+
+export const v229Schema = {
+  ...v228Schema,
+  _persist: {
+    ...v228Schema._persist,
+    version: 229,
+  },
+}
+
+export const v230Schema = {
+  ...v229Schema,
+  _persist: {
+    ...v229Schema._persist,
+    version: 230,
+  },
+  app: _.omit(v229Schema.app, 'minVersion'),
+}
+
+export const v231Schema = {
+  ...v230Schema,
+  _persist: {
+    ...v230Schema._persist,
+    version: 231,
+  },
+  jumpstart: {
+    ...v230Schema.jumpstart,
+    introHasBeenSeen: false,
+  },
+}
+
+export const v232Schema = {
+  ...v231Schema,
+  _persist: {
+    ...v231Schema._persist,
+    version: 232,
+  },
+  app: _.omit(v231Schema.app, 'numberVerified'),
+}
+
+export const v233Schema = {
+  ...v232Schema,
+  _persist: {
+    ...v232Schema._persist,
+    version: 233,
+  },
+}
+
+export const v234Schema = {
+  ...v233Schema,
+  _persist: {
+    ...v233Schema._persist,
+    version: 234,
+  },
+  transactions: {
+    ...v233Schema.transactions,
+    feedFirstPage: [],
+  },
+}
+
+export const v235Schema = {
+  ...v234Schema,
+  _persist: {
+    ...v234Schema._persist,
+    version: 235,
+  },
+}
+
+export const v236Schema = {
+  ...v235Schema,
+  _persist: {
+    ...v235Schema._persist,
+    version: 236,
+  },
+  tokens: _.omit(v235Schema.tokens, 'loading'),
+}
+
+export const v237Schema = {
+  ...v236Schema,
+  _persist: {
+    ...v236Schema._persist,
+    version: 237,
+  },
+  account: {
+    ...v236Schema.account,
+    onboardingCompleted: true,
+    lastOnboardingStepScreen: Screens.Welcome,
+  },
+  identity: _.omit(v236Schema.identity, 'hasSeenVerificationNux'),
+}
+
+export const v238Schema = {
+  ...v237Schema,
+  _persist: {
+    ...v237Schema._persist,
+    version: 238,
+  },
+  app: _.omit(v237Schema.app, 'multichainBetaStatus'),
+}
+
+export const v239Schema = {
+  ...v238Schema,
+  _persist: {
+    ...v238Schema._persist,
+    version: 239,
+  },
+  app: _.omit(v238Schema.app, 'showSwapMenuInDrawerMenu'),
+}
+
+export const v240Schema = {
+  ...v239Schema,
+  _persist: {
+    ...v239Schema._persist,
+    version: 240,
+  },
+  web3: {
+    ...v239Schema.web3,
+    demoModeEnabled: false,
+  },
+}
+
+export const v241Schema = {
+  ...v240Schema,
+  _persist: {
+    ...v240Schema._persist,
+    version: 241,
+  },
+  app: _.omit(
+    v240Schema.app,
+    'walletConnectV2Enabled',
+    'logPhoneNumberTypeEnabled',
+    'coinbasePayEnabled',
+    'maxSwapSlippagePercentage',
+    'networkTimeoutSeconds',
+    'celoEducationUri',
+    'pincodeUseExpandedBlocklist'
+  ),
+}
+
+export const v242Schema = {
+  ...v241Schema,
+  _persist: {
+    ...v241Schema._persist,
+    version: 242,
+  },
+  app: _.omit(v241Schema.app, 'celoNews'),
+  dapps: _.omit(v241Schema.dapps, 'dappListApiUrl', 'maxNumRecentDapps', 'dappsWebViewEnabled'),
+  swap: _.omit(v241Schema.swap, 'priceImpactWarningThreshold'),
+}
+
+export const v243Schema = {
+  ...v242Schema,
+  _persist: {
+    ...v242Schema._persist,
+    version: 243,
+  },
+  app: _.omit(v242Schema.app, 'sentryTracesSampleRate', 'sentryNetworkErrors'),
+  i18n: _.omit(v242Schema.i18n, 'allowOtaTranslations'),
+}
+
+export const v244Schema = {
+  ...v243Schema,
+  _persist: {
+    ...v243Schema._persist,
+    version: 244,
+  },
+  app: {
+    ..._.omit(v243Schema.app, 'loggedIn'),
+    divviRegistrations: {},
+  },
+}
+
+export const v245Schema = {
+  ...v244Schema,
+  _persist: {
+    ...v244Schema._persist,
+    version: 245,
+  },
+  app: _.omit(v244Schema.app, 'fiatConnectCashInEnabled', 'fiatConnectCashOutEnabled'),
+}
+
+export const v246Schema = {
+  ...v245Schema,
+  _persist: {
+    ...v245Schema._persist,
+    version: 246,
+  },
+  send: _.omit(v245Schema.send, 'inviteRewardsVersion'),
+  fiatConnect: _.omit(v245Schema.fiatConnect, 'schemaCountryOverrides'),
+}
+
+export const v247Schema = {
+  ...v246Schema,
+  _persist: {
+    ...v246Schema._persist,
+    version: 247,
+  },
+  home: _.omit(v246Schema.home, 'cleverTapInboxMessages'),
+}
+
 export function getLatestSchema(): Partial<RootState> {
-  return v216Schema as Partial<RootState>
+  return v247Schema as Partial<RootState>
 }

@@ -6,7 +6,7 @@
   "licenses": "Licenses",
   "removeAccountTitle": "Reset Kolektivo",
   "removeAccountDetails": "Resetting will remove your account from this device. Your funds will remain in the account, but will only be accessible with your Recovery Phrase",
-  "deleteAccountTitle": "Delete Account",
+  "deleteAccountTitle": "Delete {{appName}}",
   "deleteAccountDetails": "Deleting your account will remove it from {{appName}}. Your funds will remain in the account, but will only be accessible with your Recovery Phrase",
   "deleteAccountWarning": {
     "title": "Are you sure?",
@@ -16,7 +16,9 @@
   },
   "legal": "Legal",
   "appPreferences": "App Preferences",
+  "preferences": "Preferences",
   "security": "Security",
+  "securityPrivacy": "Security & Privacy",
   "changePin": "Change PIN",
   "pinChanged": "PIN changed",
   "pinChangeFailed": "Changing the PIN failed",
@@ -29,6 +31,7 @@
   "dataSaver": "Data Saver",
   "enableDataSaver": "Enable Data Saver",
   "dataSaverDetail": "Data Saver mode allows you to communicate with the the network through a trusted node. You can always change this mode in app settings.",
+  "keylessBackupSetupTitle": "Create Login",
   "keylessBackupSettingsTitle": "Email & Phone Backup",
   "keylessBackupSettingsDeleteError": "Your backup was not able to be deleted, please wait & try again later.",
   "setup": "Set Up",
@@ -39,7 +42,7 @@
   },
   "revokePhoneNumber": {
     "title": "Unlink Phone Number",
-    "bottomSheetTitle": "Unlink phone number",
+    "bottomSheetTitle": "Unlink Phone Number",
     "description": "Unlinking will remove the phone number linked to your wallet. You can add a new phone number later.",
     "confirmButton": "Unlink now",
     "revokeSuccess": "Your phone number has been unlinked",
@@ -72,7 +75,9 @@
   },
   "recoveryPhrase": {
     "title": "Your recovery phrase",
+    "titleV1_90": "Your Recovery Phrase",
     "body": "Write these 12 words down somewhere safe, where it cannot be stolen or damaged.",
+    "bodyV1_90": "If you lose your recovery phrase, you will lose access to all funds held in {{appName}}.",
     "continue": "I've saved it",
     "copy": "Copy to clipboard",
     "mnemonicCopied": "Recovery phrase copied to clipboard",
@@ -102,9 +107,17 @@
   },
   "signInWithEmail": {
     "title": "Sign in with email",
-    "subtitle": "Sign in with your email to set it up as a backup.\n\nYou will be prompted to sign in again if you ever lose your wallet.",
+    "subtitle": "Sign in with your email to set it up as a backup. You will be prompted to sign in again if you ever lose your wallet.",
     "subtitleRestore": "Sign in with the email you used to set up your wallet backup.",
-    "google": "Sign in with Google"
+    "google": "Sign in with Google",
+    "apple": "Sign in with Apple",
+    "signInAnotherWay": "Sign in another way",
+    "bottomSheet": {
+      "title": "Save your recovery phrase to create a wallet",
+      "description": "We’re going to be supporting other email providers soon, but in the meanwhile you’ll have to save your recovery phrase to finish creating a wallet.",
+      "continue": "Continue",
+      "skip": "Skip (not recommended)"
+    }
   },
   "keylessBackupPhoneInput": {
     "setup": {
@@ -162,7 +175,9 @@
   "termsOfServiceLink": "Terms of Service",
   "privacyPolicy": "Privacy Policy",
   "editProfile": "Edit Profile",
-  "confirmNumber": "Connect phone number",
+  "profileName": "Profile Name",
+  "profile": "Profile",
+  "confirmNumber": "Connect Phone Number",
   "cancel": "Cancel",
   "changeProfilePhoto": "Change Profile Photo",
   "name": "Name",
@@ -173,6 +188,7 @@
   "continue": "Continue",
   "yourName": "Your Name",
   "version": "Version {{appVersion}}",
+  "appVersion": "Version",
   "addressCopied": "Address copied to clipboard",
   "support": "Support",
   "contact": "Contact",
@@ -185,6 +201,7 @@
   "supportLegalCheckbox": "By submitting, I agree to share the above information and any attached application log data with {{appName}} Support.",
   "contactSuccess": "Your issue has been successfully reported! Expect an email response soon!",
   "namePictureSaved": "Your name and picture were saved successfully.",
+  "nameSaved": "Your name was saved successfully.",
   "addPhoto": "Add Photo",
   "chooseFromLibrary": "Choose from Library",
   "takePhoto": "Take Photo",
@@ -370,6 +387,7 @@
   "accountAddressLabel": "Account Address",
   "celoAmountLabel": "Amount (CELO)",
   "maxSymbol": "Max",
+  "percentage": "{{percentage}}%",
   "withdrawCeloReview": "Review",
   "withdrawCeloTo": "Withdraw to",
   "withdrawCeloAmount": "Amount (CELO)",
@@ -683,7 +701,7 @@
     "body": "Once they connect their number and add funds to {{appName}}, you’ll both receive 0.50 cUSD."
   },
   "inviteWithUrl": {
-    "title": "Invite a friend",
+    "title": "Invite a Friend",
     "body": "Connect and share value with your friends and family on {{appName}}.",
     "button": "Share Invite",
     "error": "There was an issue creating a sharable link",
@@ -816,6 +834,7 @@
     "spend": "Use your crypto to shop your favorite brands"
   },
   "enableBiometry": {
+    "title": "Secure your wallet",
     "description": "{{biometryType}} secures your wallet and makes it easier to use {{appName}}",
     "cta": "Turn on {{biometryType}}",
     "guideTitle": "Want to add {{biometryType}}?",
@@ -838,9 +857,9 @@
     "createNewWallet": "Create new wallet",
     "restoreWallet": "Restore wallet",
     "hasWallet": "I already have a wallet",
+    "hasWalletV1_88": "I have a wallet",
     "header": "Welcome to {{appName}}! Let's create your crypto wallet.",
-    "getStarted": "Get Started",
-    "agreeToTerms": "By creating a wallet you agree to our <0>Terms and Conditions</0>"
+    "getStarted": "Get Started"
   },
   "accessContacts": {
     "disclosure": {
@@ -854,7 +873,7 @@
   "registrationSteps": "Step {{step}} of {{totalSteps}}",
   "selectCountryCode": "Select Country Code",
   "pincodeSet": {
-    "createNew": "Create a new PIN",
+    "createNew": "Create a New PIN",
     "verify": "Enter your PIN again to confirm",
     "changePIN": "Change PIN",
     "pinsDontMatch": "The PINs didn't match",
@@ -906,7 +925,7 @@
     "learnMore": {
       "buttonLabel": "Do I need to connect?",
       "title": "Do I need to connect?",
-      "body": "Connecting your phone number will allow you to send money to friends in your address book and other phone numbers. \n \n If you choose to skip this step you won’t be able to access your contacts and you will only be able to send money via QR code or wallet address."
+      "body": "Connecting your phone number will allow you to send money to friends in your address book and other phone numbers. \n\nIf you choose to skip this step you won’t be able to access your contacts and you will only be able to send money via QR code or wallet address."
     },
     "skip": {
       "title": "Are you sure?",
@@ -922,9 +941,11 @@
     "codeInputPlaceholder": "123456",
     "helpDialog": {
       "title": "Help",
-      "body": "We sent an SMS to your phone number. Please check your text messages to find the 6 digit code. \n \n If you’re having trouble receiving messages, you can skip this step for now and try again later.",
+      "body": "We sent an SMS to your phone number. Please check your text messages to find the 6 digit code. \n\nIf you’re having trouble receiving messages, you can skip this step for now and try again later.",
+      "bodyCloudBackupOnboarding": "We sent an SMS to your phone number. Please check your text messages to find the 6 digit code. \n\nIf you’re having trouble receiving messages, we recommend backing up with a Recovery Phrase. You can try signing in with your email and phone later.",
       "skip": "Skip",
-      "dismiss": "Go back"
+      "dismiss": "Go back",
+      "useRecoveryPhrase": "Use Recovery Phrase"
     },
     "verificationFailure": "Oops! Something went wrong, please try again later.",
     "resendButtonNotYetAvailable": "Resend available in {{secondsRemaining}} second(s)",
@@ -935,6 +956,7 @@
     "header": "Restore wallet",
     "title": "Enter your recovery phrase",
     "description": "Use the 12 or 24-word phrase that you saved when you set up your wallet to restore.",
+    "descriptionV1_90": "Your Recovery Phrase is a 12 or 24-word phrase that you wrote down and saved when you set up your wallet. Please enter it here to restore your wallet.",
     "emptyWalletDialog": {
       "description": "This wallet doesn’t have any funds. Would you still like to use it?",
       "action": "Use Wallet",
@@ -1449,11 +1471,15 @@
   "dappsScreen": {
     "title": "Dapps",
     "titleDiscover": "Discover",
+    "exploreDapps": "Dapps",
+    "exploreAll": "View All",
     "message": "Explore ways to use your assets",
     "errorMessage": "There was an error loading dapps",
     "featuredDapp": "Featured",
     "allDapps": "All",
     "favoriteDapps": "My Favorites",
+    "mostPopularDapps": "Most Popular",
+    "mostPopularDapps_UK": "Other Dapps",
     "favoriteDappsAndAll": "My Favorites & All",
     "searchPlaceHolder": "Search dapps",
     "noFavorites": {
@@ -1469,7 +1495,8 @@
       "message": "<0>{{filter}}</0> filter applied",
       "removeFilter": "Remove filter",
       "searchMessage": "No matching results found for <0>\"{{searchTerm}}\"</0>"
-    }
+    },
+    "disclaimer_UK": "This is a list of third-party Dapps. The description for each Dapp is purely informational, and not an invitation to use them."
   },
   "dappRankings": {
     "title": "Dapp rankings",
@@ -1522,6 +1549,7 @@
     "somePaymentsUnavailable": "Purchases are powered by our partner providers. Some payment methods are unavailable in your region.",
     "disclaimerWithSomePaymentsUnavailable": "Payments are powered by network partners. Fees may vary. Some payment methods are unavailable in your region. <0>Learn more.</0>",
     "disclaimer": "Payments are powered by network partners. Fees may vary. <0>Learn more.</0>",
+    "disclaimerUK": "This is not an invitation to buy cryptoassets. We only provide a list of providers who are selling cryptoassets with price information and a link to their website.",
     "learnMore": "Learn more.",
     "whyMissingPayments": "Why don't I see more payment methods?",
     "dismiss": "Dismiss",
@@ -1683,6 +1711,7 @@
       "selectCurrencyTitle": "Add Funds",
       "exchangeAmountTitle": "Add {{currency}}",
       "selectProviderHeader": "Select Payment Method",
+      "selectProviderHeader_UK": "Provider Details",
       "depositExchangeTitle": "Deposit Crypto"
     },
     "cashOut": {
@@ -1773,11 +1802,13 @@
     "title": "Swap",
     "review": "Review",
     "confirmSwap": "Confirm Swap",
+    "confirmSwap_UK": "I Want To Swap",
     "swapFrom": "FROM",
     "swapTo": "TO",
     "insufficientFunds": "Insufficient {{token}} balance. Try a smaller amount or choose a different asset.",
     "fetchSwapQuoteFailed": "Sorry for the delay! It's taking longer than usual to get the best exchange rate. Please try again in a few minutes.",
     "disclaimer": "Best rate determined by decentralized sources. <0>Learn more</0>",
+    "disclaimer_UK": "This is not an invitation to sell or buy cryptoassets. By clicking I Want To Swap you are instructing a third party swap router to execute your swap transaction at the best rate. Best rate provided by network partners. <0>Learn more</0>",
     "swapFromTokenSelection": "SWAP FROM",
     "swapToTokenSelection": "SWAP TO",
     "tokenUsdValueUnknown": "-",
@@ -1785,6 +1816,24 @@
     "selectTokenLabel": "Select token",
     "tokenBottomSheetTitle": "Select Token",
     "onNetwork": "on {{networkName}}",
+    "crossChainNotification": "Swapping tokens between different networks",
+    "crossChainFeeWarning": {
+      "title": "You need more {{tokenSymbol}}",
+      "body": "You need more {{tokenSymbol}} on {{networkName}} to pay for cross-chain swap fees. Add {{tokenAmount}} more {{tokenSymbol}} to continue."
+    },
+    "insufficientBalanceWarning": {
+      "title": "You need more {{tokenSymbol}}",
+      "body": "Insufficient {{tokenSymbol}} balance. Try a smaller amount or choose a different asset."
+    },
+    "unsupportedTokensWarning": {
+      "title": "Incompatible Selection",
+      "body": "The tokens selected cannot be swapped for each other. Please choose another token that is compatible with your selection."
+    },
+    "decreaseSwapAmountForGasWarning": {
+      "title": "You need more {{feeTokenSymbol}} for gas",
+      "body": "Add {{feeTokenSymbol}} to cover your gas fees or adjust the amount you are swapping",
+      "cta": "Swap smaller amount"
+    },
     "switchedToNetworkWarning": {
       "title": "You switched to the {{networkName}} network",
       "body_swapFrom": "Select a token to swap from on the {{networkName}} network to continue.",
@@ -1846,12 +1895,30 @@
       "networkFeeInfo": "You are swapping on the {{networkName}} Network.\n\nThis estimated network fee is required to conduct a transaction on the {{networkName}} Network. This fee secures your transaction and goes towards keeping the network operational.",
       "networkFeeInfoV1_76": "You are swapping on the {{networkName}} Network.\n\nA network fee is required to conduct a transaction on the {{networkName}} Network. This fee secures your transaction and is paid to network validators.\n\nSince network conditions determine the exact amount, the listed estimate is what we expect the actual fee to be. The fee will not exceed the max fee amount.",
       "slippageToleranceInfo": "Slippage tolerance\n\nYour swap will execute within the slippage tolerance percentage. If the price changes more than the slippage tolerance, {{appName}} protects you by preventing the trade from executing.",
+      "slippageToleranceInfoV1_90": "Your swap will execute within the slippage tolerance percentage. If the price changes more than the slippage tolerance, {{appName}} protects you by preventing the trade from executing.",
       "networkFeeInfoDismissButton": "Got it",
       "exchangeRate": "Exchange Rate",
-      "exchangeRateInfo": "Exchange Rate\n\nWe've found the best exchange rate for you. Your trade will be completed at a price within {{slippagePercentage}}% of the estimate or the transaction will be cancelled & funds returned to your wallet.",
+      "exchangeRateInfo": "Exchange Rate\n\nWe've found the best exchange rate for you. Your trade will be completed at a price within {{slippagePercentage}}% of the estimate or the transaction will be cancelled and funds returned to your wallet.",
+      "exchangeRateInfoV1_90": "We've found the best exchange rate for you. Your trade will be completed at a price within {{slippagePercentage}}% of the estimate or the transaction will be cancelled and funds returned to your wallet.",
       "exchangeRateInfo_withAppFee": "Exchange Rate\n\nWe've found the best exchange rate for you. Your trade will be completed at a price within {{slippagePercentage}}% of the estimate or the transaction will be cancelled & funds returned to your wallet.\n\nThe estimated rate includes a {{appName}} fee of {{appFeePercentage}}%.",
       "exchangeRateInfoDismissButton": "Got it",
-      "estimatedValue": "Estimated Value"
+      "estimatedValue": "Estimated Value",
+      "estimatedTransactionTime": "Estimated Transaction Time",
+      "estimatedTransactionTimeInMinutes": "≈ {{minutes}} min",
+      "estimatedTransactionTimeInfo": "The time to complete the transaction is determined by the provider.\n\nIf you are swapping between different chains, the transaction could take a bit longer to complete.",
+      "infoDismissButton": "Got it",
+      "fees": "Fees",
+      "feesCalculationError": "Unable to calculate fees",
+      "estimatedCrossChainFee": "Estimated cross-chain fees",
+      "maxCrossChainFee": "Max cross-chain fees",
+      "feesBreakdown": "Breakdown",
+      "feeAmount": "≈ {{localCurrencySymbol}}{{feeAmountInLocalCurrency}} ({{tokenAmount}} {{tokenSymbol}})",
+      "feeAmount_noFiatPrice": "{{tokenAmount}} {{tokenSymbol}}",
+      "feesMoreInfoLabel": "More information",
+      "feesInfo_sameChain": "The network fee is required by the network to process the transaction.",
+      "feesInfo_crossChain": "The network fee is required by the network to process the transaction. The cross-chain fee is charged by the cross-chain provider.",
+      "feesInfo_sameChainWithAppFee": "The network fee is required by the network to process the transaction. The {{appName}} fee of {{appFeePercentage}}% is charged for your use of our product.",
+      "feesInfo_crossChainWithAppFee": "The network fee is required by the network to process the transaction. The cross-chain fee is charged by the cross-chain provider. The {{appName}} fee of {{appFeePercentage}}% is charged for your use of our product."
     },
     "fundYourWalletBottomSheet": {
       "title": "Fund your wallet",
@@ -1863,6 +1930,8 @@
     "swapFrom": "Swap from",
     "swapTo": "Swap to",
     "rate": "Rate",
+    "network": "Network",
+    "networkValue": "{{fromNetwork}} → {{toNetwork}}",
     "estimatedFee": "Est Network Fee",
     "networkFee": "Network Fee",
     "viewOnExplorer": "View on CeloExplorer"
@@ -1944,10 +2013,12 @@
     "subtitle": "What would you like to do first?",
     "later": "I'll explore later",
     "options": {
-      "add": "Add funds",
+      "add": "Add funds to your wallet",
       "dapp": "Find ways to use crypto",
-      "profile": "Build my profile",
-      "learn": "Learn about Celo"
+      "earn": "Explore earning opportunities",
+      "profile": "Build your profile",
+      "learn": "Learn about Celo",
+      "learnPoints": "Learn about {{appName}} Points"
     }
   },
   "reverifyUsingCPVHomecard": {
@@ -1972,7 +2043,8 @@
       "network": "{{networkName}} Network",
       "selectNetwork": "Network",
       "stablecoins": "Stablecoins",
-      "gasTokens": "Gas Tokens"
+      "gasTokens": "Gas Tokens",
+      "tokens": "Token"
     }
   },
   "homeActions": {
@@ -2068,9 +2140,13 @@
   },
   "sendSelectRecipient": {
     "searchText": "Search by name, phone, wallet...",
+    "searchInputLabel": "To",
+    "searchInputPlaceholder": "Wallet Address or Phone Number",
     "paste": "Paste from clipboard",
     "title": "Select a recipient",
     "contactsTitle": "Select a contact",
+    "header": "Send",
+    "contactsHeader": "Send to Contacts",
     "recents": "Recents",
     "results": "Results",
     "qr": {
@@ -2078,8 +2154,8 @@
       "subtitle": "Quickly find addresses on Kolektivo"
     },
     "invite": {
-      "title": "Send crypto to your friends",
-      "subtitle": "Send funds or an invite to your contacts"
+      "title": "Send to a Contact",
+      "subtitle": "Send funds to your contacts"
     },
     "jumpstart": {
       "title": "Send with a Live Link",
@@ -2139,10 +2215,12 @@
   "viewOnOPSepoliaExplorer": "View on OP Sepolia Explorer",
   "viewOnPolygonPoSScan": "View on PolygonScan",
   "viewOnBaseScan": "View on BaseScan",
+  "viewOnAxelarScan": "View on AxelarScan",
   "sendEnterAmountScreen": {
     "title": "Enter Amount",
     "selectToken": "Select a Token",
     "networkFee": "{{networkName}} Network Fee",
+    "networkFeeV1_97": "Network Fee",
     "lowerAmount": "Enter a lower amount",
     "maxAmountWarning": {
       "title": "Sending the maximum amount",
@@ -2155,6 +2233,27 @@
     "prepareTransactionError": {
       "title": "Something went wrong!",
       "description": "It was not possible to prepare a transaction for this token."
+    },
+    "insufficientBalanceWarning": {
+      "title": "You need more {{tokenSymbol}}",
+      "description": "Insufficient {{tokenSymbol}} balance. Try a smaller amount or choose a different asset."
+    }
+  },
+  "jumpstartIntro": {
+    "title": "Share crypto like a text",
+    "description": "Live Links are a way to send crypto on the Celo network to a friend with a link",
+    "noFundsHint": "To get started, you’ll need some assets on Celo in your wallet.",
+    "haveFundsButton": "Send with a Live Link",
+    "addFundsCelo": {
+      "title": "Get Assets on Celo",
+      "info": "Live Links are a way to send crypto on the Celo network to a friend with a link.\nTo get started, you’ll need some CELO assets in your wallet.",
+      "description": "Once you’ve added assets on Celo you’ll have to come back to create a Live Link.",
+      "cta": "Get Assets on Celo",
+      "actionDescriptions": {
+        "add": "Buy assets on Celo using one of our trusted providers",
+        "swap": "Swap into an asset on Celo from another asset",
+        "transfer": "Use any Celo compatible wallet or exchange to deposit assets on Celo"
+      }
     }
   },
   "jumpstartEnterAmountScreen": {
@@ -2196,6 +2295,9 @@
     "approvalTransactionTitle": "Approval",
     "estimatedNetworkFee": "Estimated network fee",
     "networkFee": "Network fee",
+    "appFee": "App fee",
+    "estimatedCrossChainFee": "Estimated cross-chain fee",
+    "crossChainFee": "Cross-chain fee",
     "finiteApprovalDescription": "Approved {{approvedAmount}} {{tokenSymbol}} for trade",
     "infiniteApprovalDescription": "Approved infinite {{tokenSymbol}} for trade",
     "revokeApprovalDescription": "Revoked {{tokenSymbol}} for trade",
@@ -2316,6 +2418,17 @@
         "swap": {
           "title": "Swap",
           "subtitle": "{{fromToken}} to {{toToken}}"
+        },
+        "createLiveLink": {
+          "title": "Live Link",
+          "subtitle": {
+            "erc20": "Sent {{tokenSymbol}}",
+            "erc721": "Sent NFT"
+          }
+        },
+        "depositEarn": {
+          "title": "Deposited",
+          "subtitle": "to {{network}} Pool"
         }
       },
       "title": "My points activity",
@@ -2350,7 +2463,7 @@
       "retryCta": "Try again"
     },
     "infoCard": {
-      "title": "More ways to earn points coming soon 🚀",
+      "title": "More ways to earn points coming soon",
       "body": "We are working on adding more ways to earn points through using the app. Keep checking in for updates."
     },
     "activitySection": {
@@ -2363,7 +2476,7 @@
     },
     "activityCards": {
       "createWallet": {
-        "title": "Create a {{appName}}  Wallet"
+        "title": "Create a {{appName}} Wallet"
       },
       "swap": {
         "title": "Swap assets",
@@ -2375,16 +2488,39 @@
       },
       "moreComing": {
         "title": "More coming soon!"
+      },
+      "createLiveLink": {
+        "title": "Send with a Live Link",
+        "bottomSheet": {
+          "title": "Send with a Live Link",
+          "body": "Earn {{pointsValue}} points every time you send funds using a Live Link in {{appName}}. \n\nTap below to start sending and earning!",
+          "cta": "Send with a Live Link"
+        }
+      },
+      "depositEarn": {
+        "title": "Deposit into an earn pool on {{appName}}",
+        "bottomSheet": {
+          "title": "Deposit into an earn pool",
+          "body": "Earn {{pointsValue}} points every time you deposit funds into an earn pool on {{appName}}. \n\nTap below to start earning yield and points!",
+          "cta": "Go to earn pools"
+        }
       }
     },
     "discoverCard": {
       "title": "{{appName}} Points",
-      "description": "Earn points easily with {{appName}}. Using the app, including swapping, leads to points!"
+      "description": "Earn points easily with {{appName}}. Using the app, including swapping, leads to points!",
+      "balance": "{{pointsBalance}} points"
     },
     "intro": {
       "title": "Earn points effortlessly",
       "description": "Jump into a new way to earn! Your {{appName}} actions now earn points. Start earning today and unlock awesome benefits.",
       "cta": "Start your points journey"
+    },
+    "disclaimer": {
+      "learnMoreCta": "<0>Learn more</0> about {{appName}} Points",
+      "title": "More About {{appName}} Points",
+      "body": "Points are {{appName}}'s loyalty program. They're awarded for using the app. Points can't be spent, traded, or transferred.",
+      "dismiss": "Got it"
     }
   },
   "earnFlow": {
@@ -2404,12 +2540,12 @@
       }
     },
     "cta": {
-      "title": "Earn on your stablecoins",
+      "title": "Earn on your crypto",
       "subtitle": "Deposit today and earn returns",
       "description": "See how much you can earn when supplying a lending pool"
     },
     "earnInfo": {
-      "title": "Earn on your\nstablecoins",
+      "title": "Earn on your\ncrypto",
       "details": {
         "earn": {
           "titleGasSubsidy": "Maximize Earnings without Gas Fees*",
@@ -2423,7 +2559,7 @@
         },
         "access": {
           "title": "Easily Access your Funds",
-          "subtitle": "Collect your funds effortlessly with a single tap. Enjoy the same instant access as you would directly through your favorite protocols."
+          "subtitle": "Collect funds with a tap when you're ready."
         }
       },
       "action": {
@@ -2436,22 +2572,58 @@
       "subtitle": "Buy {{symbol}}",
       "description": "Earn approximately {{apy}}% per year when you add {{symbol}} to a pool"
     },
+    "entrypoint": {
+      "title": "Earn on your crypto",
+      "subtitle": "Deposit and earn",
+      "description": "Earn by lending your crypto assets in liquidity pools.",
+      "totalDepositAndEarnings": "Total Deposit & Earnings"
+    },
     "enterAmount": {
+      "title": "How much would you like to deposit?",
+      "titleWithdraw": "How much would you like to withdraw?",
+      "deposit": "Deposit",
+      "fees": "Fees",
+      "available": "Available",
+      "swap": "Swap",
+      "estimatedDuration": "Est. Transaction Time",
+      "claimingReward": "Claiming Reward",
       "earnUpToLabel": "You could earn up to:",
       "rateLabel": "Rate (est.)",
       "earnUpTo": "~{{fiatSymbol}}{{amount}} / yr",
+      "earnUpToV1_87": "<0></0> / yr",
       "rate": "{{rate}}% APY",
       "continue": "Continue",
       "info": "This pool is powered by Aave",
-      "infoBottomSheet": {
-        "title": "Why this pool?",
-        "description": "This Aave pool has over $150M TVL and more than 6,000 contributors, indicating strong liquidity and trustworthiness. It also uses USDC as its token and Abritrum as its network, which reduces volatility and ensures users will receive inexpensive gas rates.\n\nAll together this makes it a safe and attractive option with competitive APY, ensuring a beneficial investment opportunity for our users.\n\nYou can explore other Aave pools <0>here</0>.",
-        "dismiss": "Dismiss"
-      },
+      "infoV1_93": "Powered by {{providerName}}",
       "notEnoughBalanceForGasWarning": {
         "title": "You need more {{feeTokenSymbol}} to continue",
         "description": "Add {{feeTokenSymbol}} on {{network}} to cover your gas fees",
         "noGasCta": "Buy {{feeTokenSymbol}} on {{network}}"
+      },
+      "feeBottomSheet": {
+        "feeDetails": "Fee Details",
+        "moreInformation": "More information",
+        "estNetworkFee": "Est. Network Fee",
+        "maxNetworkFee": "Max Network Fee",
+        "estCrossChainFee": "Est. Cross-chain Fee",
+        "maxCrossChainFee": "Max Cross-chain Fee",
+        "description_deposit": "The network fee is required by the network to process the deposit transaction.",
+        "description_withdraw": "The network fee is required by the network to process the withdrawal transaction.",
+        "description_depositSwapFee": "The network fee is required by the network to process the deposit transactions. The {{appName}} fee of {{appFeePercentage}}% is charged for your use of our product.",
+        "description_depositCrossChain": "The network fee is required by the network to process the deposit transaction. The cross-chain fee is charged by the cross-chain provider.",
+        "description_depositCrossChainWithSwapFee": "The network fee is required by the network to process the deposit transactions. The {{appName}} fee of {{appFeePercentage}}% is charged for your use of our product. The cross-chain fee is charged by the cross-chain provider.",
+        "appSwapFee": "{{appName}} Fee"
+      },
+      "swapBottomSheet": {
+        "swapDetails": "Swap Details",
+        "swapFrom": "Swap From",
+        "swapTo": "Swap To",
+        "whySwap": "Why am I swapping?",
+        "swapDescription": "To deposit funds into the pool, your token is being swapped into a pool token."
+      },
+      "withdrawingAndClaimingCard": {
+        "title": "Withdrawing and Claiming",
+        "description": "{{providerName}} requires you to claim all available rewards anytime you withdraw."
       }
     },
     "activePools": {
@@ -2460,27 +2632,44 @@
       "apy": "~{{apy}}% APY",
       "exitPool": "Exit Pool",
       "depositMore": "Deposit More",
-      "viewPools": "View Pools"
+      "viewPools": "View Pools",
+      "poolsSupplied": "Pools supplied",
+      "totalSupplied": "Total supplied",
+      "depositAndEarnings": "Deposit & Earnings",
+      "myPools": "My Pools",
+      "explore": "Explore Open"
     },
     "depositBottomSheet": {
       "title": "Review & Deposit",
       "description": "Before depositing to an Aave pool, please review the transaction details below",
+      "descriptionV1_93": "Before depositing to an {{providerName}} pool, please review the transaction details below",
       "amount": "Amount Deposited",
       "fee": "Est. Gas Fees",
       "provider": "Earnings provider",
       "network": "Network",
       "footer": "By depositing crypto into an Aave pool, you accept the risks associated with using Aave. <0>Terms & Conditions</0>",
+      "footerV1_93": "By depositing crypto into an {{providerName}} pool, you accept the risks associated with using {{providerName}}. <0>Terms & Conditions</0>",
+      "noTermsUrlFooter": "You are responsible for your actions in {{appName}}. {{appName}} disclaims all responsibility for your assets or interactions with {{providerName}}. You can review {{providerName}}'s documents <0>here</0> and our Terms & Conditions <1>here</1>.",
       "primaryCta": "Complete",
-      "secondaryCta": "Cancel"
+      "secondaryCta": "Cancel",
+      "yieldRate": "Yield Rate (est.)",
+      "apy": "{{apy}}%"
     },
     "collect": {
       "title": "Congratulations! Review & collect your earnings",
+      "titleClaim": "You’re going to claim:",
+      "titleCollect": "You’re going to collect:",
+      "titleWithdraw": "You’re going to withdraw:",
       "total": "TOTAL",
       "plus": "PLUS",
+      "reward": "REWARD",
       "rate": "Rate (est.)",
       "apy": "{{apy}}% APY",
       "fee": "Gas Fee",
       "cta": "Collect Earnings",
+      "ctaWithdraw": "Withdraw",
+      "ctaReward": "Claim Reward",
+      "ctaExit": "Exit Pool",
       "errorTitle": "Something went wrong",
       "errorDescription": "Unable to fetch deposit details. Please try again.",
       "noGasTitle": "You need more {{symbol}} to continue",

@@ -1,15 +1,15 @@
 import { formatDistanceToNowStrict } from 'date-fns'
 import * as React from 'react'
 import { Image, StyleSheet, Text, View } from 'react-native'
+import AppAnalytics from 'src/analytics/AppAnalytics'
 import { CeloNewsEvents } from 'src/analytics/Events'
-import ValoraAnalytics from 'src/analytics/ValoraAnalytics'
 import { CeloNewsArticle } from 'src/celoNews/types'
 import SkeletonPlaceholder from 'src/components/SkeletonPlaceholder'
 import Touchable from 'src/components/Touchable'
 import { navigate } from 'src/navigator/NavigationService'
 import { Screens } from 'src/navigator/Screens'
 import colors from 'src/styles/colors'
-import fontStyles from 'src/styles/fonts'
+import { typeScale } from 'src/styles/fonts'
 import { Spacing } from 'src/styles/styles'
 
 const IMAGE_SIZE = 44
@@ -22,7 +22,7 @@ interface Props {
 export default function CeloNewsFeedItem({ article, testID }: Props) {
   function onPress() {
     const url = article.link
-    ValoraAnalytics.track(CeloNewsEvents.celo_news_article_tap, { url })
+    AppAnalytics.track(CeloNewsEvents.celo_news_article_tap, { url })
     navigate(Screens.WebViewScreen, { uri: url })
   }
 
@@ -56,12 +56,7 @@ export default function CeloNewsFeedItem({ article, testID }: Props) {
 // This is a skeleton placeholder for when the feed is loading
 // It's a simplified version of the real component, reusing styles where possible
 CeloNewsFeedItem.Skeleton = () => (
-  <SkeletonPlaceholder
-    borderRadius={4}
-    backgroundColor={colors.gray2}
-    highlightColor={colors.white}
-    testID="CeloNewsFeedItemSkeleton"
-  >
+  <SkeletonPlaceholder borderRadius={4} testID="CeloNewsFeedItemSkeleton">
     <View style={styles.contentContainer}>
       <View style={{ ...styles.author, width: 60 }} />
       <View style={styles.row}>
@@ -82,22 +77,22 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.Thick24,
   },
   author: {
-    ...fontStyles.label,
-    color: colors.warningDark,
+    ...typeScale.labelSemiBoldSmall,
+    color: colors.warningPrimary,
     marginBottom: Spacing.Small12,
   },
   row: {
     flexDirection: 'row',
   },
   title: {
-    ...fontStyles.regular,
+    ...typeScale.bodyMedium,
     flex: 1,
   },
   date: {
-    ...fontStyles.small,
+    ...typeScale.bodySmall,
     fontSize: 13,
     lineHeight: 16,
-    color: colors.gray5,
+    color: colors.contentSecondary,
     marginLeft: 4,
   },
   image: {

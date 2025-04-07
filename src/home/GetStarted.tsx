@@ -1,39 +1,45 @@
-import BigNumber from 'bignumber.js'
 import React, { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, Text, View } from 'react-native'
+import AppAnalytics from 'src/analytics/AppAnalytics'
 import { FiatExchangeEvents } from 'src/analytics/Events'
-import ValoraAnalytics from 'src/analytics/ValoraAnalytics'
-import TokenIcon, { IconSize } from 'src/components/TokenIcon'
 import Touchable from 'src/components/Touchable'
-import { useAavePoolInfo } from 'src/earn/hooks'
-import { FiatExchangeFlow } from 'src/fiatExchanges/utils'
+import { FiatExchangeFlow } from 'src/fiatExchanges/types'
 import CircledIcon from 'src/icons/CircledIcon'
+import EarnCoins from 'src/icons/EarnCoins'
 import ExploreTokens from 'src/icons/ExploreTokens'
 import { navigate } from 'src/navigator/NavigationService'
 import { Screens } from 'src/navigator/Screens'
 import colors from 'src/styles/colors'
 import { typeScale } from 'src/styles/fonts'
 import { Spacing } from 'src/styles/styles'
-import { useTokenInfo } from 'src/tokens/hooks'
-import networkConfig from 'src/web3/networkConfig'
+
+function EarnItem() {
+  const { t } = useTranslation()
+
+  return (
+    <Item
+      icon={
+        <CircledIcon radius={32} backgroundColor={colors.successSecondary}>
+          <EarnCoins color={colors.successPrimary} />
+        </CircledIcon>
+      }
+      title={t('earnFlow.entrypoint.title')}
+      body={t('earnFlow.entrypoint.description')}
+    />
+  )
+}
 
 export default function GetStarted() {
   const { t } = useTranslation()
+
   const goToAddFunds = () => {
-    ValoraAnalytics.track(FiatExchangeEvents.cico_add_get_started_selected)
+    AppAnalytics.track(FiatExchangeEvents.cico_add_get_started_selected)
     navigate(Screens.FiatExchangeCurrencyBottomSheet, { flow: FiatExchangeFlow.CashIn })
   }
 
-  const earnToken = useTokenInfo(networkConfig.arbUsdcTokenId)
-  const asyncPoolInfo = useAavePoolInfo({ depositTokenId: networkConfig.arbUsdcTokenId })
-
-  const apyDisplay = asyncPoolInfo.result
-    ? new BigNumber(asyncPoolInfo.result.apy).multipliedBy(100).toFixed(2)
-    : '--'
-
   useEffect(() => {
-    ValoraAnalytics.track(FiatExchangeEvents.cico_add_get_started_impression)
+    AppAnalytics.track(FiatExchangeEvents.cico_add_get_started_impression)
   }, [])
 
   return (
@@ -47,20 +53,7 @@ export default function GetStarted() {
       >
         <View style={styles.touchableView}>
           <Text style={styles.cardTitle}>{t('getStartedHome.titleV1_86')}</Text>
-          {earnToken && (
-            <Item
-              icon={
-                <CircledIcon radius={32} backgroundColor={colors.gray1}>
-                  <TokenIcon token={earnToken} size={IconSize.SMALL} />
-                </CircledIcon>
-              }
-              title={t('earnFlow.ctaV1_86.subtitle', { symbol: earnToken.symbol })}
-              body={t('earnFlow.ctaV1_86.description', {
-                apy: apyDisplay,
-                symbol: earnToken.symbol,
-              })}
-            />
-          )}
+          <EarnItem />
           <Item
             icon={<ExploreTokens />}
             title={t('getStartedHome.exploreTokens')}
@@ -87,7 +80,6 @@ function Item({ icon, title, body }: { icon: React.ReactNode; title: string; bod
 const styles = StyleSheet.create({
   cardTitle: {
     ...typeScale.labelSemiBoldMedium,
-    color: colors.black,
   },
   container: {
     gap: 18,
@@ -95,11 +87,11 @@ const styles = StyleSheet.create({
   },
   title: {
     ...typeScale.labelSemiBoldSmall,
-    color: colors.gray4,
+    color: colors.contentSecondary,
   },
   touchable: {
     padding: Spacing.Regular16,
-    borderColor: colors.gray2,
+    borderColor: colors.borderPrimary,
     borderWidth: 1,
     borderRadius: 8,
   },
@@ -109,11 +101,10 @@ const styles = StyleSheet.create({
   },
   itemTitle: {
     ...typeScale.labelSemiBoldXSmall,
-    color: colors.black,
   },
   itemBody: {
     ...typeScale.bodyXSmall,
-    color: colors.gray4,
+    color: colors.contentSecondary,
   },
   touchableView: {
     gap: Spacing.Thick24,

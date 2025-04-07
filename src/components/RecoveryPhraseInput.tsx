@@ -13,8 +13,8 @@ import Card from 'src/components/Card'
 import ClipboardAwarePasteButton from 'src/components/ClipboardAwarePasteButton'
 import TextInput, { LINE_HEIGHT } from 'src/components/TextInput'
 import colors from 'src/styles/colors'
-import fontStyles from 'src/styles/fonts'
-import { Shadow, Spacing } from 'src/styles/styles'
+import { typeScale } from 'src/styles/fonts'
+import { Spacing } from 'src/styles/styles'
 import { useClipboard } from 'src/utils/useClipboard'
 
 export enum RecoveryPhraseInputStatus {
@@ -66,11 +66,7 @@ export default function RecoveryPhraseInput({
   const keyboardType = Platform.OS === 'android' ? 'visible-password' : undefined
 
   return (
-    <Card
-      rounded={true}
-      shadow={showInput ? Shadow.SoftLight : null}
-      style={[showInput ? styles.containerActive : styles.container]}
-    >
+    <Card rounded={true} shadow={null} style={styles.container}>
       {/* These views cannot be combined as it will cause the shadow to be clipped on iOS */}
       <View style={styles.containRadius}>
         <View style={[showInput ? styles.contentActiveLong : styles.contentLong]}>
@@ -83,6 +79,7 @@ export default function RecoveryPhraseInput({
                 showClearButton={false}
                 value={inputValue}
                 placeholder={inputPlaceholder}
+                placeholderTextColor={colors.inactive}
                 onChangeText={onInputChange}
                 multiline={true}
                 // This disables keyboard suggestions on iOS, but unfortunately NOT on Android
@@ -103,6 +100,7 @@ export default function RecoveryPhraseInput({
                     Platform.OS === 'ios' && NUMBER_OF_LINES
                       ? LINE_HEIGHT * NUMBER_OF_LINES
                       : undefined,
+                  backgroundColor: colors.textInputBackground,
                 }}
                 autoCapitalize="none"
                 testID={testID}
@@ -115,7 +113,7 @@ export default function RecoveryPhraseInput({
           </View>
           {showStatus && (
             <View style={styles.statusContainer}>
-              {showStatus && <ActivityIndicator size="small" color={colors.primary} />}
+              {showStatus && <ActivityIndicator size="small" color={colors.loadingIndicator} />}
             </View>
           )}
         </View>
@@ -134,10 +132,10 @@ export default function RecoveryPhraseInput({
 const styles = StyleSheet.create({
   container: {
     padding: 0,
-    backgroundColor: 'rgba(103, 99, 86, 0.1)',
-  },
-  containerActive: {
-    padding: 0,
+    backgroundColor: colors.textInputBackground,
+    borderColor: colors.borderSecondary,
+    borderRadius: Spacing.Smallest8,
+    borderWidth: 1,
   },
   // Applying overflow 'hidden' to `Card` also hides its shadow
   // that's why we're using a separate container
@@ -157,22 +155,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: Spacing.Regular16,
     paddingBottom: 4,
+    borderBottomWidth: 1,
+    borderColor: colors.borderSecondary,
   },
   innerContent: {
     flex: 1,
   },
   labelLong: {
-    ...fontStyles.label,
-    color: colors.onboardingBrownLight,
+    ...typeScale.labelSemiBoldSmall,
+    color: colors.contentSecondary,
     opacity: 0.5,
     marginBottom: 4,
   },
   labelActiveLong: {
-    ...fontStyles.label,
+    ...typeScale.labelSemiBoldSmall,
   },
   codeValueLong: {
-    ...fontStyles.regular,
-    color: colors.onboardingBrownLight,
+    ...typeScale.bodyMedium,
+    color: colors.contentSecondary,
   },
   statusContainer: {
     width: 32,

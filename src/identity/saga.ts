@@ -1,13 +1,12 @@
 import { showErrorInline } from 'src/alert/actions'
 import { SendEvents } from 'src/analytics/Events'
-import ValoraAnalytics from 'src/analytics/ValoraAnalytics'
+import AppAnalytics from 'src/analytics/AppAnalytics'
 import { ErrorMessages } from 'src/app/ErrorMessages'
 import {
   Actions,
   ValidateRecipientAddressAction,
   validateRecipientAddressSuccess,
 } from 'src/identity/actions'
-import { checkTxsForIdentityMetadata } from 'src/identity/commentEncryption'
 import {
   doImportContactsWrapper,
   fetchAddressVerificationSaga,
@@ -18,11 +17,9 @@ import { AddressValidationType } from 'src/identity/reducer'
 import { validateAndReturnMatch } from 'src/identity/secureSend'
 import { e164NumberToAddressSelector } from 'src/identity/selectors'
 import { recipientHasNumber } from 'src/recipients/recipient'
-import { Actions as TransactionActions } from 'src/transactions/actions'
 import Logger from 'src/utils/Logger'
 import { ensureError } from 'src/utils/ensureError'
 import { safely } from 'src/utils/safely'
-import { fetchDataEncryptionKeyWrapper } from 'src/web3/dataEncryptionKey'
 import { currentAccountSelector } from 'src/web3/selectors'
 import { cancelled, put, select, spawn, takeEvery, takeLatest, takeLeading } from 'typed-redux-saga'
 
@@ -69,7 +66,7 @@ export function* validateRecipientAddressSaga({
       addressValidationType
     )
 
-    ValoraAnalytics.track(SendEvents.send_secure_complete, {
+    AppAnalytics.track(SendEvents.send_secure_complete, {
       confirmByScan: false,
       partialAddressValidation: addressValidationType === AddressValidationType.PARTIAL,
     })
@@ -77,7 +74,7 @@ export function* validateRecipientAddressSaga({
     yield* put(validateRecipientAddressSuccess(e164PhoneNumber, validatedAddress))
   } catch (err) {
     const error = ensureError(err)
-    ValoraAnalytics.track(SendEvents.send_secure_incorrect, {
+    AppAnalytics.track(SendEvents.send_secure_incorrect, {
       confirmByScan: false,
       partialAddressValidation: addressValidationType === AddressValidationType.PARTIAL,
       error: error.message,
@@ -104,14 +101,6 @@ export function* watchValidateRecipientAddress() {
   yield* takeLatest(Actions.VALIDATE_RECIPIENT_ADDRESS, safely(validateRecipientAddressSaga))
 }
 
-function* watchNewFeedTransactions() {
-  yield* takeEvery(TransactionActions.UPDATE_TRANSACTIONS, safely(checkTxsForIdentityMetadata))
-}
-
-function* watchFetchDataEncryptionKey() {
-  yield* takeLeading(Actions.FETCH_DATA_ENCRYPTION_KEY, safely(fetchDataEncryptionKeyWrapper))
-}
-
 function* watchFetchAddressVerification() {
   yield* takeEvery(Actions.FETCH_ADDRESS_VERIFICATION_STATUS, safely(fetchAddressVerificationSaga))
 }
@@ -121,8 +110,6 @@ export function* identitySaga() {
   try {
     yield* spawn(watchContactMapping)
     yield* spawn(watchValidateRecipientAddress)
-    yield* spawn(watchNewFeedTransactions)
-    yield* spawn(watchFetchDataEncryptionKey)
     yield* spawn(watchFetchAddressVerification)
     yield* spawn(saveContacts) // save contacts on app start
   } catch (error) {

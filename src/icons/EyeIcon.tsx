@@ -1,13 +1,13 @@
 import * as React from 'react'
 import Svg, { Path } from 'react-native-svg'
-import Colors from 'src/styles/colors'
+import Colors, { ColorValue } from 'src/styles/colors'
 
 export interface Props {
   size?: number
-  color?: Colors
+  color?: ColorValue
 }
 
-function EyeIcon({ color, size }: Props) {
+function EyeIcon({ color = Colors.contentPrimary, size = 24 }: Props) {
   return (
     <Svg height={size} width={size} viewBox="0 0 24 24" fill="none" testID="EyeIcon">
       <Path
@@ -17,11 +17,6 @@ function EyeIcon({ color, size }: Props) {
       />
     </Svg>
   )
-}
-
-EyeIcon.defaultProps = {
-  size: 24,
-  color: Colors.black,
 }
 
 export default EyeIcon

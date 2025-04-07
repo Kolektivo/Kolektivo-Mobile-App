@@ -1,6 +1,7 @@
 import { renderHook } from '@testing-library/react-native'
 import React from 'react'
 import { Provider } from 'react-redux'
+import { DEEP_LINK_URL_SCHEME } from 'src/config'
 import { useIsDappListed } from 'src/walletConnect/screens/useIsDappListed'
 import { createMockStore } from 'test/utils'
 
@@ -12,8 +13,7 @@ const renderHookWithProvider = (dappUrl: string) => {
           categories: ['finance-tools'],
           dappUrl: 'https://celotracker.com?address=0x047154ac4d7e01b1dc9ddeea9e8996b57895a747',
           description: 'Manage your Celo Portfolio from DeFi to NFTs',
-          iconUrl:
-            'https://raw.githubusercontent.com/valora-inc/dapp-list/main/assets/celotracker.png',
+          iconUrl: 'https://raw.githubusercontent.com/dapp-list/main/assets/celotracker.png',
           id: 'celotracker',
           name: 'Celo Tracker',
         },
@@ -22,8 +22,8 @@ const renderHookWithProvider = (dappUrl: string) => {
           id: '2',
           categories: ['2'],
           description: 'Lend and borrow tokens!',
-          iconUrl: 'https://raw.githubusercontent.com/valora-inc/app-list/main/assets/moola.png',
-          dappUrl: 'celo://wallet/moolaScreen',
+          iconUrl: 'https://raw.githubusercontent.com/app-list/main/assets/moola.png',
+          dappUrl: `${DEEP_LINK_URL_SCHEME}://wallet/moolaScreen`,
         },
       ],
     },

@@ -1,16 +1,18 @@
-import { getRegionCodeFromCountryCode } from '@celo/phone-utils'
 import BigNumber from 'bignumber.js'
 import { camelCase } from 'lodash'
 import DeviceInfo from 'react-native-device-info'
 import * as RNLocalize from 'react-native-localize'
 import { createSelector } from 'reselect'
-import { defaultCountryCodeSelector, pincodeTypeSelector } from 'src/account/selectors'
-import { phoneVerificationStatusSelector } from 'src/app/selectors'
-import { backupCompletedSelector } from 'src/backup/selectors'
-import { superchargeInfoSelector } from 'src/consumerIncentives/selectors'
+import {
+  backupCompletedSelector,
+  defaultCountryCodeSelector,
+  pincodeTypeSelector,
+} from 'src/account/selectors'
+import { phoneNumberVerifiedSelector } from 'src/app/selectors'
 import { currentLanguageSelector } from 'src/i18n/selectors'
 import { getLocalCurrencyCode } from 'src/localCurrency/selectors'
 import { userLocationDataSelector } from 'src/networkInfo/selectors'
+import { pointsBalanceSelector } from 'src/points/selectors'
 import { getPositionBalanceUsd } from 'src/positions/getPositionBalanceUsd'
 import {
   hooksPreviewApiUrlSelector,
@@ -21,7 +23,8 @@ import { RootState } from 'src/redux/reducers'
 import { tokensListSelector, tokensWithTokenBalanceSelector } from 'src/tokens/selectors'
 import { sortByUsdBalance } from 'src/tokens/utils'
 import { NetworkId } from 'src/transactions/types'
-import { mtwAddressSelector, rawWalletAddressSelector } from 'src/web3/selectors'
+import { getRegionCodeFromCountryCode } from 'src/utils/phoneNumbers'
+import { rawWalletAddressSelector } from 'src/web3/selectors'
 
 function toPascalCase(str: string) {
   const camelCaseStr = camelCase(str)
@@ -81,22 +84,20 @@ const positionsAnalyticsSelector = createSelector(
 export const getCurrentUserTraits = createSelector(
   [
     rawWalletAddressSelector,
-    mtwAddressSelector,
     defaultCountryCodeSelector,
     userLocationDataSelector,
     currentLanguageSelector,
     tokensSelector,
     positionsAnalyticsSelector,
     getLocalCurrencyCode,
-    phoneVerificationStatusSelector,
+    phoneNumberVerifiedSelector,
     backupCompletedSelector,
     pincodeTypeSelector,
-    superchargeInfoSelector,
+    pointsBalanceSelector,
     (_state: RootState, networkIds: NetworkId[]) => networkIds,
   ],
   (
     rawWalletAddress,
-    mtwAddress,
     phoneCountryCallingCode,
     { countryCodeAlpha2 },
     language,
@@ -110,10 +111,10 @@ export const getCurrentUserTraits = createSelector(
       hooksPreviewEnabled,
     },
     localCurrencyCode,
-    { numberVerifiedDecentralized, numberVerifiedCentralized },
+    numberVerifiedCentralized,
     hasCompletedBackup,
     pincodeType,
-    superchargeInfo,
+    pointsBalance,
     networkIds
   ) => {
     const feeTokenIds = new Set(feeTokens.map(({ tokenId }) => tokenId))
@@ -151,7 +152,7 @@ export const getCurrentUserTraits = createSelector(
     // Don't rename these unless you have a really good reason!
     // They are used in users analytics profiles + super properties
     return {
-      accountAddress: mtwAddress ?? rawWalletAddress,
+      accountAddress: rawWalletAddress,
       walletAddress: rawWalletAddress?.toLowerCase(),
       phoneCountryCallingCode, // Example: +33
       phoneCountryCodeAlpha2: phoneCountryCallingCode
@@ -187,7 +188,6 @@ export const getCurrentUserTraits = createSelector(
       positionsTopTenApps,
       hooksPreviewEnabled,
       localCurrencyCode,
-      hasVerifiedNumber: numberVerifiedDecentralized,
       hasVerifiedNumberCPV: numberVerifiedCentralized,
       hasCompletedBackup,
       deviceId: DeviceInfo.getUniqueIdSync(),
@@ -195,9 +195,8 @@ export const getCurrentUserTraits = createSelector(
       appBuildNumber: DeviceInfo.getBuildNumber(),
       appBundleId: DeviceInfo.getBundleId(),
       pincodeType,
-      superchargingToken: superchargeInfo.superchargingTokenConfig?.tokenSymbol,
-      superchargingAmountInUsd: superchargeInfo.superchargeUsdBalance,
       ...hasTokenBalanceFields,
+      pointsBalance,
     } satisfies Record<string, string | boolean | number | null | undefined>
   }
 )

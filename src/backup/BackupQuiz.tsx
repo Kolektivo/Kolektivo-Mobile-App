@@ -7,9 +7,9 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { connect } from 'react-redux'
 import { setBackupCompleted } from 'src/account/actions'
 import { showError } from 'src/alert/actions'
+import AppAnalytics from 'src/analytics/AppAnalytics'
 import { OnboardingEvents } from 'src/analytics/Events'
 import { BackQuizProgress } from 'src/analytics/types'
-import ValoraAnalytics from 'src/analytics/ValoraAnalytics'
 import CancelConfirm from 'src/backup/CancelConfirm'
 import { QuizzBottom } from 'src/backup/QuizzBottom'
 import { getStoredMnemonic, onGetMnemonicFail } from 'src/backup/utils'
@@ -25,7 +25,7 @@ import { Screens } from 'src/navigator/Screens'
 import { StackParamList } from 'src/navigator/types'
 import { RootState } from 'src/redux/reducers'
 import colors from 'src/styles/colors'
-import fontStyles from 'src/styles/fonts'
+import { typeScale } from 'src/styles/fonts'
 import Logger from 'src/utils/Logger'
 import { currentAccountSelector } from 'src/web3/selectors'
 
@@ -78,7 +78,10 @@ export const navOptionsForQuiz = ({ route }: OwnProps) => {
     ...emptyHeader,
     headerLeft: () => {
       return isAccountRemoval ? (
-        <CancelButton onCancel={() => navigate(Screens.Settings)} style={styles.cancelButton} />
+        <CancelButton
+          onCancel={() => navigate(Screens.SecuritySubmenu)}
+          style={styles.cancelButton}
+        />
       ) : (
         <CancelConfirm screen={TAG} />
       )
@@ -111,7 +114,7 @@ export class BackupQuiz extends React.Component<Props, State> {
 
   componentDidMount = async () => {
     await this.retrieveMnemonic()
-    ValoraAnalytics.track(OnboardingEvents.backup_quiz_start)
+    AppAnalytics.track(OnboardingEvents.backup_quiz_start)
   }
 
   retrieveMnemonic = async () => {
@@ -141,7 +144,7 @@ export class BackupQuiz extends React.Component<Props, State> {
       userChosenWords: newUserChosenWords,
     })
 
-    ValoraAnalytics.track(OnboardingEvents.backup_quiz_progress, {
+    AppAnalytics.track(OnboardingEvents.backup_quiz_progress, {
       action: BackQuizProgress.word_chosen,
     })
   }
@@ -163,7 +166,7 @@ export class BackupQuiz extends React.Component<Props, State> {
       userChosenWords: userChosenWordsUpdated,
     })
 
-    ValoraAnalytics.track(OnboardingEvents.backup_quiz_progress, {
+    AppAnalytics.track(OnboardingEvents.backup_quiz_progress, {
       action: BackQuizProgress.backspace,
     })
   }
@@ -187,11 +190,11 @@ export class BackupQuiz extends React.Component<Props, State> {
       this.props.setBackupCompleted()
       const isAccountRemoval = this.props.route.params?.isAccountRemoval ?? false
       navigate(Screens.BackupComplete, { isAccountRemoval })
-      ValoraAnalytics.track(OnboardingEvents.backup_quiz_complete)
+      AppAnalytics.track(OnboardingEvents.backup_quiz_complete)
     } else {
       Logger.debug(TAG, 'Backup quiz failed, reseting words')
       this.setState({ mode: Mode.Failed })
-      ValoraAnalytics.track(OnboardingEvents.backup_quiz_incorrect)
+      AppAnalytics.track(OnboardingEvents.backup_quiz_incorrect)
     }
   }
 
@@ -318,7 +321,7 @@ function DeleteWord({
   }
   return (
     <Touchable borderless={true} onPress={onPressBackspace} style={styles.backWord}>
-      <Backspace color={colors.primary} />
+      <Backspace color={colors.accent} />
     </Touchable>
   )
 }
@@ -345,12 +348,11 @@ const styles = StyleSheet.create({
   bottomHalf: { flex: 1, justifyContent: 'center' },
   bodyText: {
     marginTop: 20,
-    ...fontStyles.regular,
-    color: colors.black,
+    ...typeScale.bodyMedium,
     textAlign: 'center',
   },
   bodyTextBold: {
-    ...fontStyles.regular500,
+    ...typeScale.labelMedium,
     textAlign: 'center',
     marginTop: 25,
   },
@@ -368,23 +370,23 @@ const styles = StyleSheet.create({
     marginVertical: 4,
     minWidth: 55,
     borderWidth: 1,
-    borderColor: colors.gray2,
+    borderColor: colors.borderPrimary,
     borderRadius: 100,
   },
   chosenWordWrapperFilled: {
-    backgroundColor: colors.gray2,
+    backgroundColor: colors.backgroundTertiary,
   },
   chosenWord: {
-    ...fontStyles.small,
+    ...typeScale.bodySmall,
     textAlign: 'center',
     lineHeight: undefined,
-    color: colors.gray4,
+    color: colors.contentSecondary,
   },
   chosenWordFilled: {
-    ...fontStyles.small,
+    ...typeScale.bodySmall,
     textAlign: 'center',
     lineHeight: undefined,
-    color: colors.gray5,
+    color: colors.contentPrimary,
   },
   mnemonicButtonsContainer: {
     marginTop: 24,
@@ -395,7 +397,7 @@ const styles = StyleSheet.create({
   mnemonicWordButtonOutterRim: {
     borderRadius: 100,
     borderWidth: 1.5,
-    borderColor: colors.primary,
+    borderColor: colors.accent,
     overflow: 'hidden',
     marginVertical: 4,
     marginHorizontal: 4,
@@ -408,7 +410,7 @@ const styles = StyleSheet.create({
   },
   mnemonicWordButonText: {
     textAlign: 'center',
-    color: colors.primary,
+    color: colors.accent,
   },
   backWord: {
     paddingRight: 24,
@@ -417,7 +419,7 @@ const styles = StyleSheet.create({
   },
   resetButton: { alignItems: 'center', padding: 24, marginTop: 8 },
   cancelButton: {
-    color: colors.gray4,
+    color: colors.navigationTopSecondary,
   },
 })
 

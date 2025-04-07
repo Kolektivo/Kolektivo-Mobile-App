@@ -1,9 +1,13 @@
 import Ajv from 'ajv'
 import { spawn, takeEvery } from 'redux-saga/effects'
+import AppAnalytics from 'src/analytics/AppAnalytics'
+import { PerformanceEvents } from 'src/analytics/Events'
+import { apiReducersKeys, ApiReducersKeys } from 'src/redux/apiReducersList'
 import * as createMigrateModule from 'src/redux/createMigrate'
 import { migrations } from 'src/redux/migrations'
+import { RootState } from 'src/redux/reducers'
 import { rootSaga } from 'src/redux/sagas'
-import { _persistConfig, setupStore } from 'src/redux/store'
+import { _persistConfig, setupStore, timeBetweenStoreSizeEvents } from 'src/redux/store'
 import * as accountCheckerModule from 'src/utils/accountChecker'
 import Logger from 'src/utils/Logger'
 import { getLatestSchema, vNeg1Schema } from 'test/schemas'
@@ -25,11 +29,31 @@ const resetStateOnInvalidStoredAccount = jest.spyOn(
 
 const loggerErrorSpy = jest.spyOn(Logger, 'error')
 
+function getNonApiReducers<R = Omit<RootState, ApiReducersKeys>>(state: RootState): R {
+  const nonApiReducers = {} as R
+
+  for (const [key, value] of Object.entries(state)) {
+    const isApiReducer = apiReducersKeys.includes(key)
+
+    // api reducers are not persisted so skip them
+    if (isApiReducer) continue
+
+    nonApiReducers[key as keyof R] = value as unknown as any
+  }
+
+  return nonApiReducers
+}
+
 beforeEach(() => {
   jest.clearAllMocks()
+  jest.useFakeTimers()
   // For some reason createMigrate.mockRestore doesn't work, so instead we manually reset it to the original implementation
   createMigrate.mockImplementation(originalCreateMigrate)
   resetStateOnInvalidStoredAccount.mockImplementation((state) => Promise.resolve(state))
+})
+
+afterAll(() => {
+  jest.useRealTimers()
 })
 
 describe('persistConfig', () => {
@@ -54,6 +78,27 @@ describe('persistConfig', () => {
     expect(state).toEqual({ migrated: true })
     expect(createMigrate).toHaveBeenCalledTimes(1)
     expect(resetStateOnInvalidStoredAccount).toHaveBeenCalledTimes(1)
+  })
+
+  it('sends redux store size when available and after cooldown', () => {
+    const dateNow = Date.now()
+    jest.setSystemTime(dateNow)
+    const serialize = _persistConfig?.serialize as unknown as (data: any) => string
+    serialize({ _persist: true, foo: 'bar' })
+    expect(AppAnalytics.track).toHaveBeenCalledTimes(1)
+    expect(AppAnalytics.track).toHaveBeenCalledWith(PerformanceEvents.redux_store_size, {
+      size: 29,
+    })
+    // Should not track again until delay has passed
+    serialize({ _persist: true, foo: 'bar' })
+    expect(AppAnalytics.track).toHaveBeenCalledTimes(1)
+    // Should track again after delay has passed
+    jest.setSystemTime(new Date(dateNow + 2 * timeBetweenStoreSizeEvents).getTime())
+    serialize({ _persist: true, foo: 'bar', bar: 'baz' })
+    expect(AppAnalytics.track).toHaveBeenCalledTimes(2)
+    expect(AppAnalytics.track).toHaveBeenCalledWith(PerformanceEvents.redux_store_size, {
+      size: 41,
+    })
   })
 })
 
@@ -81,9 +126,9 @@ describe('store state', () => {
       })
     })
 
-    const data = store.getState()
+    const data = getNonApiReducers(store.getState())
 
-    const ajv = new Ajv({ allErrors: true })
+    const ajv = new Ajv({ allErrors: true, allowUnionTypes: true })
     const schema = require('test/RootStateSchema.json')
     const validate = ajv.compile(schema)
     const isValid = validate(data)
@@ -98,7 +143,7 @@ describe('store state', () => {
       {
         "_persist": {
           "rehydrated": true,
-          "version": 216,
+          "version": 247,
         },
         "account": {
           "acceptedTerms": false,
@@ -117,13 +162,12 @@ describe('store state', () => {
           "devModeClickCount": 0,
           "dismissedGetVerified": false,
           "dismissedGoldEducation": false,
-          "dismissedKeepSupercharging": false,
-          "dismissedStartSupercharging": false,
           "e164PhoneNumber": "+14155556666",
           "hasMigratedToNewBip39": false,
+          "lastOnboardingStepScreen": "Welcome",
           "name": "John Doe",
+          "onboardingCompleted": false,
           "photosNUXClicked": false,
-          "pictureUri": null,
           "pincodeType": "Unset",
           "profileUploaded": false,
           "recoveringFromStoreWipe": false,
@@ -135,11 +179,7 @@ describe('store state', () => {
           "activeScreen": "Main",
           "analyticsEnabled": true,
           "appState": "Active",
-          "celoEducationUri": null,
-          "celoNews": {},
-          "coinbasePayEnabled": false,
-          "fiatConnectCashInEnabled": false,
-          "fiatConnectCashOutEnabled": false,
+          "divviRegistrations": {},
           "googleMobileServicesAvailable": undefined,
           "hapticFeedbackEnabled": true,
           "hideBalances": false,
@@ -148,55 +188,30 @@ describe('store state', () => {
           "inviterAddress": null,
           "lastTimeBackgrounded": 0,
           "locked": false,
-          "logPhoneNumberTypeEnabled": false,
-          "loggedIn": false,
-          "maxSwapSlippagePercentage": 2,
-          "minVersion": null,
-          "multichainBetaStatus": "NotSeen",
-          "networkTimeoutSeconds": 30,
-          "numberVerified": false,
           "pendingDeepLinks": [],
           "phoneNumberVerified": false,
-          "pincodeUseExpandedBlocklist": false,
           "pushNotificationRequestedUnixTime": 1692878055000,
           "pushNotificationsEnabled": false,
           "requirePinOnAppOpen": false,
-          "sentryNetworkErrors": [
-            "network request failed",
-            "The network connection was lost",
-          ],
-          "sentryTracesSampleRate": 0.2,
           "sessionId": "",
           "showNotificationSpotlight": true,
-          "showSwapMenuInDrawerMenu": false,
-          "superchargeApy": 12,
-          "superchargeTokenConfigByToken": {},
           "supportedBiometryType": null,
-          "walletConnectV2Enabled": true,
         },
         "dapps": {
           "activeDapp": null,
-          "dappListApiUrl": null,
           "dappsCategories": [],
           "dappsList": [],
           "dappsListError": null,
           "dappsListLoading": false,
-          "dappsWebViewEnabled": false,
           "favoriteDappIds": [],
-          "maxNumRecentDapps": 0,
           "mostPopularDappIds": [],
           "recentDappIds": [],
         },
         "earn": {
           "depositStatus": "idle",
+          "poolInfo": undefined,
+          "poolInfoFetchStatus": "idle",
           "withdrawStatus": "idle",
-        },
-        "escrow": {
-          "isReclaiming": false,
-          "sentEscrowedPayments": [],
-        },
-        "fees": {
-          "estimates": {},
         },
         "fiatConnect": {
           "attemptReturnUserFlowLoading": false,
@@ -209,7 +224,6 @@ describe('store state', () => {
           "quotes": [],
           "quotesError": null,
           "quotesLoading": false,
-          "schemaCountryOverrides": {},
           "selectFiatConnectQuoteLoading": false,
           "sendingFiatAccountStatus": "NotSending",
           "transfer": null,
@@ -219,28 +233,23 @@ describe('store state', () => {
           "txHashToProvider": {},
         },
         "home": {
-          "cleverTapInboxMessages": [],
           "hasVisitedHome": true,
           "loading": false,
           "nftCelebration": null,
           "notifications": {},
         },
         "i18n": {
-          "allowOtaTranslations": false,
           "language": "es-419",
           "otaTranslationsAppVersion": "0",
           "otaTranslationsLanguage": "",
           "otaTranslationsLastUpdate": 0,
         },
         "identity": {
-          "addressToDataEncryptionKey": {},
           "addressToDisplayName": {},
           "addressToE164Number": {},
           "addressToVerificationStatus": {},
           "askedContactsPermission": false,
           "e164NumberToAddress": {},
-          "e164NumberToSalt": {},
-          "hasSeenVerificationNux": false,
           "importContactsProgress": {
             "current": 0,
             "status": 0,
@@ -249,7 +258,6 @@ describe('store state', () => {
           "lastSavedContactsHash": null,
           "secureSendPhoneNumberMapping": {},
           "shouldRefreshStoredPasswordHash": true,
-          "walletToAccountAddress": {},
         },
         "imports": {
           "isImportingWallet": false,
@@ -257,15 +265,16 @@ describe('store state', () => {
         "jumpstart": {
           "claimStatus": "idle",
           "depositStatus": "idle",
+          "introHasBeenSeen": false,
           "reclaimStatus": "idle",
         },
         "keylessBackup": {
+          "appKeyshare": null,
+          "auth0IdToken": null,
           "backupStatus": "NotStarted",
           "deleteBackupStatus": "NotStarted",
-          "googleIdToken": null,
           "showDeleteBackupError": false,
           "torusKeyshare": null,
-          "valoraKeyshare": null,
         },
         "localCurrency": {
           "error": false,
@@ -305,6 +314,7 @@ describe('store state', () => {
           },
         },
         "positions": {
+          "earnPositionIds": [],
           "positions": [],
           "previewApiUrl": null,
           "shortcuts": [],
@@ -314,43 +324,30 @@ describe('store state', () => {
         },
         "priceHistory": {},
         "recipients": {
+          "appRecipientCache": {},
           "coinbasePaySenders": [],
           "inviteRewardsSenders": [],
           "phoneRecipientCache": {},
           "rewardsSenders": [],
-          "valoraRecipientCache": {},
         },
         "send": {
           "encryptedComment": null,
-          "inviteRewardsVersion": "none",
           "isEncryptingComment": false,
           "isSending": false,
           "lastUsedTokenId": undefined,
           "recentPayments": [],
           "recentRecipients": [],
         },
-        "supercharge": {
-          "availableRewards": [],
-          "error": false,
-          "fetchAvailableRewardsError": false,
-          "fetchAvailableRewardsLoading": false,
-          "loading": false,
-          "superchargeRewardContractAddress": "",
-        },
         "swap": {
           "currentSwap": null,
           "lastSwapped": [],
-          "priceImpactWarningThreshold": 4,
         },
         "tokens": {
           "error": false,
-          "loading": false,
           "tokenBalances": {},
         },
         "transactions": {
-          "inviteTransactions": {},
-          "knownFeedTransactions": {},
-          "recentTxRecipientsCache": {},
+          "feedFirstPage": [],
           "standbyTransactions": [],
           "transactionsByNetworkId": {},
         },
@@ -361,10 +358,7 @@ describe('store state', () => {
         },
         "web3": {
           "account": "0x0000000000000000000000000000000000007E57",
-          "accountInWeb3Keystore": "0x0000000000000000000000000000000000007E57",
-          "dataEncryptionKey": "0x0000000000000000000000000000000000008F68",
-          "isDekRegistered": false,
-          "mtwAddress": null,
+          "demoModeEnabled": false,
         },
       }
     `)

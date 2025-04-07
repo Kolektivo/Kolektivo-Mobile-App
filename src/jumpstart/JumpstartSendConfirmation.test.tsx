@@ -2,7 +2,7 @@ import { fireEvent, render } from '@testing-library/react-native'
 import React from 'react'
 import { Provider } from 'react-redux'
 import { JumpstartEvents } from 'src/analytics/Events'
-import ValoraAnalytics from 'src/analytics/ValoraAnalytics'
+import AppAnalytics from 'src/analytics/AppAnalytics'
 import JumpstartSendConfirmation from 'src/jumpstart/JumpstartSendConfirmation'
 import { depositErrorDismissed, depositTransactionStarted } from 'src/jumpstart/slice'
 import { navigate } from 'src/navigator/NavigationService'
@@ -28,6 +28,9 @@ const serializablePreparedTransactions = getSerializablePreparedTransactions([
     gas: BigInt(1_325_000),
   },
 ])
+
+const mockBeneficiaryAddress = '0x2CEc3C5e83eE37261F9f9BB050B2Fbf59d13eEc0'
+
 describe('JumpstartSendConfirmation', () => {
   beforeEach(() => {
     jest.clearAllMocks()
@@ -42,6 +45,7 @@ describe('JumpstartSendConfirmation', () => {
             tokenId: mockCusdTokenId,
             sendAmount: '12.345',
             serializablePreparedTransactions,
+            beneficiaryAddress: mockBeneficiaryAddress,
           }}
         />
       </Provider>
@@ -68,6 +72,7 @@ describe('JumpstartSendConfirmation', () => {
             tokenId: mockCusdTokenId,
             sendAmount: '12.345',
             serializablePreparedTransactions,
+            beneficiaryAddress: mockBeneficiaryAddress,
           }}
         />
       </Provider>
@@ -75,7 +80,7 @@ describe('JumpstartSendConfirmation', () => {
 
     fireEvent.press(getByText('jumpstartSendConfirmationScreen.confirmButton'))
 
-    expect(ValoraAnalytics.track).toHaveBeenCalledWith(JumpstartEvents.jumpstart_send_confirm, {
+    expect(AppAnalytics.track).toHaveBeenCalledWith(JumpstartEvents.jumpstart_send_confirm, {
       amountInUsd: '12.36',
       localCurrency: 'PHP',
       localCurrencyExchangeRate: '1.33',
@@ -89,6 +94,7 @@ describe('JumpstartSendConfirmation', () => {
         sendAmount: '12.345',
         sendToken: mockCusdTokenBalance,
         serializablePreparedTransactions,
+        beneficiaryAddress: mockBeneficiaryAddress,
       }),
     ])
   })

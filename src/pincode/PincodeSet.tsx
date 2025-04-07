@@ -1,21 +1,20 @@
 /**
  * This is a reactnavigation SCREEN, which we use to set a PIN.
  */
+import { BIOMETRY_TYPE } from '@divvi/react-native-keychain'
 import { NativeStackScreenProps } from '@react-navigation/native-stack'
 import * as React from 'react'
 import { WithTranslation } from 'react-i18next'
 import { StyleSheet } from 'react-native'
-import { BIOMETRY_TYPE } from 'react-native-keychain'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { connect } from 'react-redux'
 import { initializeAccount, setPincodeSuccess } from 'src/account/actions'
 import { PincodeType } from 'src/account/reducer'
+import AppAnalytics from 'src/analytics/AppAnalytics'
 import { OnboardingEvents, SettingsEvents } from 'src/analytics/Events'
-import ValoraAnalytics from 'src/analytics/ValoraAnalytics'
 import { supportedBiometryTypeSelector } from 'src/app/selectors'
 import DevSkipButton from 'src/components/DevSkipButton'
 import i18n, { withTranslation } from 'src/i18n'
-import { setHasSeenVerificationNux } from 'src/identity/actions'
 import {
   HeaderTitleWithSubtitle,
   nuxNavigationOptions,
@@ -30,22 +29,16 @@ import {
   OnboardingProps,
   onboardingPropsSelector,
 } from 'src/onboarding/steps'
-import {
-  DEFAULT_CACHE_ACCOUNT,
-  isPinValid,
-  PinBlocklist,
-  updatePin,
-} from 'src/pincode/authentication'
+import { DEFAULT_CACHE_ACCOUNT, isPinValid, updatePin } from 'src/pincode/authentication'
 import { getCachedPin, setCachedPin } from 'src/pincode/PasswordCache'
 import Pincode from 'src/pincode/Pincode'
 import { RootState } from 'src/redux/reducers'
-import colors from 'src/styles/colors'
+import Colors from 'src/styles/colors'
 import Logger from 'src/utils/Logger'
 import { currentAccountSelector } from 'src/web3/selectors'
 
 interface StateProps {
   choseToRestoreAccount: boolean | undefined
-  useExpandedBlocklist: boolean
   account: string
   registrationStep: { step: number; totalSteps: number }
   onboardingProps: OnboardingProps
@@ -55,7 +48,6 @@ interface StateProps {
 interface DispatchProps {
   initializeAccount: typeof initializeAccount
   setPincodeSuccess: typeof setPincodeSuccess
-  setHasSeenVerificationNux: typeof setHasSeenVerificationNux
 }
 
 interface State {
@@ -63,7 +55,6 @@ interface State {
   pin1: string
   pin2: string
   errorText: string | null
-  blocklist: PinBlocklist | undefined
   isVerifying: boolean
 }
 
@@ -76,7 +67,6 @@ function mapStateToProps(state: RootState): StateProps {
     choseToRestoreAccount: state.account.choseToRestoreAccount,
     onboardingProps: onboardingPropsSelector(state),
     registrationStep: getOnboardingStepValues(Screens.PincodeSet, onboardingPropsSelector(state)),
-    useExpandedBlocklist: state.app.pincodeUseExpandedBlocklist,
     account: currentAccountSelector(state) ?? '',
     supportedBiometryType: supportedBiometryTypeSelector(state),
   }
@@ -85,7 +75,6 @@ function mapStateToProps(state: RootState): StateProps {
 const mapDispatchToProps = {
   initializeAccount,
   setPincodeSuccess,
-  setHasSeenVerificationNux,
 }
 
 export class PincodeSet extends React.Component<Props, State> {
@@ -95,7 +84,7 @@ export class PincodeSet extends React.Component<Props, State> {
       ...(changePin ? nuxNavigationOptions : nuxNavigationOptionsOnboarding),
       headerTitle: () => (
         <HeaderTitleWithSubtitle
-          title={changePin ? i18n.t('pincodeSet.changePIN') : i18n.t('pincodeSet.pin')}
+          title={changePin ? '' : i18n.t('pincodeSet.pin')}
           subTitle={
             changePin || route.params?.choseToRestoreAccount
               ? undefined
@@ -114,7 +103,6 @@ export class PincodeSet extends React.Component<Props, State> {
     pin1: '',
     pin2: '',
     errorText: null,
-    blocklist: undefined,
     isVerifying: false,
   }
 
@@ -124,10 +112,6 @@ export class PincodeSet extends React.Component<Props, State> {
       // but it might expire by the time the user enters their new PIN if they take more
       // than 5 minutes to do so.
       this.setState({ oldPin: getCachedPin(DEFAULT_CACHE_ACCOUNT) ?? '' })
-    }
-    // Load the PIN blocklist from the bundle into the component state.
-    if (this.props.useExpandedBlocklist) {
-      this.setState({ blocklist: new PinBlocklist() })
     }
 
     // Setting choseToRestoreAccount on route param for navigationOptions
@@ -169,10 +153,7 @@ export class PincodeSet extends React.Component<Props, State> {
   }
 
   isPin1Valid = (pin: string) => {
-    return (
-      isPinValid(pin) &&
-      (!this.props.useExpandedBlocklist || this.state.blocklist?.contains(pin) === false)
-    )
+    return isPinValid(pin)
   }
 
   isPin2Valid = (pin: string) => {
@@ -183,12 +164,12 @@ export class PincodeSet extends React.Component<Props, State> {
     if (this.isPin1Valid(this.state.pin1)) {
       this.setState({ isVerifying: true })
       if (this.isChangingPin()) {
-        ValoraAnalytics.track(SettingsEvents.change_pin_new_pin_entered)
+        AppAnalytics.track(SettingsEvents.change_pin_new_pin_entered)
       }
     } else {
-      ValoraAnalytics.track(OnboardingEvents.pin_invalid, { error: 'Pin is invalid' })
+      AppAnalytics.track(OnboardingEvents.pin_invalid, { error: 'Pin is invalid' })
       if (this.isChangingPin()) {
-        ValoraAnalytics.track(SettingsEvents.change_pin_new_pin_error)
+        AppAnalytics.track(SettingsEvents.change_pin_new_pin_error)
       }
 
       this.setState({
@@ -205,23 +186,23 @@ export class PincodeSet extends React.Component<Props, State> {
       if (this.isChangingPin()) {
         const updated = await updatePin(this.props.account, this.state.oldPin, pin2)
         if (updated) {
-          ValoraAnalytics.track(SettingsEvents.change_pin_new_pin_confirmed)
+          AppAnalytics.track(SettingsEvents.change_pin_new_pin_confirmed)
           Logger.showMessage(this.props.t('pinChanged'))
         } else {
-          ValoraAnalytics.track(SettingsEvents.change_pin_new_pin_error)
+          AppAnalytics.track(SettingsEvents.change_pin_new_pin_error)
           Logger.showMessage(this.props.t('pinChangeFailed'))
         }
       } else {
         this.props.setPincodeSuccess(PincodeType.CustomPin)
         setCachedPin(DEFAULT_CACHE_ACCOUNT, pin1)
-        ValoraAnalytics.track(OnboardingEvents.pin_set)
+        AppAnalytics.track(OnboardingEvents.pin_set)
       }
       this.navigateToNextScreen()
     } else {
       if (this.isChangingPin()) {
-        ValoraAnalytics.track(SettingsEvents.change_pin_new_pin_error)
+        AppAnalytics.track(SettingsEvents.change_pin_new_pin_error)
       }
-      ValoraAnalytics.track(OnboardingEvents.pin_invalid, { error: 'Pins do not match' })
+      AppAnalytics.track(OnboardingEvents.pin_invalid, { error: 'Pins do not match' })
       this.setState({
         isVerifying: false,
         pin1: '',
@@ -266,13 +247,12 @@ export class PincodeSet extends React.Component<Props, State> {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.onboardingBackground,
     justifyContent: 'space-between',
     paddingTop: 72,
   },
   changePinContainer: {
     flex: 1,
-    backgroundColor: 'white',
+    backgroundColor: Colors.backgroundPrimary,
     justifyContent: 'space-between',
   },
 })

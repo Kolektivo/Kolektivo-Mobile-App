@@ -5,7 +5,7 @@ import { AlertTypes } from 'src/alert/actions'
 import SmallButton from 'src/components/SmallButton'
 import Error from 'src/icons/Error'
 import colors from 'src/styles/colors'
-import fontStyles from 'src/styles/fonts'
+import { typeScale } from 'src/styles/fonts'
 import { vibrateError, vibrateInformative } from 'src/styles/hapticFeedback'
 interface Props {
   alert: {
@@ -23,7 +23,7 @@ function SmartTopAlert({ alert }: Props) {
   const [visibleAlertState, setVisibleAlertState] = useState(alert)
   const insets = useSafeAreaInsets()
   const yOffset = useRef(new Animated.Value(-500))
-  const containerRef = useRef<View>()
+  const containerRef = useRef<View>(null)
 
   function hide() {
     if (!containerRef.current) {
@@ -120,16 +120,15 @@ function SmartTopAlert({ alert }: Props) {
             },
           ]}
         >
-          {isError && <Error style={styles.errorIcon} />}
-          <Text style={[fontStyles.small, isError && fontStyles.small500, styles.text]}>
-            {!!title && <Text style={[fontStyles.small500, styles.text]}> {title} </Text>}
+          {isError && <Error color={colors.contentTertiary} style={styles.errorIcon} />}
+          <Text style={[typeScale.bodySmall, isError && typeScale.labelSmall, styles.text]}>
+            {!!title && <Text style={[typeScale.labelSmall, styles.text]}> {title} </Text>}
             {message}
           </Text>
           {!!buttonMessage && (
             <SmallButton
               onPress={onPress}
               text={buttonMessage}
-              solid={false}
               style={styles.button}
               textStyle={styles.buttonText}
               testID={'SmartTopAlertButton'}
@@ -151,18 +150,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: colors.infoDark,
+    backgroundColor: colors.warningPrimary,
     paddingBottom: PADDING_VERTICAL,
     paddingHorizontal: 25,
   },
   containerError: {
-    backgroundColor: colors.error,
+    backgroundColor: colors.errorPrimary,
   },
   containerWithButton: {
     flexDirection: 'column',
   },
   text: {
-    color: 'white',
+    color: colors.contentTertiary,
     // Unset explicit lineHeight set by fonts.tsx otherwise the text is not centered vertically
     lineHeight: undefined,
     textAlign: 'center',
@@ -173,11 +172,11 @@ const styles = StyleSheet.create({
   },
   button: {
     marginTop: 8,
-    borderColor: colors.white,
+    borderColor: colors.contentTertiary,
     alignSelf: 'center',
   },
   buttonText: {
-    color: colors.white,
+    color: colors.contentTertiary,
   },
 })
 

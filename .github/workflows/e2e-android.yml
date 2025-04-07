@@ -8,6 +8,11 @@ on:
 
 jobs:
   android:
+    env:
+      # `if` conditions can't directly access secrets, so we use a workaround
+      # See https://docs.github.com/en/actions/security-guides/encrypted-secrets#using-encrypted-secrets-in-a-workflow
+      SECRETS_AVAILABLE: ${{ secrets.SECRETS_AVAILABLE }}
+      BASH_ENV: ~/.profile
     name: Android (SDK ${{ inputs.android-api-level }})
     runs-on:
       - nscloud-ubuntu-22.04-amd64-16x64-with-cache
@@ -17,6 +22,25 @@ jobs:
     # If it takes longer it usually fails, so no need to pay for more
     timeout-minutes: 25
     steps:
+      - uses: google-github-actions/auth@v2
+        if: ${{ env.SECRETS_AVAILABLE }}
+        with:
+          project_id: celo-mobile-mainnet
+          credentials_json: ${{ secrets.MAINNET_SERVICE_ACCOUNT_KEY }}
+      - name: Google Secrets
+        if: ${{ env.SECRETS_AVAILABLE }}
+        id: google-secrets
+        uses: google-github-actions/get-secretmanager-secrets@v2.2.2
+        with:
+          secrets: |-
+            E2E_WALLET_CONNECT_PROJECT_ID:projects/1027349420744/secrets/E2E_WALLET_CONNECT_PROJECT_ID
+            E2E_DEFAULT_RECIPIENT_MNEMONIC:projects/1027349420744/secrets/E2E_DEFAULT_RECIPIENT_MNEMONIC
+            E2E_DEFAULT_RECIPIENT_PRIVATE_KEY:projects/1027349420744/secrets/E2E_DEFAULT_RECIPIENT_PRIVATE_KEY
+            E2E_WALLET_MNEMONIC:projects/1027349420744/secrets/E2E_WALLET_MNEMONIC
+            E2E_WALLET_PRIVATE_KEY:projects/1027349420744/secrets/E2E_WALLET_PRIVATE_KEY
+            E2E_WALLET_SINGLE_VERIFIED_MNEMONIC:projects/1027349420744/secrets/E2E_WALLET_SINGLE_VERIFIED_MNEMONIC
+            E2E_WALLET_MULTIPLE_VERIFIED_MNEMONIC:projects/1027349420744/secrets/E2E_WALLET_MULTIPLE_VERIFIED_MNEMONIC
+            E2E_WALLET_12_WORDS_MNEMONIC:projects/1027349420744/secrets/E2E_WALLET_12_WORDS_MNEMONIC
       - uses: actions/checkout@v4
       - name: Set env
         run: |
@@ -25,6 +49,8 @@ jobs:
           echo "$ANDROID_HOME/cmdline-tools/latest/bin" >> $GITHUB_PATH
           echo "$ANDROID_HOME/platform-tools" >> $GITHUB_PATH
           echo "$ANDROID_HOME/emulator" >> $GITHUB_PATH
+      - name: Store compileSdkVersion in env
+        run: echo "ANDROID_COMPILE_SDK_VERSION=$(grep 'compileSdkVersion' android/build.gradle | grep -o '[0-9]\+')" >> $GITHUB_ENV
       # See https://namespace.so/docs/actions/nscloud-cache-action
       - name: Cache
         uses: namespacelabs/nscloud-cache-action@v1
@@ -47,8 +73,14 @@ jobs:
 
           # Temporarily disable checking for EPIPE error and use yes to accept all licenses
           set +o pipefail
-          yes | sdkmanager "platform-tools" "platforms;android-33"
+          yes | sdkmanager --licenses
           set -o pipefail
+
+          # Install Android SDK
+          sdkmanager "platform-tools" "platforms;android-${{ env.ANDROID_COMPILE_SDK_VERSION }}"
+
+          # Install Ninja
+          sudo apt-get install ninja-build
 
           # Allow the emulator to use /dev/kvm
           sudo adduser $USER kvm
@@ -66,9 +98,6 @@ jobs:
         run: yarn build:ts
       - name: Check E2E wallet balance
         run: NODE_OPTIONS='--unhandled-rejections=strict' yarn ts-node ./e2e/scripts/check-e2e-wallet-balance.ts
-      - name: Create Android E2E .env File
-        working-directory: e2e
-        run: echo WALLET_CONNECT_PROJECT_ID_E2E=${{ secrets.WALLET_CONNECT_PROJECT_ID_E2E }} >> .env
       - name: Create Detox Build
         run: CELO_TEST_CONFIG=e2e yarn detox build -c android.release
       - name: Run Detox
@@ -86,6 +115,15 @@ jobs:
           --headless
           --retries 3
           --device-boot-args="-snapshot ci_boot"
+        env:
+          E2E_WALLET_CONNECT_PROJECT_ID: ${{ steps.google-secrets.outputs.E2E_WALLET_CONNECT_PROJECT_ID }}
+          E2E_DEFAULT_RECIPIENT_MNEMONIC: ${{ steps.google-secrets.outputs.E2E_DEFAULT_RECIPIENT_MNEMONIC }}
+          E2E_DEFAULT_RECIPIENT_PRIVATE_KEY: ${{ steps.google-secrets.outputs.E2E_DEFAULT_RECIPIENT_PRIVATE_KEY }}
+          E2E_WALLET_MNEMONIC: ${{ steps.google-secrets.outputs.E2E_WALLET_MNEMONIC }}
+          E2E_WALLET_PRIVATE_KEY: ${{ steps.google-secrets.outputs.E2E_WALLET_PRIVATE_KEY }}
+          E2E_WALLET_SINGLE_VERIFIED_MNEMONIC: ${{ steps.google-secrets.outputs.E2E_WALLET_SINGLE_VERIFIED_MNEMONIC }}
+          E2E_WALLET_MULTIPLE_VERIFIED_MNEMONIC: ${{ steps.google-secrets.outputs.E2E_WALLET_MULTIPLE_VERIFIED_MNEMONIC }}
+          E2E_WALLET_12_WORDS_MNEMONIC: ${{ steps.google-secrets.outputs.E2E_WALLET_12_WORDS_MNEMONIC }}
       - name: Publish Android JUnit Report
         if: always()
         uses: mikepenz/action-junit-report@v4
@@ -93,7 +131,7 @@ jobs:
           check_name: Android (${{ inputs.android-api-level }}) e2e Test Report
           report_paths: 'e2e/test-results/junit.xml'
       - name: 'Upload Android E2E Artifacts'
-        if: failure()
+        if: failure() || cancelled()
         uses: actions/upload-artifact@v4
         with:
           name: android-${{ inputs.android-api-level }}-e2e-artifact

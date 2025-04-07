@@ -4,21 +4,18 @@ import * as matchers from 'redux-saga-test-plan/matchers'
 import { EffectProviders, StaticProvider, throwError } from 'redux-saga-test-plan/providers'
 import { call } from 'redux-saga/effects'
 import { showError } from 'src/alert/actions'
+import AppAnalytics from 'src/analytics/AppAnalytics'
 import { CeloExchangeEvents, SendEvents } from 'src/analytics/Events'
-import ValoraAnalytics from 'src/analytics/ValoraAnalytics'
 import { ErrorMessages } from 'src/app/ErrorMessages'
-import { encryptComment } from 'src/identity/commentEncryption'
 import { navigateBack, navigateHome } from 'src/navigator/NavigationService'
 import {
   Actions,
   SendPaymentAction,
-  encryptComment as encryptCommentAction,
-  encryptCommentComplete,
   sendPaymentFailure,
   sendPaymentSuccess,
 } from 'src/send/actions'
-import { encryptCommentSaga, sendPaymentSaga } from 'src/send/saga'
-import { Actions as TransactionActions, addStandbyTransaction } from 'src/transactions/actions'
+import { sendPaymentSaga } from 'src/send/saga'
+import { addStandbyTransaction, transactionConfirmed } from 'src/transactions/slice'
 import { NetworkId, TokenTransactionTypeV2 } from 'src/transactions/types'
 import { publicClient } from 'src/viem'
 import { ViemWallet } from 'src/viem/getLockableWallet'
@@ -33,7 +30,6 @@ import {
 import { createMockStore } from 'test/utils'
 import {
   mockAccount,
-  mockAccount2,
   mockCeloAddress,
   mockCeloTokenId,
   mockCusdAddress,
@@ -41,8 +37,6 @@ import {
   mockQRCodeRecipient,
 } from 'test/values'
 import { getTransactionCount } from 'viem/actions'
-
-jest.mock('@celo/connect')
 
 const mockNewTransactionContext = jest.fn()
 
@@ -82,9 +76,8 @@ describe(sendPaymentSaga, () => {
     amount,
     tokenId: mockCusdTokenId,
     usdAmount: amount,
-    comment: '',
     recipient: mockQRCodeRecipient,
-    fromModal: false,
+    fromExternal: false,
     preparedTransaction: {
       from: '0xfrom',
       to: '0xto',
@@ -125,24 +118,23 @@ describe(sendPaymentSaga, () => {
   it.each([
     {
       testSuffix: 'navigates home when not initiated from modal',
-      fromModal: false,
+      fromExternal: false,
       navigateFn: navigateHome,
     },
     {
       testSuffix: 'navigates back when initiated from modal',
-      fromModal: true,
+      fromExternal: true,
       navigateFn: navigateBack,
     },
   ])(
     'sends a payment successfully with viem and $testSuffix',
-    async ({ fromModal, navigateFn }) => {
-      await expectSaga(sendPaymentSaga, { ...sendAction, fromModal })
+    async ({ fromExternal, navigateFn }) => {
+      await expectSaga(sendPaymentSaga, { ...sendAction, fromExternal })
         .withState(createMockStore({}).getState())
         .provide(createDefaultProviders())
         .call(getViemWallet, networkConfig.viemChain.celo, false)
         .put(
           addStandbyTransaction({
-            __typename: 'TokenTransferV3',
             context: { id: 'mock' },
             type: TokenTransactionTypeV2.Sent,
             networkId: NetworkId['celo-alfajores'],
@@ -152,9 +144,7 @@ describe(sendPaymentSaga, () => {
               tokenId: mockCusdTokenId,
             },
             address: mockQRCodeRecipient.address,
-            metadata: {
-              comment: '',
-            },
+            metadata: {},
             feeCurrencyId: mockCeloTokenId,
             transactionHash: mockTxHash,
           })
@@ -163,9 +153,9 @@ describe(sendPaymentSaga, () => {
         .run()
 
       expect(navigateFn).toHaveBeenCalledTimes(1)
-      expect(ValoraAnalytics.track).toHaveBeenCalledTimes(2)
-      expect(ValoraAnalytics.track).toHaveBeenCalledWith(SendEvents.send_tx_start)
-      expect(ValoraAnalytics.track).toHaveBeenCalledWith(SendEvents.send_tx_complete, {
+      expect(AppAnalytics.track).toHaveBeenCalledTimes(2)
+      expect(AppAnalytics.track).toHaveBeenCalledWith(SendEvents.send_tx_start)
+      expect(AppAnalytics.track).toHaveBeenCalledWith(SendEvents.send_tx_complete, {
         txId: mockContext.id,
         recipientAddress: mockQRCodeRecipient.address,
         amount: '10',
@@ -185,7 +175,6 @@ describe(sendPaymentSaga, () => {
       .call(getViemWallet, networkConfig.viemChain.celo, false)
       .put(
         addStandbyTransaction({
-          __typename: 'TokenTransferV3',
           context: { id: 'mock' },
           type: TokenTransactionTypeV2.Sent,
           networkId: NetworkId['celo-alfajores'],
@@ -195,9 +184,7 @@ describe(sendPaymentSaga, () => {
             tokenId: mockCeloTokenId,
           },
           address: mockQRCodeRecipient.address,
-          metadata: {
-            comment: '',
-          },
+          metadata: {},
           feeCurrencyId: mockCeloTokenId,
           transactionHash: mockTxHash,
         })
@@ -205,9 +192,9 @@ describe(sendPaymentSaga, () => {
       .put(sendPaymentSuccess({ amount, tokenId: mockCeloTokenId }))
       .run()
 
-    expect(ValoraAnalytics.track).toHaveBeenCalledTimes(3)
-    expect(ValoraAnalytics.track).toHaveBeenCalledWith(SendEvents.send_tx_start)
-    expect(ValoraAnalytics.track).toHaveBeenCalledWith(SendEvents.send_tx_complete, {
+    expect(AppAnalytics.track).toHaveBeenCalledTimes(3)
+    expect(AppAnalytics.track).toHaveBeenCalledWith(SendEvents.send_tx_start)
+    expect(AppAnalytics.track).toHaveBeenCalledWith(SendEvents.send_tx_complete, {
       txId: mockContext.id,
       recipientAddress: mockQRCodeRecipient.address,
       amount: '10',
@@ -217,7 +204,7 @@ describe(sendPaymentSaga, () => {
       networkId: 'celo-alfajores',
       isTokenManuallyImported: false,
     })
-    expect(ValoraAnalytics.track).toHaveBeenCalledWith(CeloExchangeEvents.celo_withdraw_completed, {
+    expect(AppAnalytics.track).toHaveBeenCalledWith(CeloExchangeEvents.celo_withdraw_completed, {
       amount: '10',
     })
   })
@@ -235,7 +222,7 @@ describe(sendPaymentSaga, () => {
       .run()
     // 1 call for start of send transaction plus 2 calls from showError, one
     // with the error handler and one with the assertion above
-    expect(ValoraAnalytics.track).toHaveBeenCalledTimes(3)
+    expect(AppAnalytics.track).toHaveBeenCalledTimes(3)
   })
 
   it('fails if sendRawTransaction throws', async () => {
@@ -248,35 +235,12 @@ describe(sendPaymentSaga, () => {
       .call(getViemWallet, networkConfig.viemChain.celo, false)
       .put(sendPaymentFailure())
       .put(showError(ErrorMessages.SEND_PAYMENT_FAILED))
-      .not.put.actionType(TransactionActions.ADD_STANDBY_TRANSACTION)
-      .not.put.actionType(TransactionActions.TRANSACTION_CONFIRMED)
+      .not.put.actionType(addStandbyTransaction.type)
+      .not.put.actionType(transactionConfirmed.type)
       .run()
-    expect(ValoraAnalytics.track).toHaveBeenCalledWith(SendEvents.send_tx_start)
-    expect(ValoraAnalytics.track).toHaveBeenCalledWith(SendEvents.send_tx_error, {
+    expect(AppAnalytics.track).toHaveBeenCalledWith(SendEvents.send_tx_start)
+    expect(AppAnalytics.track).toHaveBeenCalledWith(SendEvents.send_tx_error, {
       error: 'tx failed',
     })
-  })
-})
-
-describe('encryptCommentSaga', () => {
-  it('encrypts comment and puts an action', async () => {
-    await expectSaga(
-      encryptCommentSaga,
-      encryptCommentAction({ comment: 'test', fromAddress: mockAccount, toAddress: mockAccount2 })
-    )
-      .provide([[matchers.call.fn(encryptComment), 'enc-test']])
-      .put(encryptCommentComplete('enc-test'))
-      .call(encryptComment, 'test', mockAccount2, mockAccount)
-      .run()
-  })
-
-  it('puts complete action with null if comment is empty string', async () => {
-    await expectSaga(
-      encryptCommentSaga,
-      encryptCommentAction({ comment: '', fromAddress: mockAccount, toAddress: mockAccount2 })
-    )
-      .put(encryptCommentComplete(null))
-      .not.call.fn(encryptComment)
-      .run()
   })
 })

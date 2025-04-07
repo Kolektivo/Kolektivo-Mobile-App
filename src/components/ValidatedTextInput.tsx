@@ -2,11 +2,10 @@
  * TextInput with input validation, interchangeable with `./TextInput.tsx`
  */
 
-import { validateInput } from '@celo/phone-utils'
-import { ValidatorKind } from '@celo/utils/lib/inputValidation'
 import * as React from 'react'
 import { KeyboardType } from 'react-native'
 import TextInput, { TextInputProps } from 'src/components/TextInput'
+import { validateInput, ValidatorKind } from 'src/utils/inputValidation'
 
 interface OwnProps {
   InputComponent: React.ComponentType<TextInputProps>
@@ -58,7 +57,7 @@ export default class ValidatedTextInput extends React.Component<ValidatedTextInp
     // note: the countryCallingCode is a string like "+31"
     const userInput =
       this.props.validator === ValidatorKind.Phone
-        ? input.split(this.props.countryCallingCode)[1] ?? input
+        ? (input.split(this.props.countryCallingCode)[1] ?? input)
         : input
     const validated = validateInput(userInput, this.props)
 

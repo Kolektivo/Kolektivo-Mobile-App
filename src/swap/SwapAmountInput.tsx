@@ -10,23 +10,22 @@ import {
   View,
   ViewStyle,
 } from 'react-native'
-import SkeletonPlaceholder from 'react-native-skeleton-placeholder'
+import SkeletonPlaceholder from 'src/components/SkeletonPlaceholder'
 import TextInput from 'src/components/TextInput'
 import TokenDisplay from 'src/components/TokenDisplay'
 import TokenIcon, { IconSize } from 'src/components/TokenIcon'
 import Touchable from 'src/components/Touchable'
 import DownArrowIcon from 'src/icons/DownArrowIcon'
+import { NETWORK_NAMES } from 'src/shared/conts'
 import Colors from 'src/styles/colors'
-import fontStyles, { typeScale } from 'src/styles/fonts'
+import { typeScale } from 'src/styles/fonts'
 import { Spacing } from 'src/styles/styles'
 import { TokenBalance } from 'src/tokens/slice'
-import { NETWORK_NAMES } from 'src/shared/conts'
 
 interface Props {
-  onInputChange(value: string): void
+  onInputChange?(value: string): void
   inputValue?: string | null
   parsedInputValue?: BigNumber | null
-  onPressMax?(): void
   onSelectToken(): void
   token?: TokenBalance
   loading: boolean
@@ -42,7 +41,6 @@ const SwapAmountInput = ({
   onInputChange,
   inputValue,
   parsedInputValue,
-  onPressMax,
   onSelectToken,
   token,
   loading,
@@ -96,7 +94,7 @@ const SwapAmountInput = ({
           ) : (
             <Text style={styles.tokenNamePlaceholder}>{buttonPlaceholder}</Text>
           )}
-          <DownArrowIcon height={24} color={Colors.gray3} />
+          <DownArrowIcon height={24} color={Colors.contentSecondary} />
         </View>
       </Touchable>
       {token && (
@@ -106,7 +104,7 @@ const SwapAmountInput = ({
               forwardedRef={textInputRef}
               onChangeText={(value) => {
                 handleSetStartPosition(undefined)
-                onInputChange(value)
+                onInputChange?.(value)
               }}
               value={inputValue || undefined}
               placeholder="0"
@@ -138,12 +136,7 @@ const SwapAmountInput = ({
             />
             {loading && (
               <View style={styles.loaderContainer}>
-                <SkeletonPlaceholder
-                  borderRadius={100} // ensure rounded corners with font scaling
-                  backgroundColor={Colors.gray2}
-                  highlightColor={Colors.white}
-                  testID="SwapAmountInput/Loader"
-                >
+                <SkeletonPlaceholder testID="SwapAmountInput/Loader">
                   <View style={styles.loader} />
                 </SkeletonPlaceholder>
               </View>
@@ -160,21 +153,6 @@ const SwapAmountInput = ({
               />
             </Text>
           )}
-          {onPressMax && (
-            <View style={styles.maxButtonWrapper}>
-              <Touchable
-                borderRadius={Spacing.Tiny4}
-                onPress={() => {
-                  onPressMax()
-                  textInputRef.current?.blur()
-                }}
-                style={styles.maxButton}
-                testID="SwapAmountInput/MaxButton"
-              >
-                <Text style={styles.maxText}>{t('max')}</Text>
-              </Touchable>
-            </View>
-          )}
         </View>
       )}
     </View>
@@ -183,8 +161,8 @@ const SwapAmountInput = ({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: Colors.gray1,
-    borderColor: Colors.gray2,
+    backgroundColor: Colors.backgroundSecondary,
+    borderColor: Colors.borderPrimary,
     borderWidth: 1,
   },
   tokenInfo: {
@@ -199,17 +177,17 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   bottomContainer: {
-    borderColor: Colors.gray2,
+    borderColor: Colors.borderPrimary,
     borderTopWidth: 1,
   },
   inputContainer: {
     flex: 1,
   },
   inputError: {
-    color: Colors.error,
+    color: Colors.errorPrimary,
   },
   inputText: {
-    ...fontStyles.h2,
+    ...typeScale.titleSmall,
     fontSize: 26,
     lineHeight: undefined,
     paddingVertical: Spacing.Smallest8,
@@ -221,29 +199,13 @@ const styles = StyleSheet.create({
     height: '100%',
     width: '100%',
   },
-  maxButtonWrapper: {
-    marginLeft: Spacing.Smallest8,
-  },
-  maxButton: {
-    backgroundColor: Colors.white,
-    borderWidth: 1,
-    borderColor: Colors.gray2,
-    borderRadius: Spacing.Tiny4,
-    paddingVertical: Spacing.Tiny4,
-    paddingHorizontal: Spacing.Tiny4,
-  },
-  maxText: {
-    ...typeScale.labelXXSmall,
-    color: Colors.gray5,
-    fontSize: 10,
-  },
   tokenName: {
     ...typeScale.labelSemiBoldXSmall,
     paddingHorizontal: 4,
   },
   tokenNetwork: {
     ...typeScale.bodyXSmall,
-    color: Colors.gray4,
+    color: Colors.contentSecondary,
     paddingHorizontal: 4,
   },
   tokenInfoText: {
@@ -252,13 +214,13 @@ const styles = StyleSheet.create({
   tokenNamePlaceholder: {
     ...typeScale.labelMedium,
     paddingHorizontal: 4,
-    color: Colors.gray3,
+    color: Colors.contentSecondary,
   },
   fiatValue: {
     ...typeScale.bodyXSmall,
     paddingLeft: Spacing.Smallest8,
     maxWidth: '40%',
-    color: Colors.gray4,
+    color: Colors.contentSecondary,
     paddingVertical: Spacing.Smallest8,
   },
 })

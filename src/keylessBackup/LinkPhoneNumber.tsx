@@ -4,17 +4,14 @@ import { useTranslation } from 'react-i18next'
 import { StyleSheet, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useSelector } from 'react-redux'
+import AppAnalytics from 'src/analytics/AppAnalytics'
 import { OnboardingEvents } from 'src/analytics/Events'
-import ValoraAnalytics from 'src/analytics/ValoraAnalytics'
 import BackButton from 'src/components/BackButton'
 import Button, { BtnSizes, BtnTypes } from 'src/components/Button'
-import { setHasSeenVerificationNux } from 'src/identity/actions'
-
 import { navigate } from 'src/navigator/NavigationService'
 import { Screens } from 'src/navigator/Screens'
 import { StackParamList } from 'src/navigator/types'
 import { goToNextOnboardingScreen, onboardingPropsSelector } from 'src/onboarding/steps'
-import { useDispatch } from 'src/redux/hooks'
 import colors from 'src/styles/colors'
 import { typeScale } from 'src/styles/fonts'
 import { Spacing } from 'src/styles/styles'
@@ -23,24 +20,22 @@ type Props = NativeStackScreenProps<StackParamList, Screens.LinkPhoneNumber>
 
 export default function LinkPhoneNumber({ navigation }: Props) {
   const { t } = useTranslation()
-  const dispatch = useDispatch()
   const onboardingProps = useSelector(onboardingPropsSelector)
   useLayoutEffect(() => {
     navigation.setOptions({
       headerLeft: () => <BackButton />,
       headerStyle: {
-        backgroundColor: colors.gray1,
+        backgroundColor: colors.backgroundPrimary,
       },
     })
   }, [navigation])
 
   const continueButtonOnPress = async () => {
-    ValoraAnalytics.track(OnboardingEvents.link_phone_number)
+    AppAnalytics.track(OnboardingEvents.link_phone_number)
     navigate(Screens.VerificationStartScreen, { hasOnboarded: false })
   }
   const laterButtonOnPress = async () => {
-    ValoraAnalytics.track(OnboardingEvents.link_phone_number_later)
-    dispatch(setHasSeenVerificationNux(true))
+    AppAnalytics.track(OnboardingEvents.link_phone_number_later)
     goToNextOnboardingScreen({
       firstScreenInCurrentStep: Screens.VerificationStartScreen,
       onboardingProps,
@@ -82,7 +77,7 @@ export default function LinkPhoneNumber({ navigation }: Props) {
 const styles = StyleSheet.create({
   safeArea: {
     alignItems: 'center',
-    backgroundColor: colors.gray1,
+    backgroundColor: colors.backgroundPrimary,
     flexGrow: 1,
     justifyContent: 'space-between',
   },

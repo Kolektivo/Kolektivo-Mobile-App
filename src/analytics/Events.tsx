@@ -25,10 +25,6 @@ export enum AppEvents {
   in_app_review_impression = 'in_app_review_impression',
   in_app_review_error = 'in_app_review_error',
 
-  multichain_beta_opt_in = 'multichain_beta_opt_in',
-  multichain_beta_opt_out = 'multichain_beta_opt_out',
-  multichain_beta_contact_support = 'multichain_beta_contact_support',
-
   handle_deeplink = 'handle_deeplink',
 }
 
@@ -95,20 +91,25 @@ export enum SettingsEvents {
 export enum KeylessBackupEvents {
   wallet_security_primer_get_started = 'wallet_security_primer_get_started',
   cab_setup_recovery_phrase = 'cab_setup_recovery_phrase',
-  cab_sign_in_with_google = 'cab_sign_in_with_google',
-  cab_sign_in_with_google_success = 'cab_sign_in_with_google_success',
+  cab_sign_in_another_way = 'cab_sign_in_another_way',
+  cab_sign_in_start = 'cab_sign_in_start',
+  cab_sign_in_success = 'cab_sign_in_success',
+  cab_sign_in_with_email_screen_back = 'cab_sign_in_with_email_screen_back',
   cab_sign_in_with_email_screen_cancel = 'cab_sign_in_with_email_screen_cancel',
+  cab_sign_in_with_email_screen_skip = 'cab_sign_in_with_email_screen_skip',
   cab_get_torus_keyshare_failed = 'cab_get_torus_keyshare_failed',
+  cab_enter_phone_number_back = 'cab_enter_phone_number_back',
   cab_enter_phone_number_continue = 'cab_enter_phone_number_continue',
   cab_enter_phone_number_cancel = 'cab_enter_phone_number_cancel',
   cab_intro_continue = 'cab_intro_continue',
   cab_issue_sms_code_start = 'cab_issue_sms_code_start',
   cab_issue_sms_code_success = 'cab_issue_sms_code_success',
   cab_issue_sms_code_error = 'cab_issue_sms_code_error',
+  cab_enter_phone_code_back = 'cab_enter_phone_code_back',
   cab_enter_phone_code_cancel = 'cab_enter_phone_code_cancel',
-  cab_issue_valora_keyshare_start = 'cab_issue_valora_keyshare_start',
-  cab_issue_valora_keyshare_success = 'cab_issue_valora_keyshare_success',
-  cab_issue_valora_keyshare_error = 'cab_issue_valora_keyshare_error',
+  cab_issue_app_keyshare_start = 'cab_issue_app_keyshare_start',
+  cab_issue_app_keyshare_success = 'cab_issue_app_keyshare_success',
+  cab_issue_app_keyshare_error = 'cab_issue_app_keyshare_error',
   cab_progress_completed_continue = 'cab_progress_completed_continue',
   cab_progress_failed_later = 'cab_progress_failed_later',
   cab_progress_failed_manual = 'cab_progress_failed_manual',
@@ -127,6 +128,7 @@ export enum KeylessBackupEvents {
   cab_phone_verification_help = 'cab_phone_verification_help',
   cab_phone_verification_help_skip = 'cab_phone_verification_help_skip',
   cab_phone_verification_help_go_back = 'cab_phone_verification_help_go_back',
+  cab_phone_verification_help_use_phrase = 'cab_phone_verification_help_use_phrase',
   cab_setup_hashed_keyshares = 'cab_setup_hashed_keyshares',
 }
 
@@ -191,19 +193,11 @@ export enum OnboardingEvents {
   initialize_account_complete = 'initialize_account_complete',
   initialize_account_error = 'initialize_account_error',
 
-  account_dek_register_start = 'account_dek_register_start',
-  account_dek_register_account_unlocked = 'account_dek_register_account_unlocked',
-  account_dek_register_account_checked = 'account_dek_register_account_checked',
-  account_dek_register_complete = 'account_dek_register_complete',
-
   protect_wallet_use_recovery = 'protect_wallet_use_recovery',
   protect_wallet_help = 'protect_wallet_help',
   protect_wallet_help_dismiss = 'protect_wallet_help_dismiss',
   protect_wallet_copy_phrase = 'protect_wallet_copy_phrase',
   protect_wallet_complete = 'protect_wallet_complete',
-
-  cya_button_press = 'cya_button_press',
-  cya_later = 'cya_later',
 
   link_phone_number = 'link_phone_number',
   link_phone_number_later = 'link_phone_number_later',
@@ -270,18 +264,6 @@ export enum InviteEvents {
   invite_help_link = 'invite_help_link',
 }
 
-export enum EscrowEvents {
-  escrow_fetch_start = 'escrow_fetch_start',
-  escrow_fetch_complete = 'escrow_fetch_complete',
-  escrow_fetch_error = 'escrow_fetch_error',
-
-  escrow_reclaim_confirm = 'escrow_reclaim_confirm',
-  escrow_reclaim_cancel = 'escrow_reclaim_cancel',
-  escrow_reclaim_start = 'escrow_reclaim_start',
-  escrow_reclaim_complete = 'escrow_reclaim_complete',
-  escrow_reclaim_error = 'escrow_reclaim_error',
-}
-
 export enum SendEvents {
   send_scan = 'send_scan',
   send_select_recipient = 'send_select_recipient',
@@ -306,7 +288,7 @@ export enum SendEvents {
   send_tx_error = 'send_tx_error',
 
   token_dropdown_opened = 'token_dropdown_opened',
-  max_pressed = 'max_pressed',
+  send_percentage_selected = 'send_percentage_selected',
   swap_input_pressed = 'swap_input_pressed',
 
   // related to the alert that is shown when sending to an unknown address
@@ -337,8 +319,8 @@ export enum QrScreenEvents {
 }
 
 export enum FeeEvents {
-  estimate_fee_failed = 'estimate_fee_failed',
-  estimate_fee_success = 'estimate_fee_success',
+  gas_fee_warning_impression = 'gas_fee_warning_impression',
+  gas_fee_warning_cta_press = 'gas_fee_warning_cta_press',
 }
 
 export enum TransactionEvents {
@@ -349,6 +331,7 @@ export enum TransactionEvents {
   transaction_confirmed = 'transaction_confirmed',
   transaction_error = 'transaction_error',
   transaction_exception = 'transaction_exception',
+  transaction_prepare_insufficient_gas = 'transaction_prepare_insufficient_gas',
 }
 
 export enum CeloExchangeEvents {
@@ -391,10 +374,6 @@ export enum FiatExchangeEvents {
   // Add fund flow via new user get started card
   cico_add_get_started_impression = 'cico_add_get_started_impression',
   cico_add_get_started_selected = 'cico_add_get_started_selected',
-
-  // Funding Education Dialog Screen
-  cico_add_funds_info_support = 'cico_add_funds_info_support',
-  cico_cash_out_info_support = 'cico_cash_out_info_support',
 
   // External Exchanges Screen
   external_exchange_link = 'external_exchange_link',
@@ -478,13 +457,6 @@ export enum NavigationEvents {
   navigator_not_ready = 'navigator_not_ready',
 }
 
-export enum RewardsEvents {
-  rewards_screen_opened = 'rewards_screen_opened',
-  rewards_screen_cta_pressed = 'rewards_screen_cta_pressed',
-  learn_more_pressed = 'learn_more_pressed',
-  claimed_reward = 'claimed_reward',
-}
-
 export enum WalletConnectEvents {
   // Events related to WalletConnect pairing (technical: opening up the communication channel via QR code or deeplink)
   wc_pairing_start = 'wc_pairing_start',
@@ -515,16 +487,6 @@ export enum WalletConnectEvents {
   wc_copy_request_payload = 'wc_copy_request_payload',
 }
 
-export enum DappKitEvents {
-  dappkit_parse_deeplink_error = 'dappkit_parse_deeplink_error',
-  dappkit_request_propose = 'dappkit_request_propose',
-  dappkit_request_cancel = 'dappkit_request_cancel',
-  dappkit_copy_request_details = 'dappkit_copy_request_details',
-  dappkit_request_accept_start = 'dappkit_request_accept_start',
-  dappkit_request_accept_success = 'dappkit_request_accept_success',
-  dappkit_request_accept_error = 'dappkit_request_accept_error',
-}
-
 export enum CICOEvents {
   persona_kyc_start = 'persona_kyc_start',
   persona_kyc_success = 'persona_kyc_success',
@@ -542,7 +504,7 @@ export enum DappExplorerEvents {
   dapp_favorite = 'dapp_favorite',
   dapp_unfavorite = 'dapp_unfavorite',
   dapp_filter = 'dapp_filter',
-  dapp_rankings_open = 'dapp_rankings_open',
+  dapp_explore_all = 'dapp_explore_all',
 }
 
 export enum WebViewEvents {
@@ -559,11 +521,12 @@ export enum SwapEvents {
   swap_screen_open = 'swap_screen_open',
   swap_screen_select_token = 'swap_screen_select_token',
   swap_screen_confirm_token = 'swap_screen_confirm_token',
-  swap_screen_max_swap_amount = 'swap_screen_max_swap_amount',
+  swap_screen_percentage_selected = 'swap_screen_percentage_selected',
   swap_gas_fees_learn_more = 'swap_gas_fees_learn_more',
   swap_review_submit = 'swap_review_submit',
   swap_execute_success = 'swap_execute_success',
   swap_execute_error = 'swap_execute_error',
+  swap_cancel = 'swap_cancel',
   swap_learn_more = 'swap_learn_more',
   swap_price_impact_warning_displayed = 'swap_price_impact_warning_displayed',
   swap_show_info = 'swap_show_info',
@@ -665,6 +628,9 @@ export enum JumpstartEvents {
   jumpstart_reclaim_contact_support = 'jumpstart_reclaim_contact_support',
   jumpstart_claim_status_fetch_success = 'jumpstart_claim_status_fetch_success',
   jumpstart_claim_status_fetch_error = 'jumpstart_claim_status_fetch_error',
+  jumpstart_add_assets_show_actions = 'jumpstart_add_assets_show_actions',
+  jumpstart_add_assets_action_press = 'jumpstart_add_assets_action_press',
+  jumpstart_intro_seen = 'jumpstart_intro_seen',
 }
 
 export enum PointsEvents {
@@ -678,26 +644,22 @@ export enum PointsEvents {
   points_screen_activity_try_again_press = 'points_screen_activity_try_again_press',
   points_screen_activity_fetch_more = 'points_screen_activity_fetch_more',
   points_screen_activity_learn_more_press = 'points_screen_activity_learn_more_press',
+  points_screen_disclaimer_press = 'points_screen_disclaimer_press',
 }
 
 export enum EarnEvents {
-  earn_cta_press = 'earn_cta_press',
-  earn_add_crypto_action_press = 'earn_add_crypto_action_press',
+  earn_entrypoint_press = 'earn_entrypoint_press',
+  earn_before_deposit_action_press = 'earn_before_deposit_action_press',
   earn_deposit_provider_info_press = 'earn_deposit_provider_info_press',
   earn_deposit_terms_and_conditions_press = 'earn_deposit_terms_and_conditions_press',
   earn_deposit_complete = 'earn_deposit_complete',
   earn_deposit_cancel = 'earn_deposit_cancel',
   earn_deposit_submit_start = 'earn_deposit_submit_start',
   earn_deposit_submit_success = 'earn_deposit_submit_success',
+  earn_deposit_execute_success = 'earn_deposit_execute_success',
   earn_deposit_submit_error = 'earn_deposit_submit_error',
   earn_deposit_submit_cancel = 'earn_deposit_submit_cancel',
-  earn_view_pools_press = 'earn_view_pools_press',
-  earn_enter_amount_info_press = 'earn_enter_amount_info_press',
   earn_enter_amount_continue_press = 'earn_enter_amount_continue_press',
-  earn_enter_amount_info_more_pools = 'earn_enter_amount_info_more_pools',
-  earn_exit_pool_press = 'earn_exit_pool_press',
-  earn_deposit_more_press = 'earn_deposit_more_press',
-  earn_deposit_add_gas_press = 'earn_deposit_add_gas_press',
   earn_feed_item_select = 'earn_feed_item_select',
   earn_collect_earnings_press = 'earn_collect_earnings_press',
   earn_withdraw_submit_start = 'earn_withdraw_submit_start',
@@ -707,4 +669,13 @@ export enum EarnEvents {
   earn_withdraw_add_gas_press = 'earn_withdraw_add_gas_press',
   earn_info_learn_press = 'earn_info_learn_press',
   earn_info_earn_press = 'earn_info_earn_press',
+  earn_home_learn_more_press = 'earn_home_learn_more_press',
+  earn_pool_card_press = 'earn_pool_card_press',
+  earn_home_error_try_again = 'earn_home_error_try_again',
+  earn_pool_info_view_pool = 'earn_pool_info_view_pool',
+  earn_pool_info_tap_info_icon = 'earn_pool_info_tap_info_icon',
+  earn_pool_info_tap_withdraw = 'earn_pool_info_tap_withdraw',
+  earn_pool_info_tap_deposit = 'earn_pool_info_tap_deposit',
+  earn_pool_info_tap_safety_details = 'earn_pool_info_tap_safety_details',
+  earn_select_withdraw_type = 'earn_select_withdraw_type',
 }

@@ -10,8 +10,6 @@ import { UriData, urlFromUriData } from 'src/qrcode/schema'
 import { RecipientType } from 'src/recipients/recipient'
 import { TransactionDataInput } from 'src/send/types'
 import { handlePaymentDeeplink, handleSendPaymentData } from 'src/send/utils'
-import { getDynamicConfigParams } from 'src/statsig'
-import { NetworkId } from 'src/transactions/types'
 import { createMockStore } from 'test/utils'
 import {
   mockAccount2,
@@ -31,9 +29,6 @@ describe('send/utils', () => {
   describe('handleSendPaymentData', () => {
     beforeEach(() => {
       jest.clearAllMocks()
-      jest.mocked(getDynamicConfigParams).mockReturnValueOnce({
-        showSend: [NetworkId['celo-alfajores']],
-      })
     })
 
     const mockData: UriData = {
@@ -43,11 +38,13 @@ describe('send/utils', () => {
       e164PhoneNumber: undefined,
       amount: undefined,
       token: undefined,
-      comment: undefined,
     }
 
     it('should navigate to SendEnterAmount screen when no amount nor token is sent', async () => {
-      await expectSaga(handleSendPaymentData, mockData, false, undefined)
+      await expectSaga(handleSendPaymentData, {
+        data: mockData,
+        isFromScan: false,
+      })
         .withState(createMockStore({}).getState())
         .run()
       expect(navigate).toHaveBeenCalledWith(
@@ -61,7 +58,10 @@ describe('send/utils', () => {
     })
 
     it('should navigate to SendEnterAmount screen when no amount is sent but token is', async () => {
-      await expectSaga(handleSendPaymentData, { ...mockData, token: 'cEUR' }, false, undefined)
+      await expectSaga(handleSendPaymentData, {
+        data: { ...mockData, token: 'cEUR' },
+        isFromScan: false,
+      })
         .withState(createMockStore({}).getState())
         .run()
       expect(navigate).toHaveBeenCalledWith(
@@ -76,12 +76,10 @@ describe('send/utils', () => {
     })
 
     it('should navigate to SendEnterAmount screen when amount and token are sent but not recognized', async () => {
-      await expectSaga(
-        handleSendPaymentData,
-        { ...mockData, amount: '1', token: 'NOT_A_TOKEN' },
-        false,
-        undefined
-      )
+      await expectSaga(handleSendPaymentData, {
+        data: { ...mockData, amount: '1', token: 'NOT_A_TOKEN' },
+        isFromScan: false,
+      })
         .withState(createMockStore({}).getState())
         .run()
       expect(navigate).toHaveBeenCalledWith(
@@ -89,6 +87,25 @@ describe('send/utils', () => {
         expect.objectContaining({
           origin: SendOrigin.AppSendFlow,
           recipient: { address: mockData.address, recipientType: RecipientType.Address },
+          forceTokenId: false,
+        })
+      )
+    })
+
+    it('should navigate to SendEnterAmount with defaultTokenIdOverride', async () => {
+      await expectSaga(handleSendPaymentData, {
+        data: mockData,
+        isFromScan: false,
+        defaultTokenIdOverride: 'some-token-id',
+      })
+        .withState(createMockStore({}).getState())
+        .run()
+      expect(navigate).toHaveBeenCalledWith(
+        Screens.SendEnterAmount,
+        expect.objectContaining({
+          origin: SendOrigin.AppSendFlow,
+          recipient: { address: mockData.address, recipientType: RecipientType.Address },
+          defaultTokenIdOverride: 'some-token-id',
           forceTokenId: false,
         })
       )
@@ -102,9 +119,10 @@ describe('send/utils', () => {
         handleSendPaymentData,
         // When currencyCode is not set, the amount is assumed to be in the currently selected local currency.
         // so here the amount is 1 PHP
-        { ...mockData, amount: '1', token: 'cEUR' },
-        false,
-        undefined
+        {
+          data: { ...mockData, amount: '1', token: 'cEUR' },
+          isFromScan: false,
+        }
       )
         .withState(mockState)
         .provide([
@@ -136,9 +154,10 @@ describe('send/utils', () => {
         // When currencyCode is not set, the amount is assumed to be in the currently selected local currency.
         // so here the amount is 1 PHP
         // When token is not set, the default token is cUSD
-        { ...mockData, amount: '1' },
-        false,
-        undefined
+        {
+          data: { ...mockData, amount: '1' },
+          isFromScan: false,
+        }
       )
         .withState(mockState)
         .provide([
@@ -162,7 +181,10 @@ describe('send/utils', () => {
     })
 
     it('should navigate to SendEnterAmount screen when an unsupported token is given', async () => {
-      await expectSaga(handleSendPaymentData, mockUriData[2], false, undefined)
+      await expectSaga(handleSendPaymentData, {
+        data: mockUriData[2],
+        isFromScan: false,
+      })
         .withState(createMockStore({}).getState())
         .run()
       expect(navigate).toHaveBeenCalledWith(
@@ -184,7 +206,10 @@ describe('send/utils', () => {
       })
 
       it('should navigate to SendEnterAmount screen when only address & currencyCode are given', async () => {
-        await expectSaga(handleSendPaymentData, mockUriData[3], false, undefined)
+        await expectSaga(handleSendPaymentData, {
+          data: mockUriData[3],
+          isFromScan: false,
+        })
           .withState(createMockStore({}).getState())
           .run()
         expect(navigate).toHaveBeenCalledWith(
@@ -207,7 +232,10 @@ describe('send/utils', () => {
           amountIsInLocalCurrency: true,
         }
 
-        await expectSaga(handleSendPaymentData, mockUriData[4], false, undefined)
+        await expectSaga(handleSendPaymentData, {
+          data: mockUriData[4],
+          isFromScan: false,
+        })
           .withState(createMockStore({}).getState())
           .provide([
             [matchers.call.fn(fetchExchangeRate), '1'], // USD to USD (currencyCode of mockUriData[4] is USD)
@@ -232,7 +260,10 @@ describe('send/utils', () => {
           amountIsInLocalCurrency: true,
         }
 
-        await expectSaga(handleSendPaymentData, mockUriData[5], false, undefined)
+        await expectSaga(handleSendPaymentData, {
+          data: mockUriData[5],
+          isFromScan: false,
+        })
           .withState(createMockStore({}).getState())
           .provide([
             [matchers.call.fn(fetchExchangeRate), '1'], // USD to USD (currencyCode of mockUriData[5] is USD)
@@ -254,7 +285,10 @@ describe('send/utils', () => {
       })
 
       it('should navigate to SendConfirmation screen when address, token = CELO, currencyCode, and amount are given', async () => {
-        await expectSaga(handleSendPaymentData, mockUriData[0], false, undefined)
+        await expectSaga(handleSendPaymentData, {
+          data: mockUriData[0],
+          isFromScan: false,
+        })
           .withState(createMockStore({}).getState())
           .provide([
             [matchers.call.fn(fetchExchangeRate), '1'], // USD to USD (currencyCode of mockUriData[0] is USD)
@@ -280,7 +314,10 @@ describe('send/utils', () => {
       })
 
       it('should navigate to SendEnterAmount screen when only address & token = CELO are given', async () => {
-        await expectSaga(handleSendPaymentData, mockUriData[1], false, undefined)
+        await expectSaga(handleSendPaymentData, {
+          data: mockUriData[1],
+          isFromScan: false,
+        })
           .withState(createMockStore({}).getState())
           .run()
         expect(navigate).toHaveBeenCalledWith(
@@ -306,7 +343,6 @@ describe('send/utils', () => {
         displayName: 'Super 8',
         currencyCode: 'PHP' as LocalCurrencyCode,
         amount: '500',
-        comment: '92a53156-c0f2-11ea-b3de-0242ac13000',
       }
 
       const deeplink = urlFromUriData(data)
@@ -318,7 +354,7 @@ describe('send/utils', () => {
       await expectSaga(handlePaymentDeeplink, deeplink)
         .withState(createMockStore({}).getState())
         .provide([[matchers.call.fn(handleSendPaymentData), undefined]])
-        .call(handleSendPaymentData, parsed, true)
+        .call(handleSendPaymentData, { data: parsed, isFromScan: true })
         .run()
     })
   })

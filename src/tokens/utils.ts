@@ -154,11 +154,6 @@ export function convertTokenToLocalAmount({
   return tokenAmount.multipliedBy(tokenPriceUsd).multipliedBy(usdToLocalRate)
 }
 
-export function getSupportedNetworkIdsForTokenBalances(): NetworkId[] {
-  return getDynamicConfigParams(DynamicConfigs[StatsigDynamicConfigs.MULTI_CHAIN_FEATURES])
-    .showBalances
-}
-
 export function getTokenId(networkId: NetworkId, tokenAddress?: string): string {
   if (
     (networkId === networkConfig.networkToNetworkId[Network.Celo] &&
@@ -168,24 +163,6 @@ export function getTokenId(networkId: NetworkId, tokenAddress?: string): string 
     return `${networkId}:native`
   }
   return `${networkId}:${tokenAddress}`
-}
-
-export function getSupportedNetworkIdsForSend(): NetworkId[] {
-  return getDynamicConfigParams(DynamicConfigs[StatsigDynamicConfigs.MULTI_CHAIN_FEATURES]).showSend
-}
-
-export function getSupportedNetworkIdsForSwap(): NetworkId[] {
-  return getDynamicConfigParams(DynamicConfigs[StatsigDynamicConfigs.MULTI_CHAIN_FEATURES]).showSwap
-}
-
-export function getSupportedNetworkIdsForWalletConnect(): NetworkId[] {
-  return getDynamicConfigParams(DynamicConfigs[StatsigDynamicConfigs.MULTI_CHAIN_FEATURES])
-    .showWalletConnect
-}
-
-export function getSupportedNetworkIdsForApprovalTxsInHomefeed(): NetworkId[] {
-  return getDynamicConfigParams(DynamicConfigs[StatsigDynamicConfigs.MULTI_CHAIN_FEATURES])
-    .showApprovalTxsInHomefeed
 }
 
 export function getTokenAnalyticsProps(token: TokenBalance): TokenProperties {

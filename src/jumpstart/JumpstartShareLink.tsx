@@ -7,10 +7,10 @@ import { Share, StyleSheet, Text, View } from 'react-native'
 import { ScrollView } from 'react-native-gesture-handler'
 import QRCode from 'react-native-qrcode-svg'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
+import AppAnalytics from 'src/analytics/AppAnalytics'
 import { JumpstartEvents } from 'src/analytics/Events'
 import { JumpstartShareOrigin } from 'src/analytics/Properties'
-import ValoraAnalytics from 'src/analytics/ValoraAnalytics'
-import BottomSheet, { BottomSheetRefType } from 'src/components/BottomSheet'
+import BottomSheet, { BottomSheetModalRefType } from 'src/components/BottomSheet'
 import Button, { BtnSizes } from 'src/components/Button'
 import DataFieldWithCopy from 'src/components/DataFieldWithCopy'
 import Dialog from 'src/components/Dialog'
@@ -23,7 +23,6 @@ import { navigateHome } from 'src/navigator/NavigationService'
 import { Screens } from 'src/navigator/Screens'
 import { TopBarIconButton } from 'src/navigator/TopBarButton'
 import { StackParamList } from 'src/navigator/types'
-import Colors from 'src/styles/colors'
 import { typeScale } from 'src/styles/fonts'
 import { Spacing } from 'src/styles/styles'
 import { useTokenInfo } from 'src/tokens/hooks'
@@ -40,7 +39,7 @@ function JumpstartShareLink({ route }: Props) {
 
   const { t } = useTranslation()
   const insets = useSafeAreaInsets()
-  const qrCodeBottomSheetRef = useRef<BottomSheetRefType>(null)
+  const qrCodeBottomSheetRef = useRef<BottomSheetModalRefType>(null)
 
   const shouldNavigate = useRef(false)
   const [showNavigationWarning, setShowNavigationWarning] = useState(false)
@@ -63,7 +62,7 @@ function JumpstartShareLink({ route }: Props) {
 
   const nativeShare = useAsyncCallback(
     async (origin: JumpstartShareOrigin) => {
-      ValoraAnalytics.track(JumpstartEvents.jumpstart_share_link, {
+      AppAnalytics.track(JumpstartEvents.jumpstart_share_link, {
         ...trackedDepositProperties,
         origin,
       })
@@ -79,13 +78,13 @@ function JumpstartShareLink({ route }: Props) {
     },
     {
       onSuccess: (result) => {
-        ValoraAnalytics.track(JumpstartEvents.jumpstart_share_link_result, {
+        AppAnalytics.track(JumpstartEvents.jumpstart_share_link_result, {
           ...result,
           ...trackedDepositProperties,
         })
       },
       onError: (error) => {
-        ValoraAnalytics.track(JumpstartEvents.jumpstart_share_link_result, {
+        AppAnalytics.track(JumpstartEvents.jumpstart_share_link_result, {
           ...trackedDepositProperties,
           error: ensureError(error).message,
         })
@@ -94,12 +93,12 @@ function JumpstartShareLink({ route }: Props) {
   )
 
   const handleShowNavigationWarning = () => {
-    ValoraAnalytics.track(JumpstartEvents.jumpstart_share_close)
+    AppAnalytics.track(JumpstartEvents.jumpstart_share_close)
     setShowNavigationWarning(true)
   }
 
   const handleConfirmNavigation = () => {
-    ValoraAnalytics.track(JumpstartEvents.jumpstart_share_confirm_close)
+    AppAnalytics.track(JumpstartEvents.jumpstart_share_confirm_close)
     // calling navigateHome directly from this function causes an app crash,
     // possibly because of the race condition between navigation and unmounting
     // the Dialog (Modal). Using a ref to track the user's intention to navigate
@@ -109,7 +108,7 @@ function JumpstartShareLink({ route }: Props) {
   }
 
   const handleDismissNavigationWarning = () => {
-    ValoraAnalytics.track(JumpstartEvents.jumpstart_share_dismiss_close)
+    AppAnalytics.track(JumpstartEvents.jumpstart_share_dismiss_close)
     setShowNavigationWarning(false)
   }
 
@@ -120,12 +119,12 @@ function JumpstartShareLink({ route }: Props) {
   }
 
   const handleShowQRBottomSheet = () => {
-    ValoraAnalytics.track(JumpstartEvents.jumpstart_show_QR, trackedDepositProperties)
+    AppAnalytics.track(JumpstartEvents.jumpstart_show_QR, trackedDepositProperties)
     qrCodeBottomSheetRef.current?.snapToIndex(0)
   }
 
   const handleCopyLink = (origin: JumpstartShareOrigin) => () => {
-    ValoraAnalytics.track(JumpstartEvents.jumpstart_copy_link, {
+    AppAnalytics.track(JumpstartEvents.jumpstart_copy_link, {
       ...trackedDepositProperties,
       origin,
     })
@@ -173,7 +172,7 @@ function JumpstartShareLink({ route }: Props) {
             text={t('jumpstartShareLinkScreen.ctaShare')}
             onPress={() => nativeShare.execute(JumpstartShareOrigin.MainScreen)}
             style={styles.button}
-            icon={<ShareIcon color={Colors.white} />}
+            icon={<ShareIcon />}
             iconPositionLeft={false}
             size={BtnSizes.FULL}
           />
@@ -181,7 +180,7 @@ function JumpstartShareLink({ route }: Props) {
             text={t('jumpstartShareLinkScreen.ctaScanQRCode')}
             onPress={handleShowQRBottomSheet}
             style={styles.button}
-            icon={<QRCodeIcon color={Colors.white} />}
+            icon={<QRCodeIcon />}
             iconPositionLeft={false}
             size={BtnSizes.FULL}
           />
@@ -226,7 +225,7 @@ function JumpstartShareLink({ route }: Props) {
           text={t('jumpstartShareLinkScreen.ctaShare')}
           onPress={() => nativeShare.execute(JumpstartShareOrigin.QrScreen)}
           style={styles.button}
-          icon={<ShareIcon color={Colors.white} />}
+          icon={<ShareIcon />}
           iconPositionLeft={false}
           size={BtnSizes.FULL}
         />

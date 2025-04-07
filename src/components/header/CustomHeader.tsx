@@ -11,19 +11,28 @@ interface Props {
 
 function CustomHeader({ left, right, title, style }: Props) {
   const titleComponent =
-    typeof title === 'string' ? <Text style={headerStyles.headerTitle}>{title}</Text> : title
+    typeof title === 'string' ? (
+      <Text testID="CustomHeaderTitle" style={headerStyles.headerTitle}>
+        {title}
+      </Text>
+    ) : (
+      title
+    )
   return (
     <View style={style ? [styles.container, style] : styles.container}>
       {!!title && <View style={styles.titleContainer}>{titleComponent}</View>}
-      {!!left && <View style={styles.buttonContainer}>{left}</View>}
+      {/* Need left element to be an empty view if not provided for right alignment to work */}
+      {left ? <View style={styles.buttonContainer}>{left}</View> : <View />}
       {!!right && <View style={styles.buttonContainer}>{right}</View>}
     </View>
   )
 }
 
+export const CUSTOM_HEADER_HEIGHT = Platform.OS === 'ios' ? 44 : 56
+
 const styles = StyleSheet.create({
   container: {
-    height: Platform.OS === 'ios' ? 44 : 56,
+    height: CUSTOM_HEADER_HEIGHT,
     width: '100%',
     flexDirection: 'row',
     justifyContent: 'space-between',

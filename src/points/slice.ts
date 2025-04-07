@@ -20,6 +20,7 @@ export type PointsConfig = {
   activitiesById: {
     [activityId in PointsActivityId]?: {
       pointsAmount: number
+      previousPointsAmount?: number
     }
   }
 }
@@ -153,7 +154,11 @@ export const {
   pointsIntroDismissed,
 } = slice.actions
 
-// action handled in saga
+// Action handled in saga. Only use this to track points events when
+// no other action would otherwise be emitted which we could listen to and
+// attach points event data to.
 export const trackPointsEvent = createAction<PointsEvent>('points/trackPointsEvent')
+
+export const pointsDataRefreshStarted = createAction('points/pointsDataRefreshStarted')
 
 export default slice.reducer

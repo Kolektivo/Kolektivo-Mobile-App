@@ -2,8 +2,8 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack'
 import React from 'react'
 import { Trans, useTranslation } from 'react-i18next'
 import { SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native'
+import AppAnalytics from 'src/analytics/AppAnalytics'
 import { KeylessBackupEvents } from 'src/analytics/Events'
-import ValoraAnalytics from 'src/analytics/ValoraAnalytics'
 import BackButton from 'src/components/BackButton'
 import Button, { BtnSizes, BtnTypes } from 'src/components/Button'
 import CancelButton from 'src/components/CancelButton'
@@ -16,12 +16,12 @@ import { emptyHeader } from 'src/navigator/Headers'
 import { navigate } from 'src/navigator/NavigationService'
 import { Screens } from 'src/navigator/Screens'
 import { StackParamList } from 'src/navigator/types'
-import { Colors } from 'src/styles/colors'
+import Colors from 'src/styles/colors'
 import { typeScale } from 'src/styles/fonts'
 import { Spacing } from 'src/styles/styles'
 
 function onPressRecoveryPhrase() {
-  ValoraAnalytics.track(KeylessBackupEvents.cab_setup_recovery_phrase)
+  AppAnalytics.track(KeylessBackupEvents.cab_setup_recovery_phrase)
   navigate(Screens.BackupIntroduction)
 }
 
@@ -83,7 +83,10 @@ function KeylessBackupIntro({ route }: Props) {
       <Button
         testID="keylessBackupIntro/Continue"
         onPress={() => {
-          ValoraAnalytics.track(KeylessBackupEvents.cab_intro_continue, { keylessBackupFlow })
+          AppAnalytics.track(KeylessBackupEvents.cab_intro_continue, {
+            keylessBackupFlow,
+            origin: KeylessBackupOrigin.Settings,
+          })
           navigate(Screens.SignInWithEmail, {
             keylessBackupFlow,
             origin: KeylessBackupOrigin.Settings,
@@ -115,26 +118,25 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.Thick24,
   },
   title: {
-    ...typeScale.labelSemiBoldLarge,
+    ...typeScale.titleMedium,
     textAlign: 'center',
-    color: Colors.black,
+    paddingTop: Spacing.Thick24,
   },
   description: {
     textAlign: 'center',
     paddingVertical: Spacing.Regular16,
-    color: Colors.black,
   },
   authFactorsCard: {
-    backgroundColor: Colors.gray1,
+    backgroundColor: Colors.backgroundSecondary,
     marginTop: Spacing.Smallest8,
-    borderColor: Colors.gray2,
+    borderColor: Colors.borderPrimary,
     borderWidth: 1,
     borderRadius: 10,
     padding: Spacing.Thick24,
   },
   authFactorsContainer: {
     borderBottomWidth: 1,
-    borderBottomColor: `${Colors.black}33`, // alpha 0.2 (20% opacity)
+    borderBottomColor: Colors.borderSecondary,
     gap: Spacing.Thick24,
     paddingBottom: Spacing.Thick24,
   },
@@ -152,21 +154,19 @@ const styles = StyleSheet.create({
   },
   authFactorText: {
     ...typeScale.labelMedium,
-    color: Colors.black,
   },
   reminderPrefix: {
     ...typeScale.labelSemiBoldXSmall,
-    color: Colors.black,
   },
   reminderText: {
     ...typeScale.bodyXSmall,
     textAlign: 'center',
     marginTop: Spacing.Thick24,
-    color: Colors.black,
   },
   recoveryPhrase: {
-    ...typeScale.labelSmall,
+    ...typeScale.labelSemiBoldMedium,
     textAlign: 'center',
+    color: Colors.accent,
     margin: Spacing.Thick24,
   },
   button: {

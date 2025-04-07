@@ -2,15 +2,14 @@ import { fireEvent, render } from '@testing-library/react-native'
 import * as React from 'react'
 import { Provider } from 'react-redux'
 import { hideAlert } from 'src/alert/actions'
+import AppAnalytics from 'src/analytics/AppAnalytics'
 import { HomeEvents } from 'src/analytics/Events'
-import ValoraAnalytics from 'src/analytics/ValoraAnalytics'
 import { toggleHideBalances } from 'src/app/actions'
 import { AssetsTokenBalance, FiatExchangeTokenBalance } from 'src/components/TokenBalance'
 import { LocalCurrencyCode } from 'src/localCurrency/consts'
 import { navigateClearingStack } from 'src/navigator/NavigationService'
 import { Screens } from 'src/navigator/Screens'
-import { getDynamicConfigParams, getFeatureGate } from 'src/statsig'
-import { NetworkId } from 'src/transactions/types'
+import { getFeatureGate } from 'src/statsig'
 import { ONE_DAY_IN_MILLIS } from 'src/utils/time'
 import { createMockStore, getElementText } from 'test/utils'
 import {
@@ -97,15 +96,6 @@ const staleTokens = {
     },
   },
 }
-
-jest.mocked(getDynamicConfigParams).mockReturnValue({
-  showBalances: [
-    NetworkId['ethereum-sepolia'],
-    NetworkId['celo-alfajores'],
-    NetworkId['arbitrum-sepolia'],
-    NetworkId['op-sepolia'],
-  ],
-})
 
 // Behavior specific to AssetsTokenBalance
 describe('AssetsTokenBalance', () => {
@@ -279,8 +269,8 @@ describe('AssetsTokenBalance', () => {
     expect(getElementText(tree.getByTestId('TotalTokenBalance'))).toEqual('XX.XX')
     expect(tree.getByTestId('HiddenEyeIcon')).toBeTruthy()
     fireEvent.press(tree.getByTestId('HiddenEyeIcon'))
-    expect(ValoraAnalytics.track).toHaveBeenCalledTimes(1)
-    expect(ValoraAnalytics.track).toHaveBeenCalledWith(HomeEvents.show_balances)
+    expect(AppAnalytics.track).toHaveBeenCalledTimes(1)
+    expect(AppAnalytics.track).toHaveBeenCalledWith(HomeEvents.show_balances)
     expect(store.getActions()).toEqual([hideAlert(), toggleHideBalances()])
   })
 
@@ -296,8 +286,8 @@ describe('AssetsTokenBalance', () => {
     expect(getElementText(tree.getByTestId('TotalTokenBalance'))).toEqual('$8.41')
     expect(tree.getByTestId('EyeIcon')).toBeTruthy()
     fireEvent.press(tree.getByTestId('EyeIcon'))
-    expect(ValoraAnalytics.track).toHaveBeenCalledTimes(1)
-    expect(ValoraAnalytics.track).toHaveBeenCalledWith(HomeEvents.hide_balances)
+    expect(AppAnalytics.track).toHaveBeenCalledTimes(1)
+    expect(AppAnalytics.track).toHaveBeenCalledWith(HomeEvents.hide_balances)
     expect(store.getActions()).toEqual([hideAlert(), toggleHideBalances()])
   })
 })

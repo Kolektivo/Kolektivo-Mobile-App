@@ -77,7 +77,7 @@ const ConfettiCelebration = ({
         progress.value = ctx.initialProgress + event.translationY / slidingHeight
       }
     },
-    onEnd: (event: { translationY: number }) => {
+    onEnd: (event) => {
       const dismissThreshold = 0.33 * notificationHeight
       const translationY = Math.abs(event.translationY)
       if (onDismiss && translationY > dismissThreshold) {
@@ -142,7 +142,7 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
   },
   backdrop: {
-    backgroundColor: Colors.black,
+    backgroundColor: Colors.backgroundScrim,
   },
   confetti: {
     ...StyleSheet.absoluteFillObject,
@@ -156,16 +156,14 @@ const styles = StyleSheet.create({
     margin: Spacing.Regular16,
     padding: Spacing.Regular16,
     borderRadius: Spacing.Regular16,
-    backgroundColor: Colors.gray1,
+    backgroundColor: Colors.info,
   },
   titleText: {
     ...typeScale.labelSemiBoldSmall,
     marginBottom: Spacing.Tiny4,
-    color: Colors.black,
   },
   descriptionText: {
     ...typeScale.bodyXSmall,
-    color: Colors.black,
   },
 })
 

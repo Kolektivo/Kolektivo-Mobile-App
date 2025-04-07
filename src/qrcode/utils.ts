@@ -1,15 +1,16 @@
+import * as RNFS from '@divvi/react-native-fs'
 import { useMemo } from 'react'
-import * as RNFS from 'react-native-fs'
 import Share from 'react-native-share'
 import { showError, showMessage } from 'src/alert/actions'
+import AppAnalytics from 'src/analytics/AppAnalytics'
 import { QrScreenEvents, SendEvents } from 'src/analytics/Events'
-import ValoraAnalytics from 'src/analytics/ValoraAnalytics'
 import {
   HooksEnablePreviewOrigin,
   SendOrigin,
   WalletConnectPairingOrigin,
 } from 'src/analytics/types'
 import { ErrorMessages } from 'src/app/ErrorMessages'
+import { DEEP_LINK_URL_SCHEME } from 'src/config'
 import { validateRecipientAddressSuccess } from 'src/identity/actions'
 import { E164NumberToAddressType } from 'src/identity/reducer'
 import { getSecureSendAddress } from 'src/identity/secureSend'
@@ -48,9 +49,9 @@ export enum QRCodeTypes {
 
 const TAG = 'QR/utils'
 
-const QRFileName = '/valora_address-qr.png'
+const QRFileName = '/wallet_address-qr.png'
 
-// ValoraDeepLink generates a QR code that deeplinks into the walletconnect send flow of the valora app
+// DeepLink generates a QR code that deeplinks into the walletconnect send flow of the app
 // Address generates a QR code that has the walletAddress as plaintext that is readable by wallets such as Coinbase and Metamask
 export function useQRContent(data: {
   address: string
@@ -113,7 +114,7 @@ export function* handleSecureSend(
   )
   if (!possibleReceivingAddressesFormatted.includes(userScannedAddress)) {
     const error = ErrorMessages.QR_FAILED_INVALID_RECIPIENT
-    ValoraAnalytics.track(SendEvents.send_secure_incorrect, {
+    AppAnalytics.track(SendEvents.send_secure_incorrect, {
       confirmByScan: true,
       error,
     })
@@ -121,7 +122,7 @@ export function* handleSecureSend(
     return false
   }
 
-  ValoraAnalytics.track(SendEvents.send_secure_complete, { confirmByScan: true })
+  AppAnalytics.track(SendEvents.send_secure_complete, { confirmByScan: true })
   yield* put(validateRecipientAddressSuccess(e164PhoneNumber, userScannedAddress))
   return true
 }
@@ -130,7 +131,7 @@ function* extractQRAddressData(qrCode: QrCode) {
   // strip network prefix if present
   const qrAddress = qrCode.data.split(':').at(-1) || qrCode.data
   if (isAddress(qrAddress, { strict: false })) {
-    qrCode.data = `celo://wallet/pay?address=${qrAddress}`
+    qrCode.data = `${DEEP_LINK_URL_SCHEME}://wallet/pay?address=${qrAddress}`
   }
   let qrData: UriData | null
   try {
@@ -145,8 +146,11 @@ function* extractQRAddressData(qrCode: QrCode) {
 
 // Catch all handler for QR Codes
 // includes support for WalletConnect, hooks, and send flow (non-secure send)
-export function* handleQRCodeDefault({ qrCode }: HandleQRCodeDetectedAction) {
-  ValoraAnalytics.track(QrScreenEvents.qr_scanned, qrCode)
+export function* handleQRCodeDefault({
+  qrCode,
+  defaultTokenIdOverride,
+}: HandleQRCodeDetectedAction) {
+  AppAnalytics.track(QrScreenEvents.qr_scanned, qrCode)
 
   const walletConnectEnabled: boolean = yield* call(isWalletConnectEnabled, qrCode.data)
 
@@ -159,7 +163,7 @@ export function* handleQRCodeDefault({ qrCode }: HandleQRCodeDetectedAction) {
   }
   if (
     (yield* select(allowHooksPreviewSelector)) &&
-    qrCode.data.startsWith('celo://wallet/hooks/enablePreview')
+    qrCode.data.startsWith(`${DEEP_LINK_URL_SCHEME}://wallet/hooks/enablePreview`)
   ) {
     yield* call(handleEnableHooksPreviewDeepLink, qrCode.data, HooksEnablePreviewOrigin.Scan)
     return
@@ -172,7 +176,12 @@ export function* handleQRCodeDefault({ qrCode }: HandleQRCodeDetectedAction) {
   const recipientInfo: RecipientInfo = yield* select(recipientInfoSelector)
   const cachedRecipient = getRecipientFromAddress(qrData.address, recipientInfo)
 
-  yield* call(handleSendPaymentData, qrData, true, cachedRecipient)
+  yield* call(handleSendPaymentData, {
+    data: qrData,
+    isFromScan: true,
+    cachedRecipient,
+    defaultTokenIdOverride,
+  })
 }
 
 export function* handleQRCodeSecureSend({
@@ -183,7 +192,7 @@ export function* handleQRCodeSecureSend({
   defaultTokenIdOverride,
 }: HandleQRCodeDetectedSecureSendAction) {
   const e164NumberToAddress = yield* select(e164NumberToAddressSelector)
-  ValoraAnalytics.track(QrScreenEvents.qr_scanned, qrCode)
+  AppAnalytics.track(QrScreenEvents.qr_scanned, qrCode)
 
   const qrData = yield* call(extractQRAddressData, qrCode)
   if (!qrData) {

@@ -1,13 +1,14 @@
-import { getCountryEmoji, parsePhoneNumber } from '@celo/phone-utils'
 import * as React from 'react'
 import { StyleSheet, Text, View } from 'react-native'
-import Colors from 'src/styles/colors'
-import fontStyles, { typeScale } from 'src/styles/fonts'
+import Colors, { ColorValue } from 'src/styles/colors'
+import { typeScale } from 'src/styles/fonts'
+import { getCountryEmoji } from 'src/utils/getCountryEmoji'
+import { parsePhoneNumber } from 'src/utils/phoneNumbers'
 
 interface Props {
   e164PhoneNumber: string
   defaultCountryCode?: string
-  textColor?: Colors
+  textColor?: ColorValue
 }
 
 export class PhoneNumberWithFlag extends React.PureComponent<Props> {
@@ -15,7 +16,7 @@ export class PhoneNumberWithFlag extends React.PureComponent<Props> {
     const parsedNumber = parsePhoneNumber(this.props.e164PhoneNumber, this.props.defaultCountryCode)
     return (
       <View style={styles.container}>
-        <Text style={[fontStyles.small, styles.countryCodeContainer]}>
+        <Text style={styles.countryCodeContainer}>
           {parsedNumber
             ? getCountryEmoji(
                 this.props.e164PhoneNumber,
@@ -28,7 +29,7 @@ export class PhoneNumberWithFlag extends React.PureComponent<Props> {
           style={{
             ...typeScale.labelSmall,
             lineHeight: 18,
-            color: this.props.textColor ?? Colors.black,
+            color: this.props.textColor ?? Colors.contentPrimary,
           }}
         >
           {parsedNumber ? parsedNumber.displayNumberInternational : ''}
@@ -43,6 +44,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
   },
   countryCodeContainer: {
+    ...typeScale.bodySmall,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 4,

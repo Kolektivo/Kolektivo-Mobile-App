@@ -5,8 +5,8 @@ import { useTranslation } from 'react-i18next'
 import { ActivityIndicator, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import PickerSelect from 'react-native-picker-select'
 import { SafeAreaView } from 'react-native-safe-area-context'
+import AppAnalytics from 'src/analytics/AppAnalytics'
 import { FiatExchangeEvents } from 'src/analytics/Events'
-import ValoraAnalytics from 'src/analytics/ValoraAnalytics'
 import BackButton from 'src/components/BackButton'
 import Button, { BtnSizes } from 'src/components/Button'
 import CancelButton from 'src/components/CancelButton'
@@ -21,10 +21,7 @@ import {
   isImplicitParam,
 } from 'src/fiatconnect/fiatAccountSchemas'
 import { FormFieldParam } from 'src/fiatconnect/fiatAccountSchemas/types'
-import {
-  schemaCountryOverridesSelector,
-  sendingFiatAccountStatusSelector,
-} from 'src/fiatconnect/selectors'
+import { sendingFiatAccountStatusSelector } from 'src/fiatconnect/selectors'
 import { SendingFiatAccountStatus, submitFiatAccount } from 'src/fiatconnect/slice'
 import Checkmark from 'src/icons/Checkmark'
 import InfoIcon from 'src/icons/InfoIcon'
@@ -34,8 +31,11 @@ import { Screens } from 'src/navigator/Screens'
 import { StackParamList } from 'src/navigator/types'
 import { userLocationDataSelector } from 'src/networkInfo/selectors'
 import { useDispatch, useSelector } from 'src/redux/hooks'
+import { getDynamicConfigParams } from 'src/statsig'
+import { DynamicConfigs } from 'src/statsig/constants'
+import { StatsigDynamicConfigs } from 'src/statsig/types'
 import colors from 'src/styles/colors'
-import fontStyles from 'src/styles/fonts'
+import { typeScale } from 'src/styles/fonts'
 import variables from 'src/styles/variables'
 
 export const TAG = 'FIATCONNECT/FiatDetailsScreen'
@@ -55,7 +55,9 @@ const FiatDetailsScreen = ({ route, navigation }: Props) => {
   const fieldNamesToValues = useRef<Record<string, string>>({})
   const { countryCodeAlpha2 } = useSelector(userLocationDataSelector)
   const dispatch = useDispatch()
-  const schemaCountryOverrides = useSelector(schemaCountryOverridesSelector)
+  const { fiatAccountSchemaCountryOverrides } = getDynamicConfigParams(
+    DynamicConfigs[StatsigDynamicConfigs.FIAT_CONNECT_CONFIG]
+  )
 
   const fiatAccountSchema = quote.getFiatAccountSchema()
   const fiatAccountType = quote.getFiatAccountType()
@@ -108,7 +110,7 @@ const FiatDetailsScreen = ({ route, navigation }: Props) => {
       headerRight: () => (
         <CancelButton
           onCancel={() => {
-            ValoraAnalytics.track(FiatExchangeEvents.cico_fiat_details_cancel, {
+            AppAnalytics.track(FiatExchangeEvents.cico_fiat_details_cancel, {
               flow: flow,
               provider: quote.getProviderId(),
               fiatAccountSchema,
@@ -126,7 +128,7 @@ const FiatDetailsScreen = ({ route, navigation }: Props) => {
       getSchema({
         fiatAccountSchema,
         country: countryCodeAlpha2,
-        schemaCountryOverrides,
+        schemaCountryOverrides: fiatAccountSchemaCountryOverrides,
         fiatAccountType: quote.getFiatAccountType(),
       }),
     [fiatAccountSchema]
@@ -204,13 +206,13 @@ const FiatDetailsScreen = ({ route, navigation }: Props) => {
     case SendingFiatAccountStatus.Sending:
       return (
         <View testID="spinner" style={styles.activityIndicatorContainer}>
-          <ActivityIndicator size="large" color={colors.primary} />
+          <ActivityIndicator size="large" color={colors.loadingIndicator} />
         </View>
       )
     case SendingFiatAccountStatus.KycApproved:
       return (
         <View testID="checkmark" style={styles.activityIndicatorContainer}>
-          <Checkmark color={colors.primary} />
+          <Checkmark color={colors.accent} />
         </View>
       )
     case SendingFiatAccountStatus.NotSending:
@@ -304,7 +306,7 @@ function FormField({
             style={styles.infoIcon}
             hitSlop={variables.iconHitslop}
           >
-            <InfoIcon size={18} color={colors.gray3} />
+            <InfoIcon size={18} color={colors.contentSecondary} />
           </TouchableOpacity>
         )}
       </View>
@@ -374,7 +376,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   inputLabel: {
-    ...fontStyles.regular500,
+    ...typeScale.labelMedium,
     paddingBottom: 4,
   },
   inputView: {
@@ -383,28 +385,26 @@ const styles = StyleSheet.create({
   formInputContainer: {
     borderRadius: 4,
     borderWidth: 1.5,
-    borderColor: colors.gray2,
+    borderColor: colors.borderPrimary,
     marginBottom: 4,
     paddingHorizontal: 8,
   },
   formInput: {
-    ...fontStyles.regular,
-    color: colors.black,
+    ...typeScale.bodyMedium,
   },
   formSelectInput: {
-    ...fontStyles.regular,
+    ...typeScale.bodyMedium,
     borderRadius: 4,
     borderWidth: 1.5,
-    borderColor: colors.gray2,
+    borderColor: colors.borderPrimary,
     marginBottom: 4,
-    color: colors.black,
     paddingHorizontal: 8,
     paddingVertical: 12,
     lineHeight: LINE_HEIGHT,
   },
   error: {
     fontSize: 12,
-    color: '#FF0000', // color red
+    color: colors.errorPrimary,
   },
   submitButton: {
     padding: variables.contentPadding,
@@ -416,7 +416,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   cancelBtn: {
-    color: colors.gray4,
+    color: colors.navigationTopSecondary,
   },
   headerSubTitleContainer: {
     flexDirection: 'row',

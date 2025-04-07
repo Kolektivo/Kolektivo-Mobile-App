@@ -121,14 +121,14 @@ exports[`BackupPhrase renders correctly with backup completed 1`] = `
                 "color": "#1AB775",
                 "fontFamily": "Inter-Regular",
                 "fontSize": 16,
-                "lineHeight": 22,
+                "lineHeight": 24,
               },
               [
                 {
                   "color": "#2E3338",
                 },
                 {
-                  "color": "#666666",
+                  "color": "#757575",
                 },
               ],
             ]
@@ -196,7 +196,7 @@ exports[`BackupPhrase renders correctly with backup completed 1`] = `
               "color": "#1AB775",
               "fontFamily": "Inter-Regular",
               "fontSize": 16,
-              "lineHeight": 22,
+              "lineHeight": 24,
             }
           }
         >
@@ -235,8 +235,8 @@ exports[`BackupPhrase renders correctly with backup completed 1`] = `
               style={
                 {
                   "color": "#2E3338",
-                  "fontFamily": "Jost-Medium",
-                  "fontSize": 22,
+                  "fontFamily": "Inter-Bold",
+                  "fontSize": 20,
                   "lineHeight": 28,
                   "marginBottom": 16,
                 }
@@ -251,8 +251,10 @@ exports[`BackupPhrase renders correctly with backup completed 1`] = `
           style={
             {
               "alignContent": "center",
-              "backgroundColor": "#F9F6F0",
+              "backgroundColor": "#F8F9F9",
+              "borderColor": "#E6E6E6",
               "borderRadius": 8,
+              "borderWidth": 1,
               "flexDirection": "row",
               "flexWrap": "wrap",
               "justifyContent": "center",
@@ -269,7 +271,7 @@ exports[`BackupPhrase renders correctly with backup completed 1`] = `
             "color": "#2E3338",
             "fontFamily": "Inter-Regular",
             "fontSize": 16,
-            "lineHeight": 22,
+            "lineHeight": 24,
             "marginTop": 16,
           }
         }
@@ -402,14 +404,14 @@ exports[`BackupPhrase renders correctly with backup not completed 1`] = `
                 "color": "#1AB775",
                 "fontFamily": "Inter-Regular",
                 "fontSize": 16,
-                "lineHeight": 22,
+                "lineHeight": 24,
               },
               [
                 {
                   "color": "#2E3338",
                 },
                 {
-                  "color": "#666666",
+                  "color": "#757575",
                 },
               ],
             ]
@@ -477,7 +479,7 @@ exports[`BackupPhrase renders correctly with backup not completed 1`] = `
               "color": "#1AB775",
               "fontFamily": "Inter-Regular",
               "fontSize": 16,
-              "lineHeight": 22,
+              "lineHeight": 24,
             }
           }
         >
@@ -516,8 +518,8 @@ exports[`BackupPhrase renders correctly with backup not completed 1`] = `
               style={
                 {
                   "color": "#2E3338",
-                  "fontFamily": "Jost-Medium",
-                  "fontSize": 22,
+                  "fontFamily": "Inter-Bold",
+                  "fontSize": 20,
                   "lineHeight": 28,
                   "marginBottom": 16,
                 }
@@ -532,8 +534,10 @@ exports[`BackupPhrase renders correctly with backup not completed 1`] = `
           style={
             {
               "alignContent": "center",
-              "backgroundColor": "#F9F6F0",
+              "backgroundColor": "#F8F9F9",
+              "borderColor": "#E6E6E6",
               "borderRadius": 8,
+              "borderWidth": 1,
               "flexDirection": "row",
               "flexWrap": "wrap",
               "justifyContent": "center",
@@ -550,7 +554,7 @@ exports[`BackupPhrase renders correctly with backup not completed 1`] = `
             "color": "#2E3338",
             "fontFamily": "Inter-Regular",
             "fontSize": 16,
-            "lineHeight": 22,
+            "lineHeight": 24,
             "marginTop": 16,
           }
         }
@@ -590,7 +594,7 @@ exports[`BackupPhrase renders correctly with backup not completed 1`] = `
           "flex": 1,
           "fontFamily": "Inter-Regular",
           "fontSize": 16,
-          "lineHeight": 22,
+          "lineHeight": 24,
           "paddingLeft": 8,
         }
       }
@@ -820,14 +824,14 @@ exports[`BackupPhrase still renders when mnemonic doesnt show up 1`] = `
                 "color": "#1AB775",
                 "fontFamily": "Inter-Regular",
                 "fontSize": 16,
-                "lineHeight": 22,
+                "lineHeight": 24,
               },
               [
                 {
                   "color": "#2E3338",
                 },
                 {
-                  "color": "#666666",
+                  "color": "#757575",
                 },
               ],
             ]
@@ -895,7 +899,7 @@ exports[`BackupPhrase still renders when mnemonic doesnt show up 1`] = `
               "color": "#1AB775",
               "fontFamily": "Inter-Regular",
               "fontSize": 16,
-              "lineHeight": 22,
+              "lineHeight": 24,
             }
           }
         >
@@ -934,8 +938,8 @@ exports[`BackupPhrase still renders when mnemonic doesnt show up 1`] = `
               style={
                 {
                   "color": "#2E3338",
-                  "fontFamily": "Jost-Medium",
-                  "fontSize": 22,
+                  "fontFamily": "Inter-Bold",
+                  "fontSize": 20,
                   "lineHeight": 28,
                   "marginBottom": 16,
                 }
@@ -950,8 +954,10 @@ exports[`BackupPhrase still renders when mnemonic doesnt show up 1`] = `
           style={
             {
               "alignContent": "center",
-              "backgroundColor": "#F9F6F0",
+              "backgroundColor": "#F8F9F9",
+              "borderColor": "#E6E6E6",
               "borderRadius": 8,
+              "borderWidth": 1,
               "flexDirection": "row",
               "flexWrap": "wrap",
               "justifyContent": "center",
@@ -968,7 +974,7 @@ exports[`BackupPhrase still renders when mnemonic doesnt show up 1`] = `
             "color": "#2E3338",
             "fontFamily": "Inter-Regular",
             "fontSize": 16,
-            "lineHeight": 22,
+            "lineHeight": 24,
             "marginTop": 16,
           }
         }

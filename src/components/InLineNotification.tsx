@@ -1,9 +1,10 @@
 import React from 'react'
 import { GestureResponderEvent, StyleProp, StyleSheet, Text, View, ViewStyle } from 'react-native'
+import Touchable from 'src/components/Touchable'
 import AttentionIcon from 'src/icons/Attention'
 import Checkmark from 'src/icons/Checkmark'
 import Warning from 'src/icons/Warning'
-import Colors from 'src/styles/colors'
+import Colors, { ColorValue } from 'src/styles/colors'
 import { typeScale } from 'src/styles/fonts'
 import { Spacing } from 'src/styles/styles'
 
@@ -31,8 +32,8 @@ export interface InLineNotificationProps {
 }
 
 interface CustomColors {
-  primary: Colors
-  secondary: Colors
+  primary: ColorValue
+  secondary: ColorValue
 }
 
 export function InLineNotification({
@@ -53,13 +54,15 @@ export function InLineNotification({
   const renderCtaLabel = (
     label?: string | null,
     onPress?: (event: GestureResponderEvent) => void,
-    color?: Colors
+    color?: ColorValue
   ) =>
     label &&
     onPress && (
-      <Text testID={`${testID}/${label}`} style={[styles.ctaLabel, { color }]} onPress={onPress}>
-        {label}
-      </Text>
+      <Touchable style={styles.cta} onPress={onPress}>
+        <Text testID={`${testID}/${label}`} style={[styles.ctaLabel, { color }]}>
+          {label}
+        </Text>
+      </Touchable>
     )
   const Icon = variantIcons[variant]
 
@@ -75,13 +78,13 @@ export function InLineNotification({
         {!hideIcon && (
           <View style={styles.iconContainer}>
             {customIcon ?? (
-              <Icon color={variantColor.primary} size={20} testId="InLineNotification/Icon" />
+              <Icon color={variantColor.primary} size={16} testId="InLineNotification/Icon" />
             )}
           </View>
         )}
         <View style={styles.contentContainer}>
           {!!title && <Text style={styles.titleText}>{title}</Text>}
-          <Text style={[styles.bodyText]}>{description}</Text>
+          {!!description && <Text style={[styles.bodyText]}>{description}</Text>}
         </View>
       </View>
 
@@ -112,7 +115,6 @@ const styles = StyleSheet.create({
     gap: Spacing.Smallest8,
   },
   iconContainer: {
-    paddingTop: Spacing.Tiny4,
     paddingRight: Spacing.Smallest8,
   },
   titleText: {
@@ -121,11 +123,11 @@ const styles = StyleSheet.create({
   },
   bodyText: {
     ...typeScale.bodyXSmall,
-    color: Colors.black,
   },
   ctaLabel: {
     ...typeScale.labelSmall,
-    fontWeight: '600',
+  },
+  cta: {
     paddingVertical: Spacing.Tiny4,
     paddingHorizontal: Spacing.Smallest8,
   },
@@ -133,20 +135,20 @@ const styles = StyleSheet.create({
 
 const variantColors: Record<NotificationVariant, CustomColors> = {
   [NotificationVariant.Info]: {
-    primary: Colors.black,
-    secondary: Colors.gray1,
+    primary: Colors.contentPrimary,
+    secondary: Colors.info,
   },
   [NotificationVariant.Success]: {
-    primary: Colors.successDark,
-    secondary: Colors.successLight,
+    primary: Colors.successPrimary,
+    secondary: Colors.successSecondary,
   },
   [NotificationVariant.Warning]: {
-    primary: Colors.warningDark,
-    secondary: Colors.warningLight,
+    primary: Colors.warningPrimary,
+    secondary: Colors.warningSecondary,
   },
   [NotificationVariant.Error]: {
-    primary: Colors.errorDark,
-    secondary: Colors.errorLight,
+    primary: Colors.errorPrimary,
+    secondary: Colors.errorSecondary,
   },
   [NotificationVariant.CheckedIn]: {
     primary: Colors.successDark,

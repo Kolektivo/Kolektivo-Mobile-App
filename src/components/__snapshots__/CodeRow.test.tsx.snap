@@ -4,7 +4,7 @@ exports[`CodeRow renders correctly for all CodeRowStatus states 1`] = `
 <View
   style={
     {
-      "backgroundColor": "#F0F0F0",
+      "backgroundColor": "#F8F9F9",
       "borderColor": "#E6E6E6",
       "borderRadius": 3,
       "borderWidth": 1,
@@ -18,10 +18,10 @@ exports[`CodeRow renders correctly for all CodeRowStatus states 1`] = `
   <Text
     style={
       {
-        "color": "#505050",
+        "color": "#757575",
         "fontFamily": "Inter-Regular",
         "fontSize": 15,
-        "lineHeight": 22,
+        "lineHeight": 24,
       }
     }
   >
@@ -36,13 +36,14 @@ exports[`CodeRow renders correctly for all CodeRowStatus states 2`] = `
     [
       {
         "alignItems": "center",
+        "backgroundColor": "#FFFFFF",
         "flex": 1,
         "flexDirection": "row",
         "gap": 8,
         "justifyContent": "center",
       },
       {
-        "backgroundColor": "#FFF",
+        "backgroundColor": "#FFFFFF",
         "borderColor": "#E6E6E6",
         "borderRadius": 3,
         "borderWidth": 1,
@@ -58,6 +59,7 @@ exports[`CodeRow renders correctly for all CodeRowStatus states 2`] = `
     onChangeText={[MockFunction]}
     onFocus={[Function]}
     placeholder="placeholder"
+    selectionColor="#757575"
     shouldShowClipboard={[MockFunction]}
     style={
       [
@@ -83,7 +85,7 @@ exports[`CodeRow renders correctly for all CodeRowStatus states 3`] = `
 <View
   style={
     {
-      "backgroundColor": "#FFF",
+      "backgroundColor": "#FFFFFF",
       "borderColor": "#E6E6E6",
       "borderRadius": 3,
       "borderWidth": 1,
@@ -98,10 +100,10 @@ exports[`CodeRow renders correctly for all CodeRowStatus states 3`] = `
   <Text
     style={
       {
-        "color": "#505050",
+        "color": "#757575",
         "fontFamily": "Inter-Regular",
         "fontSize": 15,
-        "lineHeight": 22,
+        "lineHeight": 24,
       }
     }
   >
@@ -112,7 +114,7 @@ exports[`CodeRow renders correctly for all CodeRowStatus states 3`] = `
     size="small"
     style={
       {
-        "backgroundColor": "#FFF",
+        "backgroundColor": "#FFFFFF",
         "padding": 10,
         "position": "absolute",
         "right": 3,
@@ -141,10 +143,10 @@ exports[`CodeRow renders correctly for all CodeRowStatus states 4`] = `
     numberOfLines={1}
     style={
       {
-        "color": "#505050",
+        "color": "#757575",
         "fontFamily": "Inter-Regular",
         "fontSize": 15,
-        "lineHeight": 22,
+        "lineHeight": 24,
       }
     }
   >
@@ -171,10 +173,10 @@ exports[`CodeRow renders correctly for all CodeRowStatus states 5`] = `
     numberOfLines={1}
     style={
       {
-        "color": "#505050",
+        "color": "#757575",
         "fontFamily": "Inter-Regular",
         "fontSize": 15,
-        "lineHeight": 22,
+        "lineHeight": 24,
       }
     }
   >

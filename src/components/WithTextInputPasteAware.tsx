@@ -5,6 +5,7 @@ import { StyleSheet, TextInputProps, View, ViewStyle } from 'react-native'
 import TouchableDefault from 'src/components/Touchable'
 import { PasteAwareWrappedElementProps, withPasteAware } from 'src/components/WithPasteAware'
 import Paste from 'src/icons/Paste'
+import Colors from 'src/styles/colors'
 import { iconHitslop } from 'src/styles/variables'
 
 export default function withTextInputPasteAware<P extends TextInputProps>(
@@ -23,7 +24,7 @@ export default function withTextInputPasteAware<P extends TextInputProps>(
               onPress={onPressPaste}
               hitSlop={iconHitslop}
             >
-              <Paste />
+              <Paste color={Colors.contentSecondary} />
             </TouchableDefault>
           )}
         </View>
@@ -38,7 +39,7 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   pasteIconContainer: {
-    backgroundColor: '#ffffff',
+    backgroundColor: Colors.backgroundPrimary,
     position: 'absolute',
     right: 11,
     top: 13,

@@ -8,8 +8,8 @@ import Animated, {
   useAnimatedStyle,
   useSharedValue,
 } from 'react-native-reanimated'
+import AppAnalytics from 'src/analytics/AppAnalytics'
 import { AssetsEvents } from 'src/analytics/Events'
-import ValoraAnalytics from 'src/analytics/ValoraAnalytics'
 import Button, { BtnSizes, BtnTypes } from 'src/components/Button'
 import ActionsCarousel from 'src/home/ActionsCarousel'
 import UserWalletInfoSection from 'src/kolektivo/components/UserWalletInfoSection'
@@ -17,7 +17,10 @@ import { navigate } from 'src/navigator/NavigationService'
 import { Screens } from 'src/navigator/Screens'
 import useScrollAwareHeader from 'src/navigator/ScrollAwareHeader'
 import { StackParamList } from 'src/navigator/types'
-import { positionsSelector, positionsWithClaimableRewardsSelector } from 'src/positions/selectors'
+import {
+  positionsWithBalanceSelector,
+  positionsWithClaimableRewardsSelector,
+} from 'src/positions/selectors'
 import { useSelector } from 'src/redux/hooks'
 import { getFeatureGate } from 'src/statsig'
 import { StatsigFeatureGates } from 'src/statsig/types'
@@ -41,7 +44,7 @@ function TabWallet({ navigation, route }: Props) {
   const activeTab = route.params?.activeAssetTab ?? AssetTabType.Transactions
 
   // TODO: Update this to filter out unsupported networks once positions support non-Celo chains
-  const positions = useSelector(positionsSelector)
+  const positions = useSelector(positionsWithBalanceSelector)
   const showPositions = getFeatureGate(StatsigFeatureGates.SHOW_POSITIONS)
   const displayPositions = showPositions && positions.length > 0
 
@@ -111,7 +114,7 @@ function TabWallet({ navigation, route }: Props) {
       shadowColor: interpolateColor(
         scrollPosition.value,
         [nonStickyHeaderHeight - 10, nonStickyHeaderHeight + 10],
-        ['transparent', 'rgba(48, 46, 37, 0.15)']
+        ['transparent', Colors.softShadow]
       ),
     }
   }, [scrollPosition.value, nonStickyHeaderHeight])
@@ -186,7 +189,7 @@ function TabWallet({ navigation, route }: Props) {
             size={BtnSizes.FULL}
             text={t('assets.claimRewards')}
             onPress={() => {
-              ValoraAnalytics.track(AssetsEvents.tap_claim_rewards)
+              AppAnalytics.track(AssetsEvents.tap_claim_rewards)
               navigate(Screens.DappShortcutsRewards)
             }}
           />
@@ -211,7 +214,7 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.Thick24,
   },
   footerContainer: {
-    backgroundColor: Colors.white,
+    backgroundColor: Colors.backgroundPrimary,
     position: 'absolute',
     bottom: 0,
     left: 10, // so the scroll bar is still visible

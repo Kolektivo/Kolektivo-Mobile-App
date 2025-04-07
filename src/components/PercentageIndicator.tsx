@@ -1,12 +1,12 @@
 import BigNumber from 'bignumber.js'
 import React from 'react'
 import { StyleSheet, Text, TextStyle, View } from 'react-native'
-import DownIndicator from 'src/icons/DownIndicator'
-import UpIndicator from 'src/icons/UpIndicator'
-import Colors from 'src/styles/colors'
-import fontStyles from 'src/styles/fonts'
+import DataDown from 'src/icons/DataDown'
+import DataUp from 'src/icons/DataUp'
+import Colors, { ColorValue } from 'src/styles/colors'
+import { typeScale } from 'src/styles/fonts'
 
-type IconComponentType = React.ComponentType<{ color?: Colors; testID?: string }>
+type IconComponentType = React.ComponentType<{ color?: ColorValue; testID?: string }>
 
 interface Props {
   testID?: string
@@ -24,11 +24,11 @@ function PercentageIndicator({
   comparedValue,
   currentValue,
   testID = 'PercentageIndicator',
-  percentageTextStyle = fontStyles.small,
+  percentageTextStyle = typeScale.bodySmall,
   suffixText,
-  suffixTextStyle = fontStyles.small,
-  DownIcon = DownIndicator,
-  UpIcon = UpIndicator,
+  suffixTextStyle = typeScale.bodySmall,
+  DownIcon = DataDown,
+  UpIcon = DataUp,
   NoChangeIcon,
 }: Props) {
   const percentage = new BigNumber(currentValue)
@@ -39,16 +39,15 @@ function PercentageIndicator({
   const percentageString = `${percentage.abs().toFixed(2)}%`
 
   let indicator: React.ReactElement | undefined
-  let color: Colors
-
+  let color: ColorValue
   if (comparison > 0) {
-    color = Colors.primary
+    color = Colors.accent
     indicator = <UpIcon color={color} testID={`${testID}:UpIndicator`} />
   } else if (comparison < 0) {
-    color = Colors.error
+    color = Colors.errorPrimary
     indicator = <DownIcon color={color} testID={`${testID}:DownIndicator`} />
   } else {
-    color = Colors.gray3
+    color = Colors.inactive
     indicator = NoChangeIcon && (
       <NoChangeIcon color={color} testID={`${testID}:NoChangeIndicator`} />
     )

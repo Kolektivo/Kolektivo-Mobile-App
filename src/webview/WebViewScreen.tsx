@@ -1,3 +1,4 @@
+import { ShouldStartLoadRequest } from '@interaxyz/react-native-webview/lib/WebViewTypes'
 import { useHeaderHeight } from '@react-navigation/elements'
 import { NativeStackScreenProps } from '@react-navigation/native-stack'
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
@@ -11,12 +12,13 @@ import {
   View,
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { ShouldStartLoadRequest } from 'react-native-webview/lib/WebViewTypes'
+import AppAnalytics from 'src/analytics/AppAnalytics'
 import { DappExplorerEvents, WebViewEvents } from 'src/analytics/Events'
-import ValoraAnalytics from 'src/analytics/ValoraAnalytics'
 import { openDeepLink } from 'src/app/actions'
+import KeyboardSpacer from 'src/components/KeyboardSpacer'
 import Touchable from 'src/components/Touchable'
 import WebView, { WebViewRef } from 'src/components/WebView'
+import { DEEP_LINK_URL_SCHEME } from 'src/config'
 import { activeDappSelector } from 'src/dapps/selectors'
 import { dappSessionEnded } from 'src/dapps/slice'
 import BackChevron from 'src/icons/BackChevron'
@@ -45,7 +47,7 @@ type RouteProps = NativeStackScreenProps<StackParamList, Screens.WebViewScreen>
 type Props = RouteProps
 
 function WebViewScreen({ route, navigation }: Props) {
-  const { uri, dappkitDeeplink } = route.params
+  const { uri } = route.params
 
   const dispatch = useDispatch()
   const { t } = useTranslation()
@@ -104,7 +106,7 @@ function WebViewScreen({ route, navigation }: Props) {
         <TopBarTextButton
           title={t('close')}
           onPress={navigateBack}
-          titleStyle={{ color: colors.gray4, paddingHorizontal: 0 }}
+          titleStyle={{ color: colors.navigationTopSecondary, paddingHorizontal: 0 }}
           testID="WebViewScreen/CloseButton"
         />
       ),
@@ -120,7 +122,7 @@ function WebViewScreen({ route, navigation }: Props) {
       // refreshed in the future
       if (activeDapp) {
         dispatch(dappSessionEnded())
-        ValoraAnalytics.track(DappExplorerEvents.dapp_close, {
+        AppAnalytics.track(DappExplorerEvents.dapp_close, {
           categories: activeDapp.categories,
           dappId: activeDapp.id,
           dappName: activeDapp.name,
@@ -129,14 +131,6 @@ function WebViewScreen({ route, navigation }: Props) {
       }
     }
   }, [])
-
-  useEffect(() => {
-    if (activeDapp && dappkitDeeplink) {
-      webViewRef.current?.injectJavaScript(
-        `window.history.replaceState({}, "", "${dappkitDeeplink}"); true;`
-      )
-    }
-  }, [dappkitDeeplink, activeDapp])
 
   useBackHandler(() => {
     // android hardware back button functions as either browser back button or
@@ -150,7 +144,7 @@ function WebViewScreen({ route, navigation }: Props) {
   }, [canGoBack, webViewRef.current, navigation])
 
   const handleLoadRequest = (event: ShouldStartLoadRequest): boolean => {
-    if (event.url.startsWith('celo://') || isWalletConnectDeepLink(event.url)) {
+    if (event.url.startsWith(`${DEEP_LINK_URL_SCHEME}://`) || isWalletConnectDeepLink(event.url)) {
       dispatch(openDeepLink(event.url))
       return false
     }
@@ -171,7 +165,7 @@ function WebViewScreen({ route, navigation }: Props) {
 
   const openActionSheet = () => {
     Platform.OS === 'ios' ? openActionSheetiOS() : toggleBottomSheet()
-    ValoraAnalytics.track(WebViewEvents.webview_more_options, { currentUrl })
+    AppAnalytics.track(WebViewEvents.webview_more_options, { currentUrl })
   }
 
   // iOS Action sheet
@@ -185,7 +179,7 @@ function WebViewScreen({ route, navigation }: Props) {
         switch (buttonIndex) {
           case 0:
             navigateToURI(currentUrl)
-            ValoraAnalytics.track(WebViewEvents.webview_open_in_browser, { currentUrl })
+            AppAnalytics.track(WebViewEvents.webview_open_in_browser, { currentUrl })
             break
           default:
           case 1:
@@ -212,11 +206,17 @@ function WebViewScreen({ route, navigation }: Props) {
       >
         <WebView
           ref={webViewRef}
-          originWhitelist={['https://*', 'celo://*']}
+          originWhitelist={['https://*', `${DEEP_LINK_URL_SCHEME}://*`]}
           onShouldStartLoadWithRequest={handleLoadRequest}
           source={{ uri }}
           startInLoadingState={true}
-          renderLoading={() => <ActivityIndicator style={styles.loading} size="large" />}
+          renderLoading={() => (
+            <ActivityIndicator
+              style={styles.loading}
+              size="large"
+              color={colors.loadingIndicator}
+            />
+          )}
           onNavigationStateChange={(navState) => {
             setCanGoBack(navState.canGoBack)
             setCanGoForward(navState.canGoForward)
@@ -225,6 +225,7 @@ function WebViewScreen({ route, navigation }: Props) {
           mediaPlaybackRequiresUserAction={mediaPlaybackRequiresUserAction}
           testID={activeDapp ? `WebViewScreen/${activeDapp.name}` : 'RNWebView'}
         />
+        <KeyboardSpacer />
       </KeyboardAvoidingView>
       {Platform.OS === 'android' && (
         <WebViewAndroidBottomSheet
@@ -241,7 +242,7 @@ function WebViewScreen({ route, navigation }: Props) {
           disabled={!canGoBack}
           testID="WebViewScreen/GoBack"
         >
-          <BackChevron color={canGoBack ? colors.black : colors.gray3} />
+          <BackChevron color={canGoBack ? colors.contentPrimary : colors.inactive} />
         </Touchable>
         <Touchable
           onPress={handleGoForward}
@@ -249,17 +250,17 @@ function WebViewScreen({ route, navigation }: Props) {
           disabled={!canGoForward}
           testID="WebViewScreen/GoForward"
         >
-          <ForwardChevron color={canGoForward ? colors.black : colors.gray3} />
+          <ForwardChevron color={canGoForward ? colors.contentPrimary : colors.inactive} />
         </Touchable>
         <Touchable onPress={handleRefresh} hitSlop={iconHitslop} testID="WebViewScreen/Refresh">
-          <Refresh height={20} color={colors.black} />
+          <Refresh height={20} color={colors.contentPrimary} />
         </Touchable>
         <Touchable
           onPress={openActionSheet}
           hitSlop={iconHitslop}
           testID="WebViewScreen/OpenBottomSheet"
         >
-          <TripleDotVertical color={colors.black} />
+          <TripleDotVertical color={colors.contentPrimary} />
         </Touchable>
       </View>
     </SafeAreaView>
@@ -271,7 +272,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   keyboardView: {
-    flex: 1,
+    flexGrow: 1,
   },
   loading: {
     position: 'absolute',
@@ -288,7 +289,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 32,
     borderTopWidth: 1,
-    borderColor: colors.gray2,
+    borderColor: colors.borderPrimary,
   },
 })
 

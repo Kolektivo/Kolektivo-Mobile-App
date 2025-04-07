@@ -4,10 +4,9 @@ import { useAsyncCallback } from 'react-async-hook'
 import { useTranslation } from 'react-i18next'
 import { Keyboard, StyleSheet, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import erc20 from 'src/abis/IERC20'
 import { showMessage } from 'src/alert/actions'
+import AppAnalytics from 'src/analytics/AppAnalytics'
 import { AssetsEvents } from 'src/analytics/Events'
-import ValoraAnalytics from 'src/analytics/ValoraAnalytics'
 import BackButton from 'src/components/BackButton'
 import Button, { BtnSizes } from 'src/components/Button'
 import Dropdown from 'src/components/Dropdown'
@@ -23,20 +22,29 @@ import { Screens } from 'src/navigator/Screens'
 import { StackParamList } from 'src/navigator/types'
 import { useDispatch, useSelector } from 'src/redux/hooks'
 import { NETWORK_NAMES } from 'src/shared/conts'
-import { Colors } from 'src/styles/colors'
+import Colors from 'src/styles/colors'
 import { typeScale } from 'src/styles/fonts'
 import { Spacing } from 'src/styles/styles'
 import variables from 'src/styles/variables'
 import { PasteButton } from 'src/tokens/PasteButton'
 import { networksIconSelector, tokensByIdSelector } from 'src/tokens/selectors'
 import { importToken } from 'src/tokens/slice'
-import { getSupportedNetworkIdsForTokenBalances, getTokenId } from 'src/tokens/utils'
+import { getTokenId } from 'src/tokens/utils'
 import { NetworkId } from 'src/transactions/types'
 import Logger from 'src/utils/Logger'
 import { publicClient } from 'src/viem'
 import { networkIdToNetwork } from 'src/web3/networkConfig'
 import { walletAddressSelector } from 'src/web3/selectors'
-import { Address, BaseError, TimeoutError, formatUnits, getContract, isAddress } from 'viem'
+import { getSupportedNetworkIds } from 'src/web3/utils'
+import {
+  Address,
+  BaseError,
+  TimeoutError,
+  erc20Abi,
+  formatUnits,
+  getContract,
+  isAddress,
+} from 'viem'
 
 const TAG = 'tokens/TokenImport'
 
@@ -62,7 +70,7 @@ export default function TokenImportScreen(_: Props) {
   const { t } = useTranslation()
   const dispatch = useDispatch()
 
-  const supportedNetworkIds = getSupportedNetworkIdsForTokenBalances()
+  const supportedNetworkIds = getSupportedNetworkIds()
   const networkShouldBeEditable = supportedNetworkIds.length > 1
 
   const [tokenAddress, setTokenAddress] = useState<string | undefined>()
@@ -88,7 +96,7 @@ export default function TokenImportScreen(_: Props) {
     const tokenId = getTokenId(networkId, tokenAddress.toLowerCase())
     if (supportedTokens[tokenId]) {
       setError(t('tokenImport.error.tokenAlreadySupported'))
-      ValoraAnalytics.track(AssetsEvents.import_token_error, {
+      AppAnalytics.track(AssetsEvents.import_token_error, {
         networkId,
         tokenId,
         tokenAddress,
@@ -107,7 +115,7 @@ export default function TokenImportScreen(_: Props) {
     networkId: NetworkId
   ): Promise<TokenDetails> => {
     const contract = getContract({
-      abi: erc20.abi,
+      abi: erc20Abi,
       address: tokenAddress,
       client: {
         public: publicClient[networkIdToNetwork[networkId]],
@@ -152,7 +160,7 @@ export default function TokenImportScreen(_: Props) {
 
       const trackedError = hasTimeout(error) ? Errors.Timeout : Errors.NotERC20
       const tokenId = getTokenId(networkId, tokenAddress.toLowerCase())
-      ValoraAnalytics.track(AssetsEvents.import_token_error, {
+      AppAnalytics.track(AssetsEvents.import_token_error, {
         networkId,
         tokenId,
         tokenAddress,
@@ -173,7 +181,7 @@ export default function TokenImportScreen(_: Props) {
   }
 
   const handlePaste = async (address: string) => {
-    ValoraAnalytics.track(AssetsEvents.import_token_paste)
+    AppAnalytics.track(AssetsEvents.import_token_paste)
     const addressWith0xPrefix = ensure0xPrefixOrEmpty(address)
     setTokenAddress(addressWith0xPrefix)
     Keyboard.dismiss()
@@ -203,7 +211,7 @@ export default function TokenImportScreen(_: Props) {
     const networkIconUrl = networkIconByNetworkId[networkId]
 
     const tokenId = getTokenId(networkId, tokenAddress)
-    ValoraAnalytics.track(AssetsEvents.import_token_submit, {
+    AppAnalytics.track(AssetsEvents.import_token_submit, {
       tokenAddress,
       tokenSymbol: tokenDetails.symbol,
       networkId,
@@ -316,7 +324,7 @@ const TextInputGroup = ({
     <TextInput
       multiline={false}
       style={styles.messageTextInput}
-      placeholderTextColor={Colors.gray4}
+      placeholderTextColor={Colors.inactive}
       numberOfLines={1}
       showClearButton={true}
       autoCorrect={false}
@@ -344,9 +352,9 @@ const styles = StyleSheet.create({
   },
   messageTextInput: {
     paddingHorizontal: Spacing.Small12,
-    borderColor: Colors.gray2,
+    borderColor: Colors.borderSecondary,
     borderRadius: Spacing.Tiny4,
-    borderWidth: 1.5,
+    borderWidth: 1,
   },
   scrollViewContainer: {
     marginVertical: Spacing.Smallest8,
@@ -368,6 +376,6 @@ const styles = StyleSheet.create({
   },
   errorLabel: {
     ...typeScale.labelSmall,
-    color: Colors.error,
+    color: Colors.errorPrimary,
   },
 })

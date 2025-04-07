@@ -1,4 +1,4 @@
-import GorhomBottomSheet from '@gorhom/bottom-sheet'
+import { BottomSheetModal } from '@gorhom/bottom-sheet'
 import React, { Dispatch, SetStateAction, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import MultiSelectBottomSheet from 'src/components/multiSelect/MultiSelectBottomSheet'
@@ -8,8 +8,8 @@ import { networksIconSelector } from 'src/tokens/selectors'
 import { NetworkId } from 'src/transactions/types'
 
 interface Props {
-  forwardedRef: React.RefObject<GorhomBottomSheet>
-  onClose?: () => void
+  forwardedRef: React.RefObject<BottomSheetModal>
+  onSelect?: (networks: NetworkId[]) => void
   onOpen?: () => void
   allNetworkIds: NetworkId[]
   selectedNetworkIds: NetworkId[]
@@ -18,7 +18,7 @@ interface Props {
 
 function NetworkMultiSelectBottomSheet({
   forwardedRef,
-  onClose,
+  onSelect,
   onOpen,
   allNetworkIds,
   selectedNetworkIds,
@@ -41,7 +41,7 @@ function NetworkMultiSelectBottomSheet({
   return (
     <MultiSelectBottomSheet<NetworkId>
       forwardedRef={forwardedRef}
-      onClose={onClose}
+      onSelect={onSelect}
       onOpen={onOpen}
       options={options}
       selectedOptions={selectedNetworkIds}

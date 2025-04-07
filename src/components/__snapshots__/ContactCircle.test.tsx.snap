@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`ContactCircle when given recipient with only address uses DefaultAvatar svg 1`] = `
+exports[`ContactCircle when given recipient with only address uses User svg 1`] = `
 <View
   style={
     [
@@ -21,7 +21,7 @@ exports[`ContactCircle when given recipient with only address uses DefaultAvatar
           "justifyContent": "center",
         },
         {
-          "backgroundColor": "hsl(291, 53%, 93%)",
+          "backgroundColor": "#F8F9F9",
           "borderRadius": 15,
           "height": 30,
           "width": 30,

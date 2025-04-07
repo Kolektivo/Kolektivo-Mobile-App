@@ -6,7 +6,7 @@
   "licenses": "Lisanslar",
   "removeAccountTitle": "Kolektivo'yı Sıfırla",
   "removeAccountDetails": "Sıfırlama, hesabınızı bu cihazdan kaldıracaktır. Fonlarınız hesapta kalacak, ancak yalnızca Kurtarma Kelimeleri ile erişilebilir olacaktır",
-  "deleteAccountTitle": "Hesabı Sil",
+  "deleteAccountTitle": "{{appName}} Uygulamasını Sil",
   "deleteAccountDetails": "Silme, hesabınızı {{appName}} uygulamasından kaldıracaktır. Fonlarınız hesapta kalacak, ancak yalnızca Kurtarma İfadesi ile erişilebilir olacaktır",
   "deleteAccountWarning": {
     "title": "Emin misiniz?",
@@ -16,7 +16,9 @@
   },
   "legal": "Yasal",
   "appPreferences": "Uygulama Tercihleri",
+  "preferences": "Tercihler",
   "security": "Güvenlik",
+  "securityPrivacy": "Güvenlik ve Gizlilik",
   "changePin": "PIN Değiştir",
   "pinChanged": "PIN değiştirildi",
   "pinChangeFailed": "PIN değiştirme işlemi başarısız",
@@ -29,6 +31,7 @@
   "dataSaver": "Veri Tasarrufu",
   "enableDataSaver": "Veri Tasarrufunu Etkinleştir",
   "dataSaverDetail": "Veri Tasarrufu modu, güvenilir bir node aracılığıyla ağ ile iletişim kurmanıza olanak tanır. Bu modu her zaman uygulama ayarlarından değiştirebilirsiniz.",
+  "keylessBackupSetupTitle": "Giriş Oluştur",
   "keylessBackupSettingsTitle": "E-posta ve Telefon Yedekleme",
   "keylessBackupSettingsDeleteError": "Yedeklemeniz silinemedi, lütfen bekleyin ve daha sonra tekrar deneyin.",
   "setup": "Oluştur",
@@ -39,7 +42,7 @@
   },
   "revokePhoneNumber": {
     "title": "Telefon Numarasının Bağlantısını Kaldır",
-    "bottomSheetTitle": "Telefon numarasının bağlantısını kaldır",
+    "bottomSheetTitle": "Telefon Numarasının Bağlantısını Kaldır",
     "description": "Bağlantıyı kaldırmak, cüzdanınıza bağlı telefon numarasını kaldıracaktır. Daha sonra yeni bir telefon numarası ekleyebilirsiniz.",
     "confirmButton": "Şimdi bağlantıyı kaldır",
     "revokeSuccess": "Telefon numaranızın bağlantısı kaldırıldı",
@@ -72,7 +75,9 @@
   },
   "recoveryPhrase": {
     "title": "Kurtarma ifadeniz",
+    "titleV1_90": "Kurtarma Cümleniz",
     "body": "Bu 12 kelimeyi çalınamayacak ya da zarar görmeyecek güvenli bir yere yazın.",
+    "bodyV1_90": "Kurtarma ifadenizi kaybederseniz {{appName}} üzerinde tutulan tüm fonlarınıza erişimi kaybedersiniz.",
     "continue": "Kaydettim",
     "copy": "Panoya kopyala",
     "mnemonicCopied": "Kurtarma ifadesi panoya kopyalandı",
@@ -102,9 +107,17 @@
   },
   "signInWithEmail": {
     "title": "E-posta ile oturum aç",
-    "subtitle": "Yedek olarak ayarlamak için e-postanızla oturum açın.\n\nCüzdanınızı kaybetmeniz durumunda tekrar oturum açmanız istenecektir.",
+    "subtitle": "Yedek olarak ayarlamak için e-postanızla oturum açın. Cüzdanınızı kaybetmeniz durumunda tekrar oturum açmanız istenecektir.",
     "subtitleRestore": "Cüzdan yedeklemenizi ayarladığınız e-postayla oturum açın.",
-    "google": "Google ile oturum aç"
+    "google": "Google ile oturum aç",
+    "apple": "Apple ile oturum aç",
+    "signInAnotherWay": "Başka bir şekilde oturum açın",
+    "bottomSheet": {
+      "title": "Bir cüzdan oluşturmak için kurtarma ifadenizi kaydedin",
+      "description": "Yakında diğer e-posta sağlayıcılarını da destekleyeceğiz, ancak bu arada bir cüzdan oluşturmayı tamamlamak için kurtarma ifadenizi kaydetmeniz gerekecek.",
+      "continue": "İleri",
+      "skip": "Atla (önerilmez)"
+    }
   },
   "keylessBackupPhoneInput": {
     "setup": {
@@ -161,7 +174,9 @@
   "termsOfServiceLink": "Kullanım Şartları",
   "privacyPolicy": "Gizlilik Politikası",
   "editProfile": "Profili Düzenle",
-  "confirmNumber": "Telefon numarası bağla",
+  "profileName": "Profil Adı",
+  "profile": "Profil",
+  "confirmNumber": "Telefon Numarasını Bağla",
   "cancel": "İptal",
   "changeProfilePhoto": "Profil Fotoğrafını Değiştir",
   "name": "İsim",
@@ -172,6 +187,7 @@
   "continue": "İleri",
   "yourName": "Adınız",
   "version": "Versiyon {{appVersion}}",
+  "appVersion": "Versiyon",
   "addressCopied": "Adres panoya kopyalandı",
   "support": "Destek",
   "contact": "İletişim",
@@ -184,6 +200,7 @@
   "supportLegalCheckbox": "Yukarıdaki bilgileri ve ekli tüm uygulama geçmişi verilerini {{appName}} Desteği ile paylaşmayı kabul ediyorum.",
   "contactSuccess": "Sorununuz başarıyla bildirildi! Çok yakında size e-posta ile geri dönüş sağlayacağız!",
   "namePictureSaved": "Adınız ve resminiz başarıyla kaydedildi.",
+  "nameSaved": "Adınız başarıyla kaydedildi.",
   "addPhoto": "Fotoğraf Ekle",
   "chooseFromLibrary": "Kitaplıktan Seç",
   "takePhoto": "Fotoğraf Çek",
@@ -286,7 +303,7 @@
     "dismiss": "Yoksay"
   },
   "superchargingTitle": "Uygulama güncellemesi gerekli",
-  "superchargingDescription": "Supercharge ödüllerini almaya devam etmek için Valora uygulamasını güncelleyin.",
+  "superchargingDescription": "Süper charge ödüllerini almaya devam etmek için {{appName}} uygulamasını güncelleyin.",
   "superchargingTitleV1_54": "Süper charge sona eriyor",
   "superchargingDescriptionV1_54": "Haftalık ödüller 28 Mayıs Salı günü saat 23:59'a (UTC) kadar talep edilebilecektir. 29 Mayıs'tan itibaren Süper charge ödüllerini artık talep edemeyeceksiniz.",
   "superchargeRewardsAvailable": "{{amount}} {{token}} almaya hak kazandınız!",
@@ -369,6 +386,7 @@
   "accountAddressLabel": "Hesap Adresi",
   "celoAmountLabel": "Miktar (CELO)",
   "maxSymbol": "Maks.",
+  "percentage": "%{{percentage}}",
   "withdrawCeloReview": "Gözden Geçir",
   "withdrawCeloTo": "Şuraya çekim yap",
   "withdrawCeloAmount": "Miktar (CELO)",
@@ -693,7 +711,7 @@
       "body": "Arkadaşlarınızı ve ailenizi {{appName}} uygulamasını indirmeye davet edin ve her biriniz özel bir NFT kazanın"
     },
     "rewardsActiveCUSD": {
-      "title": "Arkadaşlarınızı Valora'ya davet ederek 12 cUSD'ye KADAR KAZANIN!",
+      "title": "Arkadaşlarınızı {{appName}} uygulamasına davet ederek 12 cUSD'ye KADAR KAZANIN!",
       "body": "{{appName}} uygulamasına davet ettiğiniz her arkadaşınız için 0,50 cUSD kazanın. Numaralarını bağladıklarında, fon eklediklerinde ve 7 gün boyunca tuttuklarında ikiniz de 0,50 cUSD alacaksınız. Acele edin, fonlar sınırlıdır! (25 arkadaşla sınırlıdır)."
     }
   },
@@ -804,6 +822,7 @@
     "spend": "Alışveriş için kripto kullanın"
   },
   "enableBiometry": {
+    "title": "Cüzdanınızı emniyete alın",
     "description": "{{biometryType}}, cüzdanınızın güvenliğini sağlar ve {{appName}} kullanımını kolaylaştırır",
     "cta": "{{biometryType}} etkinleştir",
     "guideTitle": "{{biometryType}} eklemek ister misiniz?",
@@ -826,9 +845,9 @@
     "createNewWallet": "Cüzdan oluştur",
     "restoreWallet": "Cüzdan Yeniden Kur",
     "hasWallet": "Zaten cüzdanım var",
+    "hasWalletV1_88": "Bir cüzdanım var",
     "header": "{{appName}} uygulamasına hoş geldiniz! Kripto cüzdanınızı oluşturalım.",
-    "getStarted": "Başlayın",
-    "agreeToTerms": "Bir cüzdan oluşturarak <0>Şartlar ve Koşullarımızı</0> kabul etmiş olursunuz"
+    "getStarted": "Başlayın"
   },
   "accessContacts": {
     "disclosure": {
@@ -842,7 +861,7 @@
   "registrationSteps": "Toplam {{totalSteps}} adımdan {{step}}.",
   "selectCountryCode": "Ülke Kodu Seçin",
   "pincodeSet": {
-    "createNew": "Yeni PIN oluştur",
+    "createNew": "Yeni PIN oluşturun.",
     "verify": "Doğrulamak için PIN'i tekrar girin",
     "changePIN": "PIN Değiştir",
     "pinsDontMatch": "PIN'ler eşleşmedi",
@@ -894,7 +913,7 @@
     "learnMore": {
       "buttonLabel": "Bağlanmam gerekiyor mu?",
       "title": "Bağlanmam gerekiyor mu?",
-      "body": "Telefon numaranızı bağlamanız, adres defterinizdeki ve diğer telefon numaralarınızdaki arkadaşlarınıza para göndermenize olanak tanır.\n \nBu adımı atlarsanız, kişilerinize erişemezsiniz ve yalnızca QR kodu veya cüzdan adresi aracılığıyla para gönderebilirsiniz."
+      "body": "Telefon numaranızı bağlamak, adres defterinizdeki arkadaşlarınıza ve diğer telefon numaralarına para göndermenizi sağlayacaktır. \n\nBu adımı atlamayı seçerseniz, kişilerinize erişemezsiniz ve yalnızca QR kodu veya cüzdan adresi aracılığıyla para gönderebilirsiniz."
     },
     "skip": {
       "title": "Emin misiniz?",
@@ -910,9 +929,11 @@
     "codeInputPlaceholder": "123456",
     "helpDialog": {
       "title": "Yardım",
-      "body": "Telefon numaranıza bir SMS gönderdik. Lütfen 6 haneli kodu bulmak için kısa mesajlarınızı kontrol edin. \n \n Mesaj almakta sorun yaşıyorsanız şimdilik bu adımı atlayabilir ve daha sonra tekrar deneyebilirsiniz.",
+      "body": "Telefon numaranıza bir SMS gönderdik. Lütfen 6 haneli kodu bulmak için kısa mesajlarınızı kontrol edin. \n\nMesajları almakta sorun yaşıyorsanız, şimdilik bu adımı atlayabilir ve daha sonra tekrar deneyebilirsiniz.",
+      "bodyCloudBackupOnboarding": "Telefon numaranıza bir SMS gönderdik. Lütfen 6 haneli kodu bulmak için kısa mesajlarınızı kontrol edin. \n\nMesajları almakta sorun yaşıyorsanız, bir Kurtarma İfadesi ile yedekleme yapmanızı öneririz. Daha sonra e-posta adresiniz ve telefonunuzla oturum açmayı deneyebilirsiniz.",
       "skip": "Atla",
-      "dismiss": "Geri dön"
+      "dismiss": "Geri dön",
+      "useRecoveryPhrase": "Kurtarma İfadesini Kullan"
     },
     "verificationFailure": "Bir şeyler ters gitti. Lütfen daha sonra tekrar deneyiniz.",
     "resendButtonNotYetAvailable": "{{secondsRemaining}} saniye sonra tekrar gönderilebilir",
@@ -923,6 +944,7 @@
     "header": "Cüzdan Yeniden Kur",
     "title": "Kurtarma ifadenizi girin",
     "description": "Geri yüklemek için cüzdanınızı ayarlarken kaydettiğiniz 12 veya 24 kelimelik ifadeyi kullanın.",
+    "descriptionV1_90": "Kurtarma İfadeniz, cüzdanınızı oluştururken not ettiğiniz ve kaydettiğiniz 12 veya 24 kelimelik bir ifadedir. Cüzdanınızı geri yüklemek için lütfen ifadeyi buraya girin.",
     "emptyWalletDialog": {
       "description": "Bu cüzdanda hiç bakiye yok. Yine de kullanmak ister misiniz?",
       "action": "Cüzdan Kullan",
@@ -1035,7 +1057,7 @@
   "inviteWithoutPayment": "Merhaba, dünyanın her tarafına kripto göndermek için {{appName}} kullanıyorum. Denemen için seni davet etmek isterim. Bu bağlantıya göz atabilirsin: {{link}}",
   "inviteWithEscrowedPayment": "Merhaba, dünyanın her tarafına kripto göndermek için {{appName}} kullanıyorum. Sana az önce {{amount}} {{token}} gönderdim. {{appName}} uygulamasını indirerek {{token}} miktarını alabilmen lütfen şu bağlantıyı tıkla{{link}}",
   "inviteWithRewards": "Merhaba! 👋 {{appName}} uygulamasını kripto cüzdanım olarak kullanıyorum. Uygulamayı indirmek ve telefon numaranı bağlamak çok kolay, ayrıca ikimiz de ödül olarak özel bir NFT sürümü alacağız. 💫 \n\nBu bağlantıyla indir: {{link}}",
-  "inviteWithRewardsCUSD": "Hey! Şu anda Valora cüzdanına kaydolur, fon yatırır ve numaranı bağlarsanız ikimiz de ücretsiz 0,50 USD ödül kazanabiliriz. Tasarruflarımı USD ve kripto olarak büyütmek için bunu kullanıyorum ve siz de sadece bir telefon numarasıyla saniyeler içinde kurabilirsiniz. Buradaki davet bağlantımla kaydolduğunuzdan emin olun: \n\n{{link}} \n\nAncak acele edin, davet promosyonu yakında sona eriyor.",
+  "inviteWithRewardsCUSD": "Hey! Şu anda {{appName}} cüzdanına kaydolur, fon yatırır ve numaranı bağlarsan ikimiz de ücretsiz 0,50 USD ödül kazanabiliriz. Tasarruflarımı USD ve kripto olarak büyütmek için bunu kullanıyorum ve sen de sadece bir telefon numarasıyla saniyeler içinde bu cüzdanı kullanmaya başlayabilirsin. Aşağıdaki davet bağlantımla kaydolduğundan emin ol: \n\n{{link}} \n\nAncak acele et, davet promosyonu yakında sona eriyor.",
   "loadingContacts": "Kişilerinizi bulma",
   "myCode": "Benim Kodum",
   "scanCode": "Tara",
@@ -1435,11 +1457,15 @@
   "dappsScreen": {
     "title": "Dapp'ler",
     "titleDiscover": "Keşfedin",
+    "exploreDapps": "Dapp'ler",
+    "exploreAll": "Tümünü Göster",
     "message": "Varlıklarınızı kullanmanın yollarını keşfedin",
     "errorMessage": "Dapp'ler yüklenirken bir hata oluştu",
     "featuredDapp": "Öne Çıkan",
     "allDapps": "Tümü",
     "favoriteDapps": "Favorilerim",
+    "mostPopularDapps": "En Popüler",
+    "mostPopularDapps_UK": "Diğer Dapp'ler",
     "favoriteDappsAndAll": "Favorilerim & Hepsi",
     "searchPlaceHolder": "Dapp'leri ara",
     "noFavorites": {
@@ -1455,7 +1481,8 @@
       "message": "<0>{{filter}}</0> filtresi uygulandı",
       "removeFilter": "Filtreyi kaldır",
       "searchMessage": "\" <0>{{searchTerm}}</0> \" için eşleşen sonuç bulunamadı"
-    }
+    },
+    "disclaimer_UK": "Bu, üçüncü taraf Dapp'lerin bir listesidir. Her bir Dapp için sunulan açıklama tamamen bilgilendirme amaçlı olup bunların kullanımına yönelik bir davet niteliğinde değildir."
   },
   "dappRankings": {
     "title": "Dapp sıralamaları",
@@ -1508,6 +1535,7 @@
     "somePaymentsUnavailable": "Satın alımlar ortak sağlayıcılarımız tarafından desteklenmektedir. Ücretler değişebilir. Bazı ödeme yöntemleri bölgenizde kullanılamamaktadır.",
     "disclaimerWithSomePaymentsUnavailable": "Ödemeler ağ ortakları tarafından desteklenmektedir. Ücretler değişebilir. Bazı ödeme yöntemleri bölgenizde kullanılamamaktadır. <0>Daha fazla bilgi edinin.</0>",
     "disclaimer": "Ödemeler ağ ortakları tarafından desteklenmektedir. Ücretler değişebilir. <0>Daha fazla bilgi edinin.</0>",
+    "disclaimerUK": "Bu, kripto varlık satın almaya davet değildir. Yalnızca fiyat bilgileri ve web sitelerine bağlantı ile kripto varlık satan sağlayıcıların bir listesini sunuyoruz.",
     "learnMore": "Daha fazla bilgi edinin.",
     "whyMissingPayments": "Neden başka ödeme yöntemi göremiyorum?",
     "dismiss": "Yoksay",
@@ -1669,6 +1697,7 @@
       "selectCurrencyTitle": "Bakiye Ekle",
       "exchangeAmountTitle": "{{currency}} ekle",
       "selectProviderHeader": "Ödeme Yöntemi Seç",
+      "selectProviderHeader_UK": "Sağlayıcı Detayları",
       "depositExchangeTitle": "Kripto Para Yatır"
     },
     "cashOut": {
@@ -1759,11 +1788,13 @@
     "title": "Swap",
     "review": "Gözden Geçir",
     "confirmSwap": "Swap'ı Onayla",
+    "confirmSwap_UK": "Takas Yapmak İstiyorum",
     "swapFrom": "KAYNAK",
     "swapTo": "HEDEF",
     "insufficientFunds": "Yetersiz {{token}}. Lütfen daha küçük bir miktar girin veya farklı bir varlık seçin.",
     "fetchSwapQuoteFailed": "Gecikme için üzgünüz! En iyi döviz kurunu almak normalden daha uzun sürüyor. Lütfen birkaç dakika içinde tekrar deneyin.",
     "disclaimer": "En iyi fiyat merkezi olmayan kaynaklar tarafından belirlenir. <0>Daha fazla bilgi</0>",
+    "disclaimer_UK": "Bu, kripto varlık satın almaya davet değildir. Takas Yapmak İstiyorum seçeneğine tıkladığınızda takas işleminizi en iyi kurdan gerçekleştirmesi için üçüncü taraf bir takas yönlendiricisine talimat vermiş olursunuz. En iyi oran ağ ortakları tarafından sağlanır. <0>Daha fazla bilgi</0>",
     "swapFromTokenSelection": "ŞURADAN TAKAS",
     "swapToTokenSelection": "ŞUNA TAKAS",
     "tokenUsdValueUnknown": "-",
@@ -1771,6 +1802,24 @@
     "selectTokenLabel": "Token seçin",
     "tokenBottomSheetTitle": "Token Seç",
     "onNetwork": "{{networkName}} üzerinde",
+    "crossChainNotification": "Farklı ağlar arasında token takas etme",
+    "crossChainFeeWarning": {
+      "title": "Daha fazla {{tokenSymbol}} bakiyesine ihtiyacınız var",
+      "body": "Zincirler arası takas ücretlerini ödemek için {{networkName}} üzerinde daha fazla {{tokenSymbol}} bakiyesine ihtiyacınız var. Devam etmek için {{tokenAmount}} {{tokenSymbol}} daha ekleyin."
+    },
+    "insufficientBalanceWarning": {
+      "title": "Daha fazla {{tokenSymbol}} bakiyesine ihtiyacınız var",
+      "body": "Yetersiz {{tokenSymbol}}. Lütfen daha küçük bir miktar girin veya farklı bir varlık seçin."
+    },
+    "unsupportedTokensWarning": {
+      "title": "Uyumsuz Seçim",
+      "body": "Seçilen tokenler birbirleriyle takas yapılamaz. Lütfen seçiminizle uyumlu başka bir token seçin."
+    },
+    "decreaseSwapAmountForGasWarning": {
+      "title": "Gas için daha fazla {{feeTokenSymbol}} bakiyesine ihtiyacınız var",
+      "body": "Gas ücretlerinizi karşılamak için {{feeTokenSymbol}} ekleyin veya takas ettiğiniz tutarı ayarlayın",
+      "cta": "Daha düşük bir tutarı swap edin"
+    },
     "switchedToNetworkWarning": {
       "title": "{{networkName}} ağına geçtiniz",
       "body_swapFrom": "Devam etmek için {{networkName}} ağında kendisinden swap yapılacak bir token seçin.",
@@ -1832,12 +1881,30 @@
       "networkFeeInfo": "{{networkName}} Ağında swap işlemi yapıyorsunuz.\n\nBu tahmini ağ ücreti, {{networkName}} Ağında bir işlem gerçekleştirmek için gereklidir. Bu ücret işleminizi güvence altına alır ve ağın çalışır durumda kalmasını sağlar.",
       "networkFeeInfoV1_76": "{{networkName}} Ağında takas yapıyorsunuz.\n\n{{networkName}} Ağında işlem gerçekleştirmek için bir ağ ücreti gereklidir. Bu ücret işleminizi güvence altına alır ve ağ doğrulayıcılarına ödenir.\n\nAğ koşulları kesin tutarı belirlediğinden, listelenen tahmin, gerçek ücretin ne olmasını beklediğimizdir. Ücret, maksimum ücret tutarını aşmayacaktır.",
       "slippageToleranceInfo": "Slipaj toleransı\n\nSwap işleminiz slipaj toleransı yüzdesi dahilinde gerçekleşecektir. Fiyat slipaj toleransından fazla değişirse {{appName}} işlemin gerçekleşmesini engelleyerek sizi korur.",
+      "slippageToleranceInfoV1_90": "Takas işleminiz slipaj toleransı yüzdesi dahilinde gerçekleşecektir. Fiyat slipaj toleransından fazla değişirse {{appName}} işlemin gerçekleşmesini engelleyerek sizi korur.",
       "networkFeeInfoDismissButton": "Anladım",
       "exchangeRate": "Döviz Kuru",
       "exchangeRateInfo": "Kur\n\nSizin için en iyi kuru bulduk. İşleminiz, tahminin %{{slippagePercentage}} oranı dahilinde bir fiyatla tamamlanacak veya işlem iptal edilecek ve fonlar cüzdanınıza iade edilecektir.",
+      "exchangeRateInfoV1_90": "Sizin için en iyi kuru bulduk. İşleminiz, tahminin %{{slippagePercentage}} oranı dahilinde bir fiyatla tamamlanacak veya işlem iptal edilecek ve fonlar cüzdanınıza iade edilecektir.",
       "exchangeRateInfo_withAppFee": "Kur\n\nSizin için en iyi kuru bulduk. İşleminiz, tahminin %{{slippagePercentage}} oranı dahilinde bir fiyatla tamamlanacak veya işlem iptal edilecek ve fonlar cüzdanınıza iade edilecektir.\n\nTahmini kura %{{appFeePercentage}} oranında {{appName}} ücreti dahildir.",
       "exchangeRateInfoDismissButton": "Anladım",
-      "estimatedValue": "Tahmini Değer"
+      "estimatedValue": "Tahmini Değer",
+      "estimatedTransactionTime": "Tahmini İşlem Süresi",
+      "estimatedTransactionTimeInMinutes": "≈ {{minutes}} dak",
+      "estimatedTransactionTimeInfo": "İşlemin tamamlanma süresi sağlayıcı tarafından belirlenir.\n\nFarklı zincirler arasında takas yapıyorsanız işlemin tamamlanması biraz daha uzun sürebilir.",
+      "infoDismissButton": "Anladım",
+      "fees": "Ücretler",
+      "feesCalculationError": "Ücretler hesaplanamıyor",
+      "estimatedCrossChainFee": "Tahmini zincirler arası işlem ücretleri",
+      "maxCrossChainFee": "Maksimum zincirler arası işlem ücretleri",
+      "feesBreakdown": "Dağılım",
+      "feeAmount": "≈ {{localCurrencySymbol}}{{feeAmountInLocalCurrency}} ({{tokenAmount}} {{tokenSymbol}})",
+      "feeAmount_noFiatPrice": "{{tokenAmount}} {{tokenSymbol}}",
+      "feesMoreInfoLabel": "Daha fazla bilgi",
+      "feesInfo_sameChain": "Ağ ücreti, işlemin gerçekleştirilmesi için ağ tarafından talep edilir.",
+      "feesInfo_crossChain": "Ağ ücreti, işlemin gerçekleştirilmesi için ağ tarafından talep edilir. Zincirler arası işlem ücreti, zincirler arası işlem sağlayıcısı tarafından tahsil edilir.",
+      "feesInfo_sameChainWithAppFee": "Ağ ücreti, işlemin gerçekleştirilmesi için ağ tarafından talep edilir. Ürünümüzü kullanmanız için %{{appFeePercentage}} {{appName}} ücreti tahsil edilir.",
+      "feesInfo_crossChainWithAppFee": "Ağ ücreti, işlemin gerçekleştirilmesi için ağ tarafından talep edilir. Zincirler arası işlem ücreti, zincirler arası işlem sağlayıcısı tarafından tahsil edilir. Ürünümüzü kullanmanız için %{{appFeePercentage}} {{appName}} ücreti tahsil edilir."
     },
     "fundYourWalletBottomSheet": {
       "title": "Cüzdanınıza fon ekleyin",
@@ -1849,6 +1916,8 @@
     "swapFrom": "Takas kaynağı",
     "swapTo": "Takas hedefi",
     "rate": "Oran",
+    "network": "Ağ",
+    "networkValue": "{{fromNetwork}} → {{toNetwork}}",
     "estimatedFee": "Tah Ağ Ücreti",
     "networkFee": "Ağ Ücreti",
     "viewOnExplorer": "CeloExplorer'da görüntüle"
@@ -1930,10 +1999,12 @@
     "subtitle": "Önce ne yapmak istersiniz?",
     "later": "Daha sonra keşfedeceğim",
     "options": {
-      "add": "Bakiye ekleme",
+      "add": "Cüzdanınıza fon ekleyin",
       "dapp": "Kriptoyu kullanmanın yollarını bulma",
-      "profile": "Profilimi oluştur",
-      "learn": "Celo hakkında bilgi edinme"
+      "earn": "Kazanç fırsatlarını keşfedin",
+      "profile": "Profilimi oluşturma",
+      "learn": "Celo hakkında bilgi edinme",
+      "learnPoints": "{{appName}} Puanları hakkında daha fazla bilgi edinin"
     }
   },
   "reverifyUsingCPVHomecard": {
@@ -1958,7 +2029,8 @@
       "network": "{{networkName}} Ağı",
       "selectNetwork": "Ağ",
       "stablecoins": "Stabilcoinler",
-      "gasTokens": "Tokenler"
+      "gasTokens": "Tokenler",
+      "tokens": "Token"
     }
   },
   "homeActions": {
@@ -2052,9 +2124,13 @@
   },
   "sendSelectRecipient": {
     "searchText": "İsme, telefona, cüzdana göre arama yapın...",
+    "searchInputLabel": "Şu Token’a",
+    "searchInputPlaceholder": "Cüzdan Adresi veya Telefon Numarası",
     "paste": "Panodan yapıştır",
     "title": "Bir alıcı seçin",
     "contactsTitle": "Bir kişi seçin",
+    "header": "Gönder",
+    "contactsHeader": "Kişilere Gönder",
     "recents": "En sonuncular",
     "results": "Sonuçlar",
     "qr": {
@@ -2062,8 +2138,8 @@
       "subtitle": "Kolektivo'daki adresleri hızlıca bulun"
     },
     "invite": {
-      "title": "Arkadaşlarınıza kripto gönderin",
-      "subtitle": "Kişilerinize fon veya davet gönderin"
+      "title": "Bir Kişiye Gönder",
+      "subtitle": "Kişilerinize fon gönderin"
     },
     "jumpstart": {
       "title": "Canlı Bağlantı ile Gönder",
@@ -2123,10 +2199,12 @@
   "viewOnOPSepoliaExplorer": "OP Sepolia Explorer'da görüntüle",
   "viewOnPolygonPoSScan": "PolygonScan'de görüntüle",
   "viewOnBaseScan": "BaseScan'de görüntüle",
+  "viewOnAxelarScan": "AxelarScan'de görüntüle",
   "sendEnterAmountScreen": {
     "title": "Tutar Girin",
     "selectToken": "Bir Token seçin",
     "networkFee": "{{networkName}} Ağ Ücreti",
+    "networkFeeV1_97": "Ağ Ücreti",
     "lowerAmount": "Daha düşük bir tutar girin",
     "maxAmountWarning": {
       "title": "Maksimum tutar gönderiliyor",
@@ -2139,6 +2217,27 @@
     "prepareTransactionError": {
       "title": "Bir şeyler ters gitti!",
       "description": "Bu token için bir işlem hazırlanamadı."
+    },
+    "insufficientBalanceWarning": {
+      "title": "Daha fazla {{tokenSymbol}} bakiyesine ihtiyacınız var",
+      "description": "Yetersiz {{tokenSymbol}}. Lütfen daha küçük bir miktar girin veya farklı bir varlık seçin."
+    }
+  },
+  "jumpstartIntro": {
+    "title": "Bir metin gibi kripto paylaşın",
+    "description": "Canlı Bağlantılar ile Celo ağındaki bir arkadaşınıza bir bağlantı ile kripto gönderebilirsiniz",
+    "noFundsHint": "Kullanmaya başlamak için cüzdanınızda Celo ağında bazı varlıklar olmalıdır.",
+    "haveFundsButton": "Canlı Bağlantı ile Gönder",
+    "addFundsCelo": {
+      "title": "Celo'da Varlık Alın",
+      "info": "Canlı Bağlantılar, Celo ağındaki kriptoyu bir bağlantı ile bir arkadaşınıza göndermenin bir yoludur.\nBaşlamak için cüzdanınızda biraz CELO varlığına ihtiyacınız vardır.",
+      "description": "Celo'ya varlık ekledikten sonra Canlı Bağlantı oluşturmak için geri gelmeniz gerekir.",
+      "cta": "Celo'da Varlık Alın",
+      "actionDescriptions": {
+        "add": "Güvenilir sağlayıcılarımızdan birini kullanarak Celo'da varlık satın alın",
+        "swap": "Celo'daki bir varlığı başka bir varlıkla takas edin",
+        "transfer": "Celo'ya varlık yatırmak için Celo uyumlu cüzdan veya borsa kullanın"
+      }
     }
   },
   "jumpstartEnterAmountScreen": {
@@ -2180,6 +2279,9 @@
     "approvalTransactionTitle": "Onay",
     "estimatedNetworkFee": "Tahmini ağ ücreti",
     "networkFee": "Ağ ücreti",
+    "appFee": "Uygulama ücreti",
+    "estimatedCrossChainFee": "Tahmini zincirler arası işlem ücreti",
+    "crossChainFee": "Zincirler arası işlem ücreti",
     "finiteApprovalDescription": "{{approvedAmount}} {{tokenSymbol}} işlem için onaylandı",
     "infiniteApprovalDescription": "{{tokenSymbol}} işlem için süresiz onaylandı",
     "revokeApprovalDescription": "{{tokenSymbol}} işlem için iptal edildi",
@@ -2198,7 +2300,7 @@
     "body": "Kripto göndermek ve web3'ü keşfetmek için uyumlu tokenları satın alın veya transfer edin!",
     "titleV1_86": "Cüzdanınıza fon ekleyin",
     "exploreTokens": "Tüm tokenleri keşfedin",
-    "exploreTokensBody": "Valora'da 10'dan fazla token satın alabilirsiniz. Şunlara bir göz atın!"
+    "exploreTokensBody": "{{appName}} uygulamasında 10'dan fazla token satın alabilirsiniz. Şunlara bir göz atın!"
   },
   "nftCelebration": {
     "bottomSheet": {
@@ -2286,6 +2388,17 @@
         "swap": {
           "title": "Swap",
           "subtitle": "{{fromToken}} - {{toToken}}"
+        },
+        "createLiveLink": {
+          "title": "Canlı Bağlantı",
+          "subtitle": {
+            "erc20": "{{tokenSymbol}} gönderildi",
+            "erc721": "Gönderilen NFT"
+          }
+        },
+        "depositEarn": {
+          "title": "Yatırılan",
+          "subtitle": "{{network}} Havuzuna"
         }
       },
       "title": "Puan faaliyetim",
@@ -2320,7 +2433,7 @@
       "retryCta": "Tekrar deneyin"
     },
     "infoCard": {
-      "title": "Puan kazanmanın daha fazla yolu çok yakında 🚀",
+      "title": "Puan kazanmanın daha fazla yolu çok yakında",
       "body": "Uygulamayı kullanarak puan kazanmanın daha fazla yolunu eklemek için çalışıyoruz. Güncellemeler için kontrol etmeye devam edin."
     },
     "activitySection": {
@@ -2339,26 +2452,49 @@
         "title": "Varlıkları takas edin",
         "bottomSheet": {
           "title": "Varlıkları takas edin",
-          "body": "{{appName}}adresini kullanarak her varlık takası yaptığınızda {{pointsValue}} puanı kazanın. \n\nTakas etmeye ve kazanmaya başlamak için aşağıya dokunun!",
+          "body": "{{appName}} uygulamasını kullanarak her varlık takası yaptığınızda {{pointsValue}} puanı kazanın. \n\nTakas etmeye ve kazanmaya başlamak için aşağıya dokunun!",
           "cta": "Bir takas başlatın"
         }
       },
       "moreComing": {
         "title": "Daha fazlası yakında!"
+      },
+      "createLiveLink": {
+        "title": "Canlı Bağlantı ile Gönder",
+        "bottomSheet": {
+          "title": "Canlı Bağlantı ile Gönder",
+          "body": "{{appName}} uygulamasıyla bir Canlı Bağlantı kullanarak her fon gönderdiğinizde {{pointsValue}} puan kazanın. \n\nGöndermeye ve kazanmaya başlamak için aşağıya dokunun!",
+          "cta": "Canlı Bağlantı ile Gönder"
+        }
+      },
+      "depositEarn": {
+        "title": "{{appName}} uygulamasındaki kazanç havuzuna para yatırın",
+        "bottomSheet": {
+          "title": "Bir kazanç havuzuna para yatırma",
+          "body": "{{appName}} uygulamasındaki bir kazanç havuzuna her fon yatırdığınızda {{pointsValue}} puan kazanın. \n\nGetiri ve puan kazanmaya başlamak için aşağıya dokunun!",
+          "cta": "Kazanç havuzlarına gidin"
+        }
       }
     },
     "discoverCard": {
       "title": "{{appName}} Puanları",
-      "description": "{{appName}} ile kolayca puan kazanın. Takas işlemi dahil olmak üzere uygulamayı kullanmak puan kazandırır!"
+      "description": "{{appName}} ile kolayca puan kazanın. Takas işlemi dahil olmak üzere uygulamayı kullanmak puan kazandırır!",
+      "balance": "{{pointsBalance}} puanları"
     },
     "intro": {
       "title": "Zahmetsizce puan kazanın",
       "description": "Kazanmak için yeni bir yola girin! {{appName}} eylemleriniz artık puan kazandırıyor. Bugün kazanmaya başlayın ve harika avantajların kilidini açın.",
       "cta": "Puan yolculuğunuza başlayın"
+    },
+    "disclaimer": {
+      "learnMoreCta": "{{appName}} Puanları hakkında <0>daha fazla bilgi edinin</0>",
+      "title": "{{appName}} Puanları hakkında daha fazla bilgi",
+      "body": "Puanlar {{appName}} uygulamasının sadakat programıdır. Uygulamayı kullandığınız için ödüllendirilirsiniz. Puanlar harcanamaz, takas edilemez veya transfer edilemez.",
+      "dismiss": "Anladım"
     }
   },
   "earnFlow": {
-    "gasSubsidized": "Valora bu işlem için gas ücretini karşılıyor!",
+    "gasSubsidized": "İşlem ücretleri sınırlı bir süre için karşılanmaktadır",
     "addCryptoBottomSheet": {
       "title": "{{tokenNetwork}} ağına {{tokenSymbol}} ekleyin",
       "description": "Token ekledikten sonra havuza para yatırma işlemini tamamlamak için geri gelmeniz gerekecektir.",
@@ -2374,26 +2510,34 @@
       }
     },
     "cta": {
-      "title": "Sabit coinlerinizden kazanın",
+      "title": "Kripto paranızdan kazanç sağlayın",
       "subtitle": "Bugün para yatırın ve getiri kazanın",
       "description": "Bir kredi havuzu sağlarken ne kadar kazanabileceğinizi görün"
     },
     "earnInfo": {
-      "title": "Sabit coinlerinizden\nkazanın",
+      "title": "Kripto paranızdan\nkazanç sağlayın",
       "details": {
         "earn": {
           "titleGasSubsidy": "Gas Ücretleri Olmadan Kazancınızı En Üst Düzeye Çıkarın*",
-          "title": "Kazançları En Üst Düzeye Çıkarın",
-          "subtitle": "Sabit coinlerinizden kazanın ve bir havuz sağladığınızda ödüller kazanın.",
-          "footnoteSubsidy": "*Gas ücretleri geçici olarak Valora tarafından karşılanmaktadır"
+          "title": "Havuzları Keşfedin ve Karşılaştırın",
+          "subtitle": "Kazanç potansiyelini ve riskleri karşılaştırın. Size en uygun havuza katılmak için tokenları takas edin, satın alın veya transfer edin.",
+          "footnoteSubsidy": "*Gas ücretleri geçici olarak {{appName}} tarafından karşılanmaktadır"
+        },
+        "work": {
+          "title": "Varlıklarınızdan Kazanç Sağlayın",
+          "subtitle": "Bir likidite havuzuna para yatırarak kriptolarınızdan kazanç sağlamaya başlayın. "
         },
         "manage": {
-          "title": "Doğrudan Valora'dan Yönetin",
-          "subtitle": "Pozisyonunuzu doğrudan Valora'dan yönetebilmeniz için kurulumla biz ilgileneceğiz."
+          "title": "Doğrudan {{appName}} uygulamasından yönetin",
+          "titleV1_92": "Doğrudan {{appName}} uygulamasından yönetin",
+          "titleV1_94": "Pozisyonlarınızı Yönetin",
+          "subtitle": "{{appName}} uygulamasından ayrılmadan havuzları yönetebilmeniz için cüzdanınızı otomatik olarak bağlayacağız.",
+          "subtitleV1_92": "{{appName}} uygulamasından ayrılmadan havuzları yönetebilmeniz için cüzdanınızı otomatik olarak bağlayacağız.",
+          "subtitleV1_94": "Dilediğiniz havuzu seçin, tokenlerinizi ekleyin ve kazançlarınızı izleyin."
         },
         "access": {
           "title": "Fonlarınıza Kolayca Erişin",
-          "subtitle": "Tek bir dokunuşla fonlarınızı zahmetsizce toplayın. Doğrudan favori protokolleriniz aracılığıyla yaptığınızla aynı şekilde anında erişimin keyfini çıkarın."
+          "subtitle": "Hazır olduğunuzda tek dokunuşla fonları toplayın."
         }
       },
       "action": {
@@ -2406,22 +2550,58 @@
       "subtitle": "{{symbol}} satın alın",
       "description": "Bir havuza {{symbol}} ekleyerek yılda yaklaşık %{{apy}} kazanın"
     },
+    "entrypoint": {
+      "title": "Kripto paranızdan kazanç sağlayın",
+      "subtitle": "Yatırın ve kazanın",
+      "description": "Likidite havuzlarında kripto varlıklarınızı ödünç vererek kazanın.",
+      "totalDepositAndEarnings": "Toplam Yatırım ve Kazançlar"
+    },
     "enterAmount": {
+      "title": "Ne kadar yatırmak istersiniz?",
+      "titleWithdraw": "Ne kadar para çekmek istersiniz?",
+      "deposit": "Patra Yatırma",
+      "fees": "Ücretler",
+      "available": "Kullanılabilir",
+      "swap": "Swap",
+      "estimatedDuration": "Tahmini İşlem Süresi",
+      "claimingReward": "Ödül Alma",
       "earnUpToLabel": "Şu kadar kazanabilirsiniz:",
       "rateLabel": "Oran (tahmini)",
       "earnUpTo": "~{{fiatSymbol}}{{amount}} / yıl",
+      "earnUpToV1_87": "<0></0> / yıl",
       "rate": "%{{rate}} Yıllık Getiri Oranı (APY)",
       "continue": "İleri",
       "info": "Bu havuz Aave tarafından desteklenmektedir",
-      "infoBottomSheet": {
-        "title": "Neden bu havuz?",
-        "description": "Bu Aave havuzu 150 milyon ABD dolarının üzerinde TVL'ye ve 6000'den fazla katılımcıya sahiptir, bu da güçlü likidite ve güvenilirliği gösterir. Ayrıca token olarak USDC ve ağ olarak Abritrum kullanır, bu da oynaklığı azaltır ve kullanıcıların ucuz gas oranları almasını sağlar.\n\nTüm bunlar bir araya geldiğinde, rekabetçi Yıllık Getiri Oranı ile güvenli ve cazip bir seçenek haline gelir ve kullanıcılarımız için faydalı bir yatırım fırsatı sağlar.\n\nDiğer Aave havuzlarını <0>buradan</0> keşfedebilirsiniz.",
-        "dismiss": "Yoksay"
-      },
+      "infoV1_93": "{{providerName}} tarafından desteklenmektedir",
       "notEnoughBalanceForGasWarning": {
         "title": "Devam etmek için daha fazla {{feeTokenSymbol}} bakiyesine ihtiyacınız var",
         "description": "Gas ücretlerinizi karşılamak için {{network}} ağına {{feeTokenSymbol}} ekleyin",
         "noGasCta": "{{network}} ağında {{feeTokenSymbol}} satın alın"
+      },
+      "feeBottomSheet": {
+        "feeDetails": "Ücret Detayları",
+        "moreInformation": "Daha fazla bilgi",
+        "estNetworkFee": "Tahmini Ağ Ücreti",
+        "maxNetworkFee": "Maks. Ağ Ücreti",
+        "estCrossChainFee": "Tahmini Zincirler Arası İşlem Ücreti",
+        "maxCrossChainFee": "Maksimum Zincirler Arası İşlem Ücreti",
+        "description_deposit": "Ağ ücreti, yatırma işlemin gerçekleştirilmesi için ağ tarafından talep edilir.",
+        "description_withdraw": "Ağ ücreti, ağın, para çekme işlemlerini işleme koyması için gereklidir.",
+        "description_depositSwapFee": "Ağ ücreti, para yatırma işlemlerinin gerçekleştirilmesi için ağ tarafından talep edilir. Ürünümüzü kullanmanız için %{{appFeePercentage}} {{appName}} ücreti tahsil edilir.",
+        "description_depositCrossChain": "Ağ ücreti, para yatırma işleminin gerçekleştirilmesi için ağ tarafından talep edilir. Zincirler arası işlem ücreti, zincirler arası işlem sağlayıcısı tarafından tahsil edilir.",
+        "description_depositCrossChainWithSwapFee": "Ağ ücreti, para yatırma işlemlerinin gerçekleştirilmesi için ağ tarafından talep edilir. Ürünümüzü kullanmanız için %{{appFeePercentage}} {{appName}} ücreti tahsil edilir. Zincirler arası işlem ücreti, zincirler arası işlem sağlayıcısı tarafından tahsil edilir.",
+        "appSwapFee": "{{appName}} Ücreti"
+      },
+      "swapBottomSheet": {
+        "swapDetails": "Takas Detayları",
+        "swapFrom": "Şuradan Gelen Takas",
+        "swapTo": "Şuraya Giden Takas",
+        "whySwap": "Neden takas yapıyorum?",
+        "swapDescription": "Havuza fon yatırmak için tokeniniz bir havuz tokeni ile takas edilir."
+      },
+      "withdrawingAndClaimingCard": {
+        "title": "Para Çekme ve Talep Etme",
+        "description": "{{providerName}}, para çekme işlemi yaptığınız her defasında, mevcut tüm ödülleri talep etmenizi zorunlu kılmaktadır."
       }
     },
     "activePools": {
@@ -2430,27 +2610,44 @@
       "apy": "~%{{apy}} Yıllık Getiri Oranı (APY)",
       "exitPool": "Havuzdan Çık",
       "depositMore": "Daha Fazla Yatırın",
-      "viewPools": "Havuzları Görüntüle"
+      "viewPools": "Havuzları Görüntüle",
+      "poolsSupplied": "Para yatırılan havuzlar",
+      "totalSupplied": "Yatırılan toplam",
+      "depositAndEarnings": "Yatırım ve Kazançlar",
+      "myPools": "Havuzlarım",
+      "explore": "Açık Havuzları Keşfet"
     },
     "depositBottomSheet": {
       "title": "İncele ve Para Yatır",
       "description": "Bir Aave havuzuna para yatırmadan önce lütfen aşağıdaki işlem ayrıntılarını inceleyin",
+      "descriptionV1_93": "Lütfen {{providerName}} havuzuna varlık yatırmadan önce aşağıdan işlem ayrıntılarını inceleyin",
       "amount": "Yatırılan Toplam",
       "fee": "Tah. Gas Ücretleri",
       "provider": "Kazanç sağlayıcı",
       "network": "Ağ",
       "footer": "Bir Aave havuzuna kripto yatırarak, Aave kullanımıyla ilişkili riskleri kabul etmiş olursunuz. <0>Şartlar ve Koşullar</0>",
+      "footerV1_93": "Bir {{providerName}} havuzuna kripto yatırarak {{providerName}} kullanımıyla ilişkili riskleri kabul etmiş olursunuz. <0>Şartlar ve Koşullar</0>",
+      "noTermsUrlFooter": "{{appName}} uygulamasındaki eylemlerinizden siz sorumlusunuz. {{appName}}, varlıklarınız veya {{providerName}} ile etkileşimlerinizden doğabilecek tüm sorumluluğu reddeder. {{providerName}} sağlayıcısına ait belgeleri <0>buradan</0> ve Hüküm ve Koşullarımızı ise <1>buradan</1> inceleyebilirsiniz.",
       "primaryCta": "Tamamlandı",
-      "secondaryCta": "İptal"
+      "secondaryCta": "İptal",
+      "yieldRate": "Verim Oranı (tahmini)",
+      "apy": "%{{apy}}"
     },
     "collect": {
       "title": "Tebrikler! Kazancınızı inceleyin ve toplayın",
+      "titleClaim": "Talep edilecek:",
+      "titleCollect": "Toplanacak:",
+      "titleWithdraw": "Çekilecek:",
       "total": "TOPLAM",
       "plus": "ARTI",
+      "reward": "ÖDÜL",
       "rate": "Oran (tahmini)",
       "apy": "%{{apy}} Yıllık Getiri Oranı (APY)",
       "fee": "Gas Ücreti",
       "cta": "Kazançları Toplayın",
+      "ctaWithdraw": "Çek",
+      "ctaReward": "Ödülü Talep Et",
+      "ctaExit": "Havuzdan Çık",
       "errorTitle": "Bir şeyler ters gitti",
       "errorDescription": "Para yatırma detayları alınamıyor. Lütfen tekrar deneyin.",
       "noGasTitle": "Devam etmek için daha fazla {{symbol}} bakiyesine ihtiyacınız var",
@@ -2475,8 +2672,191 @@
       "earnDepositDetails": "Yatırılan Toplam",
       "earnWithdrawTitle": "Çekilen",
       "earnWithdrawSubtitle": "{{providerName}} Havuzundan {{tokenSymbol}} Çekildi",
-      "earnWithdrawDetails": "Çekilen Tutar"
+      "earnWithdrawDetails": "Çekilen Tutar",
+      "swap": "Swap",
+      "network": "Ağ",
+      "fees": "Ücretler"
+    },
+    "home": {
+      "title": "Kazan",
+      "learnMore": "Getiri havuzları hakkında <0>daha fazla bilgi edinin</0>.",
+      "learnMoreBottomSheet": {
+        "bottomSheetTitle": "Getiri havuzları hakkında daha fazla bilgi edinin",
+        "apySubtitle": "APY nedir?",
+        "apyDescription": "Yıllık getiri oranı (APY), kripto yatırımlarının yıllık getirisini hesaplamak için kullanılan bir metriktir. Bir kripto paranın potansiyel getirisi ve kârlılığının önemli bir göstergesidir.",
+        "tvlSubtitle": "TVL nedir?",
+        "tvlDescription": "TVL, Total Value Locked (Kilitli Toplam Değer) anlamına gelir ve kripto sektöründe bir blok zincir ağında kilitli olan dijital varlıkların değerini ölçmek için kullanılan bir metriktir. TVL, bir DeFi protokolünde ya da akıllı kontratta kilitli olan tüm dijital varlıkların değerinin toplanmasıyla hesaplanır. Bu varlıklar arasında kripto paralar, sabit coinler ve diğer tokenlar yer alabilir.",
+        "yieldPoolSubtitle": "Getiri havuzu nedir?",
+        "yieldPoolDescription": "Getiri havuzları ya da likidite havuzları, token sahipleri tarafından sağlanan ve merkezi olmayan borsalarda alım satıma olanak tanıyan havuzlanmış fonlardır. Havuza katkıda bulunduğunuzda bu fonları borç alan diğer kişilerden faiz kazanabilirsiniz.",
+        "chooseSubtitle": "Nasıl bir havuz seçmelisiniz? ",
+        "chooseDescription": "Her türlü finansal karar kişisel bir seçimdir. Farklı protokollerdeki bazı havuzları bir araya getirdik, ancak her havuzun avantajları ve riskleri vardır. Her havuza ilişkin bazı yararlı bilgiler sağlamak için elimizden geleni yapıyoruz ancak emin değilseniz ek araştırma yapmak her zaman en iyisidir."
+      },
+      "noPoolsTitle": "Henüz hiçbir havuza katılmadınız",
+      "noPoolsDescription": "Mevcut havuzları keşfedin, hedeflerinize uygun bir havuz seçin ve kripto paralarınızdan en iyi şekilde yararlanın.",
+      "errorTitle": "Havuzlar yüklenemiyor.",
+      "errorDescription": "Hay aksi, havuz bilgileri yüklenirken bir şeyler ters gitti. Lütfen tekrar deneyin.",
+      "errorButton": "Tekrar deneyin"
+    },
+    "poolCard": {
+      "onNetwork": "{{networkName}} üzerinde",
+      "rate": "Oran (tahmini)",
+      "yieldRate": "Verim Oranı (tahmini)",
+      "reward": "Ödül",
+      "tvl": "TVL",
+      "exitPool": "Havuzdan Çık",
+      "addToPool": "Havuza Ekle",
+      "apy": "%{{apy}} Yıllık Getiri Oranı (APY)",
+      "percentage": "%{{percentage}}",
+      "poweredBy": "{{providerName}} tarafından desteklenmektedir",
+      "deposited": "Yatırılan",
+      "depositAndEarnings": "Yatırım ve Kazançlar"
+    },
+    "poolFilters": {
+      "allPools": "Tüm Havuzlar",
+      "myPools": "Havuzlarım"
+    },
+    "poolInfoScreen": {
+      "chainName": "Zincir: <0>{{networkName}}</0>",
+      "protocolName": "Protokol: <0>{{providerName}}</0>",
+      "yieldRate": "Getiri Oranı",
+      "dailyYieldRate": "Günlük Oran",
+      "ratePercent": "%{{rate}}",
+      "rewards": "Ödüller",
+      "noRewards": "Ödül yok",
+      "safetyScore": "Güvenlik Puanı",
+      "tvl": "TVL",
+      "ageOfPool": "Havuz Yaşı",
+      "learnMoreOnProvider": "Havuzu {{providerName}} üzerinde görüntüleyin.",
+      "deposit": "Patra Yatırma",
+      "depositAndEarnings": "Yatırım ve Kazançlar",
+      "withdraw": "Çek",
+      "withdrawBottomSheet": {
+        "title": "Para çekme türünü seçin",
+        "withdrawAndClaim": "Para Çek ve Talep Et",
+        "withdrawDescription": "Havuza yatırdığınız herhangi bir tokenin belirli bir miktarını çekin",
+        "withdrawAndClaimRewardsDescription": "Havuza yatırdığınız herhangi bir tokenin belirli bir miktarını çekin ve ödüllerinizi otomatik olarak talep edin",
+        "withdrawAndClaimEarningsDescription": "Havuza yatırdığınız herhangi bir tokenin belirli bir miktarını çekin ve kazançlarınızı otomatik olarak talep edin",
+        "claimRewards": "Ödüllerinizi Alın",
+        "claimRewardsDescription": "Ödüllerinizi talep edin. Ödülün kısmi tutarları talep edilemez",
+        "claimEarnings": "Kazançları Talep Et",
+        "claimEarningsDescription": "Yatırma işleminizde kazançları talep edin. Kısmi tutarlar talep edilemez",
+        "exit": "Çıkış",
+        "exitDescription": "Çıkış yapıldığında, havuzda sahip olduğunuz tüm öğeler çekilir",
+        "exitWithRewardsDescription": "Çıkış yapıldığında, havuzda sahip olduğunuz, ödülleri de içeren tüm öğeler çekilir",
+        "exitWithEarningsDescription": "Çıkış yapıldığında, havuzda sahip olduğunuz, kazançları da içeren tüm öğeler çekilir"
+      },
+      "totalDepositAndEarnings": "Toplam Yatırım ve Kazançlar",
+      "titleLocalAmountDisplay": "{{localCurrencySymbol}}{{localCurrencyAmount}}",
+      "lineItemAmountDisplay": "{{localCurrencySymbol}}{{localCurrencyAmount}} ({{cryptoAmount}} {{cryptoSymbol}})",
+      "infoBottomSheet": {
+        "gotIt": "Anladım",
+        "depositDescription": "Bu, yatırdığınız tutarın, bu tutar üzerinden kazandığınız faizin ve havuza katılarak aldığınız ek ödüllerin dökümüdür.",
+        "depositNoBreakdownDescription": "Bu sayı, size verilen tokenları kazandığınız faiz ve ödüllerle birleştirir.\n\nBazı protokoller, örneğin {{providerName}}, kazançlarınızın bir dökümünü sunmaz; bu normaldir. Bunun yerine, kazancınızı doğrudan yatırdığınız tutara eklerler ve bu da artan tutara bağlı olarak faiz kazanmaya devam eder. ",
+        "tvlTitle": "Kilitlenen Toplam Değer (TVL)",
+        "tvlDescription": "TVL, bir likidite havuzuna yatırılan toplam varlık miktarını ifade eder ve havuzun güvenilirliğini ve faydasını gösterir. Genel olarak TVL değerinin yüksek olması daha riskin daha düşük olduğunu gösterir. Ancak, hiçbir havuz tamamen risksiz değildir.",
+        "ageTitle": "Havuz Yaşı",
+        "ageDescription": "Likidite havuzunun eski olması, o havuzun sağlam bir geçmiş performansı olduğuna ve toplulukta güven inşa ettiğine işaret edebilir. Bu nedenle, bazıları bu havuzların daha güvenli olduğunu düşünebilir.\n\nRiski tam olarak belirleyebilecek bir yöntem yoktur; bu nedenle genel araştırmanızı desteklemek için bu bilgilerden yararlanabilirsiniz.",
+        "yieldRateTitle": "Getiri Oranı",
+        "yieldRateDescription": "Çoğu havuz, kazançları likidite havuzunun tokeni şeklinde sağlarken bazı havuzlar, ödül veya ek teşvik olarak ek tokenler verebilir.\n\n{{appName}} çeşitli protokoller genelindeki havuzları bir araya toplar. Bu nedenle, kazanç potansiyelinizi kolayca değerlendirebilmeniz için tüm kazanç ve ödül oranlarını tek bir genel getiri oranı altında birleştirdik. Kazanç ve ödül değerleri sürekli dalgalandığı için bu rakam, tahmini bir değeri gösterir.\n\nKazanç dökümleri hakkında daha fazla bilgi için <0>{{providerName}}</0> sayfasını ziyaret edebilirsiniz.",
+        "dailyYieldRateTitle": "Günlük Oran",
+        "dailyYieldRateDescription": "Görüntülenen günlük oran, {{providerName}} tarafından sağlanan günlük oranı yansıtır.",
+        "dailyYieldRateLink": "{{providerName}} Üzerinde Daha Fazla Günlük Oran Görüntüleyin",
+        "safetyScoreTitle": "Güvenlik Puanı",
+        "safetyScoreDescription": "Güvenlik Puanı, dayanak kasa varlığının güvenliğini birkaç temel faktöre ayırır. Yatırım yapmadan önce göz önünde bulundurmanız gereken risklere dikkatinizi çekmeyi ve kendi başınıza değerlendiremeyebileceğiniz teknik ayrıntılar hakkında sizi bilgilendirmeyi amaçlamaktadır.\nTam pozisyon her zaman daha karmaşık olsa da, Güvenlik Puanı, temel risk ve güvenlik hususlarını basitleştirmek ve kendi durum tespitinizi başlatmak için sağlanır. Ekibimiz, bir kasa devreye alınmadan önce her bir faktörü dikkatlice değerlendirir ve {{providerName}} tarafından entegre edilen her bir varlığı, zinciri ve protokolü dikkatli biçimde izler.",
+        "safetyScoreRateLink": "{{providerName}} Üzerinde Daha Fazla Güvenlik Puanı Ayrıntısı görüntüleyin"
+      },
+      "viewMoreDetails": "Daha Fazla Ayrıntı Görüntüle",
+      "viewLessDetails": "Daha Az Ayrıntı Görüntüle"
+    },
+    "beforeDepositBottomSheet": {
+      "youNeedTitle": "Yatırma İşlemi için {{tokenNetwork}} ağında {{tokenSymbol}} tokenine sahip olmalısınız",
+      "depositTitle": "Havuza yatır",
+      "crossChainAlternativeDescription": "{{tokenNetwork}} ağındaki tokenlerinizi kullanmaz istemiyorsanız aşağıdaki seçeneklerden birini seçin. Havuza yatırma işleminizi tamamlamak için daha sonra geri dönmeniz gerekecektir.",
+      "alternativeDescription": "Tokenlerinizi kullanmaz istemiyorsanız aşağıdaki seçeneklerden birini seçin. Havuza para yatırma işleminizi tamamlamak için daha sonra geri dönmeniz gerekecektir.",
+      "beforeYouCanDepositTitle": "Para yatırmadan önce...",
+      "beforeYouCanDepositDescription": "Havuz tokenlerinden birini eklemeniz gereklidir. Token eklendikten sonra havuza para yatırma işlemini tamamlamak için geri dönmeniz gerekir.",
+      "beforeYouCanDepositDescriptionV1_101": "{{tokenNetwork}} ağında {{tokenSymbol}} eklemeniz gereklidir. Token eklendikten sonra havuza para yatırma işlemini tamamlamak için geri dönmeniz gerekir.",
+      "action": {
+        "swapAndDeposit": "Swap ve Para Yatırma",
+        "swapAndDepositDescription": "{{tokenNetwork}} ağındaki herhangi bir tokeni seçin. Seçtiğiniz tokeni sizin için anında swap edip yatırma işleminizi tamamlayacağız.",
+        "swapAndDepositAllTokensDescription": "Herhangi bir token seçin. Seçtiğiniz tokeni sizin için anında swap edip para yatırma işleminizi tamamlayacağız.",
+        "crossChainSwap": "Zincirler arası Swap",
+        "crossChainSwapDescription": "Başka bir ağdaki tokeni {{tokenSymbol}} ile swap edin",
+        "swap": "Swap",
+        "swapDescription": "Cüzdanınızdaki başka bir tokeni {{tokenNetwork}} ağında {{tokenSymbol}} ile swap edin",
+        "add": "Satın Al",
+        "addDescription": "Güvenilir sağlayıcılarımızdan birini kullanarak {{tokenNetwork}} ağında {{tokenSymbol}} satın alın",
+        "transfer": "Transfer Et",
+        "transferDescription": "{{tokenSymbol}} yatırmak için {{tokenNetwork}} uyumlu cüzdan veya borsa kullanın",
+        "addMore": "Daha fazla {{tokenSymbol}} satın al",
+        "deposit": "{{tokenSymbol}} tokeninizi yatırın",
+        "depositDescription": "{{amount}} {{tokenSymbol}} var"
+      }
     }
+  },
+  "addFundsActions": {
+    "add": "Satın Al",
+    "transfer": "Transfer Et",
+    "swap": "Swap"
+  },
+  "duration_lessThanADay": "Bir günden az",
+  "duration_day_one": "1 gün",
+  "duration_day_other": "{{count}} gün",
+  "duration_month_one": "1 ay",
+  "duration_month_other": "{{count}} ay",
+  "duration_year_one": "1 yıl",
+  "duration_year_other": "{{count}} yıl",
+  "duration_yearMonth_one": "1 yıl, 1 ay",
+  "duration_yearMonth_other": "{{count}} yıl, {{count2}} ay",
+  "tokenEnterAmount": {
+    "availableBalance": "Mevcut: <0></0>",
+    "selectToken": "Token seçin",
+    "fiatPriceUnavailable": "Fiyat mevcut değil",
+    "tokenDescription": "{{tokenNetwork}} ağında {{tokenName}}"
+  },
+  "gasFeeWarning": {
+    "title": "Benzin ücretleri için daha fazla {{tokenSymbol}} adresine ihtiyacınız var",
+    "title_Dapp": "Yetersiz gaz jetonu bakiyeniz var",
+    "descriptionMaxAmount_Send": "Benzin ücretleri için {{tokenSymbol}} adresini ekleyin veya gönderdiğiniz miktarı azaltın",
+    "descriptionMaxAmount_Swap": "Benzin ücretleri için {{tokenSymbol}} adresini ekleyin veya takas ettiğiniz miktarı düşürün",
+    "descriptionMaxAmount_Deposit": "Benzin ücretleri için {{tokenSymbol}} adresini ekleyin veya yatırdığınız miktarı düşürün",
+    "descriptionMaxAmount_Withdraw": "Gaz ücretleri için {{tokenSymbol}} adresini ekleyin veya çektiğiniz miktarı düşürün",
+    "descriptionDapp": "Bu işlemi tamamlamak için {{tokenSymbol}} adresini ekleyin",
+    "ctaBuy": "{{tokenSymbol}} satın alın",
+    "ctaAction_Send": "Daha küçük miktar gönderin",
+    "ctaAction_Swap": "Daha düşük bir tutarı swap edin",
+    "ctaAction_Deposit": "Daha az miktarda para yatırın",
+    "ctaAction_Withdraw": "Daha küçük miktarda para çekme"
+  },
+  "reviewTransaction": {
+    "title": "İnceleme Gönder",
+    "totalPlusFees": "Toplam Artı Ücretler",
+    "multipleTokensWithPlusSign": "≈ {{amount1}} {{symbol1}} + {{amount2}} {{symbol2}}"
+  },
+  "tokenAmount": "{{tokenAmount}} {{tokenSymbol}}",
+  "localAmount": "{{localCurrencySymbol}}{{localAmount}}",
+  "localAmount_noFiatPrice": "Fiyat Mevcut Değil",
+  "tokenAndLocalAmount": "{{tokenAmount}} {{tokenSymbol}} <0>({{localCurrencySymbol}}{{localAmount}})</0>",
+  "tokenAmountApprox": "≈ {{tokenAmount}} {{tokenSymbol}}",
+  "localAmountApprox": "≈ {{localCurrencySymbol}}{{localAmount}}",
+  "tokenAndLocalAmountApprox": "≈ {{tokenAmount}} {{tokenSymbol}} <0>({{localCurrencySymbol}}{{localAmount}})</0>",
+  "demoMode": {
+    "confirmEnter": {
+      "title": "Demo Modu",
+      "info": "Demo moduna girmek üzeresiniz. Herhangi bir işlem yapmadan uygulamanın özelliklerini keşfetmekte özgürsünüz",
+      "cta": "Demo Girin"
+    },
+    "confirmExit": {
+      "title": "Demo Modunda",
+      "info": "Şu anda uygulamayı demo modunda görüntülüyorsunuz",
+      "cta": "Çıkış Demosu"
+    },
+    "restrictedAccess": {
+      "title": "Demo Modunda",
+      "info": "Uygulamayı demo modunda görüntülediğiniz için bu işlemi tamamlayamazsınız",
+      "cta": "Çıkış Demosu"
+    },
+    "inAppIndicatorLabel": "Demo Modu"
   },
   "celoDollarAmount": "<0></0> Celo Dollar",
   "celoDollarAmount_plural": "<0></0> Celo Dollars"

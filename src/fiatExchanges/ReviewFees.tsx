@@ -7,7 +7,7 @@ import Touchable from 'src/components/Touchable'
 import InfoIcon from 'src/icons/InfoIcon'
 import { LocalCurrencyCode } from 'src/localCurrency/consts'
 import colors from 'src/styles/colors'
-import fontStyles from 'src/styles/fonts'
+import { typeScale } from 'src/styles/fonts'
 import variables from 'src/styles/variables'
 import { useTokenInfo } from 'src/tokens/hooks'
 import { navigateToURI } from 'src/utils/linking'
@@ -81,10 +81,10 @@ export default function ReviewFees({
         isActionHighlighted={false}
         onBackgroundPress={closeFeeExplanation}
       >
-        <Text style={[fontStyles.large600]}>{t('providerFeesDialog.title')}</Text>
+        <Text style={typeScale.labelSemiBoldLarge}>{t('providerFeesDialog.title')}</Text>
         {'\n\n'}
-        <Text style={[fontStyles.regular]}>{t('providerFeesDialog.body1')}</Text>
-        <Text style={{ color: colors.primary }} onPress={openProviderFeeUrl}>
+        <Text style={[typeScale.bodyMedium]}>{t('providerFeesDialog.body1')}</Text>
+        <Text style={{ color: colors.accent }} onPress={openProviderFeeUrl}>
           {t('providerFeesDialog.body2', { providerName: provider })}
         </Text>
       </Dialog>
@@ -95,9 +95,9 @@ export default function ReviewFees({
         isActionHighlighted={false}
         onBackgroundPress={closeFeeDiscountExplanation}
       >
-        <Text style={[fontStyles.large600]}>{t('providerFeeDiscountDialog.title')}</Text>
+        <Text style={typeScale.labelSemiBoldLarge}>{t('providerFeeDiscountDialog.title')}</Text>
         {'\n\n'}
-        <Text style={[fontStyles.regular]}>{t('providerFeeDiscountDialog.body')}</Text>
+        <Text style={[typeScale.bodyMedium]}>{t('providerFeeDiscountDialog.body')}</Text>
       </Dialog>
       <View style={[styles.reviewLine]}>
         <Text style={[styles.reviewLineText]}>
@@ -129,7 +129,7 @@ export default function ReviewFees({
               onPress={openFeeExplanation}
               hitSlop={variables.iconHitslop}
             >
-              <InfoIcon color={colors.gray3} size={14} />
+              <InfoIcon color={colors.contentSecondary} size={14} />
             </Touchable>
           </View>
           <Text>{showAmount(fiat.total - fiat.subTotal, false, [styles.reviewLineText])}</Text>
@@ -143,7 +143,7 @@ export default function ReviewFees({
               onPress={openFeeDiscountExplanation}
               hitSlop={variables.iconHitslop}
             >
-              <InfoIcon color={colors.gray3} size={14} />
+              <InfoIcon color={colors.contentSecondary} size={14} />
             </Touchable>
           </View>
           <Text style={styles.feeWaivedText}>{t('free')}</Text>
@@ -165,7 +165,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   reviewLine: {
-    ...fontStyles.regular,
+    ...typeScale.bodyMedium,
     paddingVertical: 4,
     display: 'flex',
     flexDirection: 'row',
@@ -176,23 +176,23 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
   },
   reviewLineText: {
-    ...fontStyles.regular,
+    ...typeScale.bodyMedium,
   },
   feeWaivedText: {
-    ...fontStyles.regular,
-    color: colors.primary,
+    ...typeScale.bodyMedium,
+    color: colors.accent,
   },
   reviewLineTextAlt: {
-    color: colors.gray4,
+    color: colors.contentSecondary,
   },
   reviewLineTextTotal: {
-    ...fontStyles.regular600,
+    ...typeScale.labelSemiBoldMedium,
   },
   line: {
     marginVertical: 16,
     height: 1,
     width: '100%',
-    backgroundColor: colors.gray2,
+    backgroundColor: colors.borderPrimary,
   },
   icon: {
     position: 'relative',

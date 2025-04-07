@@ -1,4 +1,3 @@
-import { getDisplayNumberInternational } from '@celo/phone-utils'
 import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { LayoutAnimation, StyleSheet, Text, View } from 'react-native'
@@ -8,7 +7,8 @@ import Touchable from 'src/components/Touchable'
 import { Screens } from 'src/navigator/Screens'
 import { getDisplayName, Recipient, recipientHasNumber } from 'src/recipients/recipient'
 import colors from 'src/styles/colors'
-import fontStyles from 'src/styles/fonts'
+import { typeScale } from 'src/styles/fonts'
+import { getDisplayNumberInternational } from 'src/utils/phoneNumbers'
 
 interface Props {
   type: 'sent' | 'received' | 'withdrawn'
@@ -93,8 +93,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
   },
   sectionLabel: {
-    ...fontStyles.label,
-    color: colors.gray3,
+    ...typeScale.labelSemiBoldSmall,
+    color: colors.contentSecondary,
     marginBottom: 4,
   },
   userContainer: {
@@ -102,11 +102,11 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   username: {
-    ...fontStyles.regular,
+    ...typeScale.bodyMedium,
   },
   phoneNumber: {
-    ...fontStyles.small,
-    color: colors.gray4,
+    ...typeScale.bodySmall,
+    color: colors.contentSecondary,
   },
   avatarContainer: {
     flex: 1,
@@ -116,18 +116,18 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   addressHasChanged: {
-    ...fontStyles.small,
-    color: colors.gray5,
+    ...typeScale.bodySmall,
+    color: colors.contentSecondary,
     marginBottom: 8,
   },
   accountBox: {
     borderRadius: 4,
-    backgroundColor: colors.gray2,
+    backgroundColor: colors.backgroundTertiary,
     flexDirection: 'column',
     padding: 16,
   },
   accountLabel: {
-    ...fontStyles.label,
-    color: colors.gray5,
+    ...typeScale.labelSemiBoldSmall,
+    color: colors.contentSecondary,
   },
 })

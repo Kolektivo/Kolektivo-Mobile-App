@@ -2,22 +2,41 @@ import { fireEvent, render, waitFor } from '@testing-library/react-native'
 import { FetchMock } from 'jest-fetch-mock/types'
 import * as React from 'react'
 import { Provider } from 'react-redux'
+import AppAnalytics from 'src/analytics/AppAnalytics'
 import { PointsEvents } from 'src/analytics/Events'
-import ValoraAnalytics from 'src/analytics/ValoraAnalytics'
 import PointsHistoryBottomSheet from 'src/points/PointsHistoryBottomSheet'
 import { getHistoryStarted } from 'src/points/slice'
 import { GetHistoryResponse } from 'src/points/types'
 import { RootState } from 'src/redux/reducers'
 import { RecursivePartial, createMockStore } from 'test/utils'
 
-jest.mock('src/statsig', () => ({
-  getDynamicConfigParams: jest.fn().mockReturnValue({
-    showSwap: ['celo-alfajores'],
-  }),
-}))
-
 const MOCK_RESPONSE_NO_NEXT_PAGE: GetHistoryResponse = {
   data: [
+    {
+      activityId: 'deposit-earn',
+      pointsAmount: 10,
+      createdAt: '2024-03-05T20:26:25.000Z',
+      metadata: {
+        tokenId: 'celo-alfajores:0x874069fa1eb16d44d622f2e0ca25eea172369bc1',
+      },
+    },
+    {
+      activityId: 'create-live-link',
+      pointsAmount: 10,
+      createdAt: '2024-03-05T19:26:25.000Z',
+      metadata: {
+        liveLinkType: 'erc721',
+      },
+    },
+    {
+      activityId: 'create-live-link',
+      pointsAmount: 20,
+      createdAt: '2024-03-05T19:26:25.000Z',
+      metadata: {
+        liveLinkType: 'erc20',
+        tokenId: 'celo-alfajores:native',
+      },
+    },
     {
       activityId: 'swap',
       pointsAmount: 20,
@@ -30,7 +49,7 @@ const MOCK_RESPONSE_NO_NEXT_PAGE: GetHistoryResponse = {
     {
       activityId: 'swap',
       pointsAmount: 20,
-      createdAt: '2024-01-04T19:26:25.000Z',
+      createdAt: '2024-03-05T19:26:25.000Z',
       metadata: {
         to: 'celo-alfajores:0x874069fa1eb16d44d622f2e0ca25eea172369bc1',
         from: 'celo-alfajores:native',
@@ -85,8 +104,15 @@ describe(PointsHistoryBottomSheet, () => {
     const tree = renderScreen({
       points: { pointsHistory: MOCK_RESPONSE_NO_NEXT_PAGE.data, getHistoryStatus: 'loading' },
     })
-    await waitFor(() => expect(tree.getByTestId('PointsHistoryList').props.data.length).toBe(3))
+    await waitFor(() => expect(tree.getByTestId('PointsHistoryList').props.data.length).toBe(2))
 
+    expect(
+      tree.getByText('points.history.cards.depositEarn.subtitle, {"network":"Celo Alfajores"}')
+    ).toBeTruthy()
+    expect(
+      tree.getByText('points.history.cards.createLiveLink.subtitle.erc20, {"tokenSymbol":"CELO"}')
+    ).toBeTruthy()
+    expect(tree.getByText('points.history.cards.createLiveLink.subtitle.erc721')).toBeTruthy()
     expect(
       tree.getByText('points.history.cards.swap.subtitle, {"fromToken":"CELO","toToken":"cUSD"}')
     ).toBeTruthy()
@@ -95,8 +121,8 @@ describe(PointsHistoryBottomSheet, () => {
     ).toBeTruthy()
     expect(tree.getByText('points.history.cards.createWallet.subtitle')).toBeTruthy()
 
-    expect(tree.getByText('January')).toBeTruthy()
-    expect(tree.getByText('March')).toBeTruthy()
+    expect(tree.getByText('March', { exact: false })).toBeTruthy()
+    expect(tree.getByText('December 2023')).toBeTruthy()
     expect(tree.getByTestId('PointsHistoryBottomSheet/Loading')).toBeTruthy()
   })
 
@@ -124,7 +150,7 @@ describe(PointsHistoryBottomSheet, () => {
     const { dispatch, getByText } = renderScreen({ points: { getHistoryStatus: 'errorFirstPage' } })
     fireEvent.press(getByText('points.history.error.tryAgain'))
     await waitFor(() =>
-      expect(ValoraAnalytics.track).toHaveBeenCalledWith(
+      expect(AppAnalytics.track).toHaveBeenCalledWith(
         PointsEvents.points_screen_activity_try_again_press,
         {
           getNextPage: false,
@@ -143,7 +169,7 @@ describe(PointsHistoryBottomSheet, () => {
     const { getByText } = renderScreen({ points: { getHistoryStatus: 'idle', pointsHistory: [] } })
     fireEvent.press(getByText('points.history.empty.gotIt'))
     await waitFor(() =>
-      expect(ValoraAnalytics.track).toHaveBeenCalledWith(
+      expect(AppAnalytics.track).toHaveBeenCalledWith(
         PointsEvents.points_screen_activity_learn_more_press
       )
     )
@@ -162,7 +188,7 @@ describe(PointsHistoryBottomSheet, () => {
     })
     fireEvent.press(getByText('points.history.pageError.refresh'))
     await waitFor(() =>
-      expect(ValoraAnalytics.track).toHaveBeenCalledWith(
+      expect(AppAnalytics.track).toHaveBeenCalledWith(
         PointsEvents.points_screen_activity_try_again_press,
         {
           getNextPage: true,

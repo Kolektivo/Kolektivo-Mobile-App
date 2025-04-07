@@ -1,30 +1,35 @@
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { configureStore, Middleware } from '@reduxjs/toolkit'
+import { setupListeners } from '@reduxjs/toolkit/query'
 import { getStoredState, PersistConfig, persistReducer, persistStore } from 'redux-persist'
 import FSStorage from 'redux-persist-fs-storage'
 import autoMergeLevel2 from 'redux-persist/lib/stateReconciler/autoMergeLevel2'
 import createSagaMiddleware from 'redux-saga'
+import AppAnalytics from 'src/analytics/AppAnalytics'
 import { PerformanceEvents } from 'src/analytics/Events'
-import ValoraAnalytics from 'src/analytics/ValoraAnalytics'
+import { apiMiddlewares } from 'src/redux/apiReducersList'
 import { createMigrate } from 'src/redux/createMigrate'
 import { migrations } from 'src/redux/migrations'
 import rootReducer, { RootState as ReducersRootState } from 'src/redux/reducers'
 import { rootSaga } from 'src/redux/sagas'
+import { transactionFeedV2Api } from 'src/transactions/api'
 import { resetStateOnInvalidStoredAccount } from 'src/utils/accountChecker'
 import Logger from 'src/utils/Logger'
-import { ONE_DAY_IN_MILLIS } from 'src/utils/time'
+import { ONE_MINUTE_IN_MILLIS } from 'src/utils/time'
 
-const timeBetweenStoreSizeEvents = ONE_DAY_IN_MILLIS
-let lastEventTime = Date.now()
+export const timeBetweenStoreSizeEvents = ONE_MINUTE_IN_MILLIS
+// Set this to the epoch so that a redix_store_size event will always be emitted the first time
+// the entire state is serialized in a session
+let lastEventTime = 0
 
 const persistConfig: PersistConfig<ReducersRootState> = {
   key: 'root',
   // default is -1, increment as we make migrations
   // See https://github.com/valora-inc/wallet/tree/main/WALLET.md#redux-state-migration
-  version: 216,
+  version: 247,
   keyPrefix: `reduxStore-`, // the redux-persist default is `persist:` which doesn't work with some file systems.
   storage: FSStorage(),
-  blacklist: ['networkInfo', 'alert', 'imports', 'keylessBackup', 'jumpstart'],
+  blacklist: ['networkInfo', 'alert', 'imports', 'keylessBackup', transactionFeedV2Api.reducerPath],
   stateReconciler: autoMergeLevel2,
   migrate: async (...args) => {
     const migrate = createMigrate(migrations)
@@ -41,7 +46,7 @@ const persistConfig: PersistConfig<ReducersRootState> = {
     // sometimes serialized independently).
     if (data._persist && Date.now() > lastEventTime + timeBetweenStoreSizeEvents) {
       lastEventTime = Date.now()
-      ValoraAnalytics.track(PerformanceEvents.redux_store_size, {
+      AppAnalytics.track(PerformanceEvents.redux_store_size, {
         size: stringifiedData.length,
       })
     }
@@ -103,7 +108,8 @@ export const setupStore = (initialState?: ReducersRootState, config = persistCon
       )
     },
   })
-  const middlewares: Middleware[] = [sagaMiddleware]
+
+  const middlewares: Middleware[] = [sagaMiddleware, ...apiMiddlewares]
 
   if (__DEV__ && !process.env.JEST_WORKER_ID) {
     const createDebugger = require('redux-flipper').default
@@ -130,7 +136,6 @@ export const setupStore = (initialState?: ReducersRootState, config = persistCon
           'identity',
           'account',
           'invite',
-          'escrow',
           'fees',
           'recipients',
           'localCurrency',
@@ -173,3 +178,5 @@ export { persistor, store }
 
 export type RootState = ReturnType<typeof store.getState>
 export type AppDispatch = typeof store.dispatch
+
+setupListeners(store.dispatch)

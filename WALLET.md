@@ -50,7 +50,7 @@
     - [Why do we use http(s) provider?](#why-do-we-use-https-provider)
     - [Helpful hints for development](#helpful-hints-for-development)
     - [Vulnerabilities found in dependencies](#vulnerabilities-found-in-dependencies)
-    - [Branding (for Kolektivo employees only)](#branding-for-kolektivo-employees-only)
+    - [Branding](#branding)
     - [Troubleshooting](#troubleshooting)
       - [Postinstall script](#postinstall-script)
       - [`Activity class {org.celo.mobile.staging/org.celo.mobile.MainActivity} does not exist.`](#activity-class-orgcelomobilestagingorgcelomobilemainactivity-does-not-exist)
@@ -113,7 +113,7 @@ To test your GCP access, try running `yarn keys:decrypt` from the wallet repo ro
 External contributors don't need to decrypt repository secrets and can successfully build and run the mobile application with the following differences:
 
 - the default branding will be used (some images/icons will appear in pink or will be missing)
-- Firebase related features needs to be disabled. You can do this by setting `FIREBASE_ENABLED=false` in the `.env.*` files.
+- Firebase related features need to be disabled. You can do this by setting `FIREBASE_ENABLED=false` in the `.env.*` files.
 
 ### iOS
 
@@ -207,7 +207,7 @@ export GRADLE_OPTS='-Dorg.gradle.daemon=true -Dorg.gradle.parallel=true -Dorg.gr
 export TERM_PROGRAM=iterm  # or whatever your favorite terminal program is
 ```
 
-(optional) You may want install Jenv to manage multiple Java versions:
+(optional) You may want to install Jenv to manage multiple Java versions:
 
 ```bash
 brew install jenv
@@ -314,7 +314,7 @@ The below steps should help you successfully run the mobile wallet on either a U
 
 ### iOS
 
-3. Launch Xcode and use it to open the directory `celo.xcworkspace`. Confirm your iOS device has been detected by Xcode.
+3. Launch Xcode and use it to open the directory `MobileStack.xcworkspace`. Confirm your iOS device has been detected by Xcode.
 
 4. Build the project by pressing the play button in the top left corner or selecting `Product > Build` from the Xcode menu bar.
 
@@ -341,7 +341,7 @@ you may require a fresh install of the app. Instead of rebuilding the app to get
 a fresh install, you can drag drop the generated app into the simulator after
 uninstalling the app. It is typically available in the following paths:
 
-- For iOS: `$HOME/Library/Developer/Xcode/DerivedData/celo-<randomid>/Build/Products/Debug-iphonesimulator/celo.app`
+- For iOS: `$HOME/Library/Developer/Xcode/DerivedData/MobileStack-<randomid>/Build/Products/Debug-iphonesimulator/Valora.app`
 - For Android: `<path-to-wallet>/android/app/build/outputs/apk/alfajoresdev/debug/app-alfajoresdev-debug.apk`
 
 ## Debugging & App Profiling
@@ -393,9 +393,9 @@ The flame graph provides a view of each component and sub-component. The width i
 
 ### App Profiling with Android Profiler
 
-The [Android Profiler (standalone)][androidprofilerstandalone] is useful for viewing memory, CPU, and energy consumption. Run the profiler either from Android Studio or following the standalone instructions.
+Profiling in release mode is recommended because memory usage tends to be significantly higher in development builds. To create a local mainnet release build for profiling, use the following command: `yarn dev:android -e mainnet -r -t`. This supplies an env flag: `-e <environment>`, the release flag: `-r` and the profile flag: `-t`.
 
-Release mode is preferred for profiling as memory usage can be significantly higher in development builds. To create a local mainnet release build for profiling run the app with `yarn dev:android -e mainnet -r -t`; this supplies an env flag: `-e <environment>`, the release flag: `-r` and the profile flag: `-t`. After both the app and profiler are launched, in the profiler attach a new session by selecting your device and a debuggable process e.g. `co.clabs.kolektivo`.
+To analyze the app's memory, CPU, and energy usage, the [Android APK Profiler][androidprofilerapk] is a useful tool. In Android Studio, navigate to `File > Profile or Debug APK`, then select the APK built in the previous step, typically located at `android/app/build/outputs/apk/mainnet/release`. Once both the app and Android Studio are running, attach a new profiling session by selecting your device and choosing the debuggable process, such as co.clabs.valora.
 
 ## Testing
 
@@ -442,9 +442,8 @@ If you have not yet created a keystore, one will be required to generate a relea
 
 ```sh
 cd android/app
-keytool -genkey -v -keystore celo-release-key.keystore -alias celo-key-alias -storepass celoFakeReleaseStorePass -keypass celoFakeReleaseKeyPass -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
-export CELO_RELEASE_STORE_PASSWORD=celoFakeReleaseStorePass
-export CELO_RELEASE_KEY_PASSWORD=celoFakeReleaseKeyPass
+keytool -genkey -v -keystore mobilestack-release-key.keystore -alias mobilestack-key-alias -storepass fakeReleaseStorePass -keypass fakeReleaseStorePass -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
+export RELEASE_STORE_PASSWORD=fakeReleaseStorePass
 ```
 
 ### Building an APK or Bundle
@@ -493,7 +492,7 @@ Note that Crowdin Over-The-Air (OTA) content delivery is used to push live trans
 
 On Android, the wallet app uses the SMS Retriever API to automatically input codes during phone number verification. When creating a new app build type this needs to be properly configured.
 
-The service that route SMS messages to the app needs to be configured to [append this app signature to the message][sms retriever]. The hash depends on both the bundle id and the signing certificate. Since we use Google Play signing, we need to download the certificate.
+The service that routes SMS messages to the app needs to be configured to [append this app signature to the message][sms retriever]. The hash depends on both the bundle id and the signing certificate. Since we use Google Play signing, we need to download the certificate.
 
 1.  Go to the play console for the relevant app, Release management > App signing, and download the App signing certificate.
 2.  Use this script to generate the hash code: https://github.com/michalbrz/sms-retriever-hash-generator
@@ -614,11 +613,9 @@ If they do not have fixes and they do not apply to production, you may ignore th
 1. run: `yarn audit --json --groups dependencies --level high | grep auditAdvisory > yarn-audit-known-issues`
 2. commit `yarn-audit-known-issues` and open a PR
 
-### Branding (for Kolektivo employees only)
+### Branding
 
-Images and icons in Kolektivo are stored in the [branding repo](https://github.com/zed-io/kolektivo-app-branding). When running `yarn install`, the script `scripts/sync_branding.sh` is run to clone this repo into `branding/kolektivo`, and these assets are then put into `src/images` and `src/icons`. If you do not have access to the branding repo, assets are pulled from `branding/celo`, and are displayed as pink squares instead. The jest tests and CircleCI pipeline also use these default assets.
-
-When adding new images to the [branding repo](https://github.com/zed-io/kolektivo-app-branding), we also include the 1.5x, 2x, 3x, and 4x versions. The app will automatically download the appropriate size. After making changes to the remote repo, find the commit hash and update it in `scripts/sync_branding.sh`. Make sure to also add the corresponding pink square version of the images to `branding/celo/src/images`. You can do this by copying one of the existing files and renaming it.
+Images related to the brand are stored in the `src/images` folder. When adding new images, we also include the 1.5x, 2x, 3x, and 4x versions. The app will automatically download the appropriate size.
 
 ### Troubleshooting
 
@@ -641,14 +638,10 @@ patch-package 6.2.2
 Applying patches...
 @react-native-community/netinfo@5.8.0 ✔
 bn.js@4.11.9 ✔
-clevertap-react-native@0.5.2 ✔
-react-native-fast-crypto@2.0.0 ✔
-react-native-securerandom@1.0.0 ✔
 react-native-sms@1.11.0 ✔
 react-native-splash-screen@3.3.0 ✔
 react-native-svg@12.1.1 ✔
 react-native-tab-view@2.15.2 ✔
-react-native-webview@11.6.5 ✔
 $ bash scripts/key_placer.sh decrypt
 Processing encrypted files
 Encrypted files decrypted
@@ -727,4 +720,4 @@ rm -rf $HOME/Library/Developer/Xcode/DerivedData/*
 [jq]: https://stedolan.github.io/jq/
 [rootstate]: src/redux/reducers.ts#L79
 [rootstateschema]: test/RootStateSchema.json
-[androidprofilerstandalone]: https://developer.android.com/studio/profile/android-profiler#standalone-profilers
+[androidprofilerapk]: https://developer.android.com/studio/profile/apk-profiler

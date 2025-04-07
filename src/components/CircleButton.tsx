@@ -1,6 +1,6 @@
 import * as React from 'react'
 import { StyleSheet, TouchableOpacity, View } from 'react-native'
-import SmoothX from 'src/icons/SmoothX'
+import Times from 'src/icons/Times'
 import colors from 'src/styles/colors'
 import { iconHitslop } from 'src/styles/variables'
 
@@ -16,15 +16,17 @@ interface ButtonProps {
 }
 
 export default class CircleButton extends React.PureComponent<ButtonProps> {
-  static defaultProps = {
-    size: 50,
-    disable: false,
-    activeColor: colors.primary,
-    inactiveColor: colors.primaryDisabled,
-  }
-
   render() {
-    const { onPress, solid, borderWidth, disabled, size, activeColor, inactiveColor } = this.props
+    const {
+      onPress,
+      solid,
+      borderWidth,
+      disabled = false,
+      size = 50,
+      activeColor = colors.accent,
+      inactiveColor = `${colors.accent}80`,
+      style,
+    } = this.props
     const color = disabled ? inactiveColor : activeColor
     const buttonStyle = [
       styles.button,
@@ -32,17 +34,17 @@ export default class CircleButton extends React.PureComponent<ButtonProps> {
       borderWidth !== undefined ? { borderWidth } : { borderWidth: 0 },
       { borderColor: color, width: size, height: size, borderRadius: Math.floor(size! / 2) },
     ]
-    const xColor = solid ? colors.white : color
+    const xColor = solid ? colors.contentTertiary : color
 
     return (
-      <View style={[styles.row, this.props.style]}>
+      <View style={[styles.row, style]}>
         <TouchableOpacity
           onPress={onPress}
           disabled={disabled}
           style={buttonStyle}
           hitSlop={iconHitslop}
         >
-          <SmoothX height={Math.floor(size! * 0.4)} color={xColor} />
+          <Times height={Math.floor(size! * 0.4)} color={xColor} />
         </TouchableOpacity>
       </View>
     )

@@ -3,8 +3,8 @@ import { StyleSheet, Text, View } from 'react-native'
 import Card from 'src/components/Card'
 import Touchable from 'src/components/Touchable'
 import ForwardChevron from 'src/icons/ForwardChevron'
-import { Colors } from 'src/styles/colors'
-import fontStyles from 'src/styles/fonts'
+import Colors from 'src/styles/colors'
+import { typeScale } from 'src/styles/fonts'
 import { Shadow, Spacing } from 'src/styles/styles'
 
 interface Props {
@@ -23,7 +23,7 @@ function OnboardingCard({ testId, onPress, title, subtitle }: Props) {
             <Text style={styles.title}>{title}</Text>
             <Text style={styles.subtitle}>{subtitle}</Text>
           </View>
-          <ForwardChevron color={Colors.successDark} />
+          <ForwardChevron color={Colors.successPrimary} />
         </>
       </Touchable>
     </Card>
@@ -47,14 +47,14 @@ const styles = StyleSheet.create({
     padding: 0,
   },
   title: {
-    ...fontStyles.small500,
+    ...typeScale.labelSmall,
     lineHeight: 24,
     paddingBottom: 5,
-    color: Colors.successDark,
+    color: Colors.successPrimary,
   },
   subtitle: {
-    ...fontStyles.xsmall,
-    color: Colors.gray5,
+    ...typeScale.bodyXSmall,
+    color: Colors.contentSecondary,
   },
 })
 

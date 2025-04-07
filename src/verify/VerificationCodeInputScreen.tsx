@@ -1,19 +1,23 @@
 import { useHeaderHeight } from '@react-navigation/elements'
 import { NativeStackScreenProps } from '@react-navigation/native-stack'
-import React, { useLayoutEffect, useState } from 'react'
+import React, { useLayoutEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
+import AppAnalytics from 'src/analytics/AppAnalytics'
 import { PhoneVerificationEvents } from 'src/analytics/Events'
-import ValoraAnalytics from 'src/analytics/ValoraAnalytics'
 import BackButton from 'src/components/BackButton'
-import InfoBottomSheet from 'src/components/InfoBottomSheet'
+import BottomSheet, { BottomSheetModalRefType } from 'src/components/BottomSheet'
+import Button, { BtnSizes, BtnTypes } from 'src/components/Button'
 import { HeaderTitleWithSubtitle } from 'src/navigator/Headers'
-import { navigate } from 'src/navigator/NavigationService'
+import { navigate, popToScreen } from 'src/navigator/NavigationService'
 import { Screens } from 'src/navigator/Screens'
 import { TopBarTextButton } from 'src/navigator/TopBarButton'
 import { StackParamList } from 'src/navigator/types'
+import { goToNextOnboardingScreen, onboardingPropsSelector } from 'src/onboarding/steps'
+import { useSelector } from 'src/redux/hooks'
 import colors from 'src/styles/colors'
+import { Spacing } from 'src/styles/styles'
 import { useVerifyPhoneNumber } from 'src/verify/hooks'
 import VerificationCodeInput from 'src/verify/VerificationCodeInput'
 
@@ -21,7 +25,7 @@ function VerificationCodeInputScreen({
   route,
   navigation,
 }: NativeStackScreenProps<StackParamList, Screens.VerificationCodeInputScreen>) {
-  const [showHelpDialog, setShowHelpDialog] = useState(false)
+  const infoBottomSheetRef = useRef<BottomSheetModalRefType>(null)
 
   const { t } = useTranslation()
   const headerHeight = useHeaderHeight()
@@ -29,20 +33,21 @@ function VerificationCodeInputScreen({
     route.params.e164Number,
     route.params.countryCallingCode
   )
+  const onboardingProps = useSelector(onboardingPropsSelector)
 
   const onResendSms = () => {
-    ValoraAnalytics.track(PhoneVerificationEvents.phone_verification_resend_message)
+    AppAnalytics.track(PhoneVerificationEvents.phone_verification_resend_message)
     resendSms()
   }
 
   const onPressHelp = () => {
-    ValoraAnalytics.track(PhoneVerificationEvents.phone_verification_input_help)
-    setShowHelpDialog(true)
+    AppAnalytics.track(PhoneVerificationEvents.phone_verification_input_help)
+    infoBottomSheetRef.current?.snapToIndex(0)
   }
 
   const onPressHelpDismiss = () => {
-    ValoraAnalytics.track(PhoneVerificationEvents.phone_verification_input_help_continue)
-    setShowHelpDialog(false)
+    AppAnalytics.track(PhoneVerificationEvents.phone_verification_input_help_continue)
+    infoBottomSheetRef.current?.close()
   }
 
   useLayoutEffect(() => {
@@ -66,10 +71,10 @@ function VerificationCodeInputScreen({
           title={t('phoneVerificationInput.help')}
           testID="PhoneVerificationHelpHeader"
           onPress={onPressHelp}
-          titleStyle={{ color: colors.onboardingBrownLight }}
+          titleStyle={{ color: colors.navigationTopPrimary }}
         />
       ),
-      headerLeft: () => <BackButton color={colors.onboardingBrownLight} />,
+      headerLeft: () => <BackButton color={colors.navigationTopPrimary} />,
       headerTransparent: true,
     })
   }, [navigation, route.params])
@@ -82,31 +87,51 @@ function VerificationCodeInputScreen({
         setSmsCode={setSmsCode}
         onResendSms={onResendSms}
         onSuccess={() => {
-          navigate(Screens.OnboardingSuccessScreen)
+          if (route.params.hasOnboarded) {
+            const routes = navigation.getState().routes
+            // if not from onboarding, go back to the screen where phone
+            // verification was started, which is 2 screens back. If no screen
+            // is found, go to home screen
+            const prevRoute = routes[routes.length - 3]
+            if (prevRoute?.name) {
+              popToScreen(prevRoute.name)
+            } else {
+              navigate(Screens.TabHome)
+            }
+          } else {
+            // if onboarding, continue with the next onboarding screen
+            goToNextOnboardingScreen({
+              firstScreenInCurrentStep: Screens.VerificationStartScreen,
+              onboardingProps,
+            })
+          }
         }}
         containerStyle={{ marginTop: headerHeight }}
       />
-      <InfoBottomSheet
-        isVisible={showHelpDialog}
+      <BottomSheet
+        forwardedRef={infoBottomSheetRef}
         title={t('phoneVerificationInput.helpDialog.title')}
-        body={t('phoneVerificationInput.helpDialog.body')}
-        onDismiss={onPressHelpDismiss}
-        testID="PhoneVerificationInputHelpDialog"
-      />
+        description={t('phoneVerificationInput.helpDialog.body')}
+        testId="PhoneVerificationInputHelpDialog"
+      >
+        <Button
+          text={t('dismiss')}
+          onPress={onPressHelpDismiss}
+          size={BtnSizes.FULL}
+          type={BtnTypes.SECONDARY}
+          style={styles.dismissHelpButton}
+        />
+      </BottomSheet>
     </SafeAreaView>
   )
-}
-
-VerificationCodeInputScreen.navigationOptions = {
-  headerStyle: {
-    backgroundColor: colors.onboardingBackground,
-  },
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.onboardingBackground,
+  },
+  dismissHelpButton: {
+    marginTop: Spacing.Thick24,
   },
 })
 

@@ -6,8 +6,7 @@ import { LocalCurrencyCode, LocalCurrencySymbol } from 'src/localCurrency/consts
 import { convertCurrencyToLocalAmount } from 'src/localCurrency/convert'
 import { useLocalCurrencyToShow } from 'src/localCurrency/hooks'
 import { CurrencyInfo } from 'src/localCurrency/types'
-import colors from 'src/styles/colors'
-import fontStyles from 'src/styles/fonts'
+import { typeScale } from 'src/styles/fonts'
 import { CURRENCIES, Currency } from 'src/utils/currencies'
 import {
   getCentAwareMoneyDisplay,
@@ -33,17 +32,16 @@ export enum FormatType {
 }
 
 interface Props {
-  type: DisplayType
+  type?: DisplayType
   amount: MoneyAmount
-  size: number // only used for DisplayType.Big
-  useColors: boolean
-  hideSign: boolean
-  hideSymbol: boolean
-  hideCode: boolean
+  size?: number // only used for DisplayType.Big
+  hideSign?: boolean
+  hideSymbol?: boolean
+  hideCode?: boolean
   showLocalAmount?: boolean
-  showExplicitPositiveSign: boolean // shows '+' for a positive amount when true (default is false)
-  formatType: FormatType
-  hideFullCurrencyName: boolean
+  showExplicitPositiveSign?: boolean // shows '+' for a positive amount when true (default is false)
+  formatType?: FormatType
+  hideFullCurrencyName?: boolean
   style?: StyleProp<TextStyle>
   currencyInfo?: CurrencyInfo
   testID?: string
@@ -120,17 +118,16 @@ export function getFullCurrencyName(currency: Currency | null) {
  * @deprecated use TokenDisplay instead
  */
 export default function CurrencyDisplay({
-  type,
-  size,
-  useColors,
-  hideSign,
-  hideSymbol,
-  hideCode,
+  type = DisplayType.Default,
+  size = 48,
+  hideSign = false,
+  hideSymbol = false,
+  hideCode = true,
   showLocalAmount,
-  showExplicitPositiveSign,
+  showExplicitPositiveSign = false,
   amount,
-  formatType,
-  hideFullCurrencyName,
+  formatType = FormatType.Default,
+  hideFullCurrencyName = true,
   style,
   currencyInfo,
   testID,
@@ -164,11 +161,7 @@ export default function CurrencyDisplay({
   const code = displayAmount?.currencyCode
   const fullCurrencyName = getFullCurrencyName(amountCurrency)
 
-  const color = useColors
-    ? amountCurrency === Currency.Celo
-      ? colors.goldBrand
-      : colors.primary
-    : StyleSheet.flatten(style)?.color
+  const color = StyleSheet.flatten(style)?.color
 
   if (type === DisplayType.Big) {
     // In this type the symbol is displayed as superscript
@@ -192,17 +185,17 @@ export default function CurrencyDisplay({
     return (
       <View style={[styles.bigContainer, style]} testID={testID}>
         {!hideSign && (
-          <Text numberOfLines={1} style={[fontStyles.regular, signStyle]}>
+          <Text numberOfLines={1} style={[typeScale.bodyMedium, signStyle]}>
             {sign}
           </Text>
         )}
         {includesLowerThanSymbol && (
-          <Text numberOfLines={1} style={[fontStyles.regular, symbolStyle]}>
+          <Text numberOfLines={1} style={[typeScale.bodyMedium, symbolStyle]}>
             {'<'}
           </Text>
         )}
         {!hideSymbol && (
-          <Text numberOfLines={1} style={[fontStyles.regular, symbolStyle]}>
+          <Text numberOfLines={1} style={[typeScale.bodyMedium, symbolStyle]}>
             {currencySymbol}
           </Text>
         )}
@@ -230,18 +223,6 @@ export default function CurrencyDisplay({
   )
 }
 
-CurrencyDisplay.defaultProps = {
-  type: DisplayType.Default,
-  size: 48,
-  useColors: false,
-  hideSign: false,
-  hideSymbol: false,
-  hideCode: true,
-  showExplicitPositiveSign: false,
-  formatType: FormatType.Default,
-  hideFullCurrencyName: true,
-}
-
 const styles = StyleSheet.create({
   bigContainer: {
     flexDirection: 'row',
@@ -250,11 +231,11 @@ const styles = StyleSheet.create({
     marginTop: 5,
   },
   bigCurrency: {
-    ...fontStyles.regular,
+    ...typeScale.bodyMedium,
     paddingHorizontal: 3,
   },
   bigCurrencyCode: {
-    ...fontStyles.regular,
+    ...typeScale.bodyMedium,
     marginLeft: 7,
     alignSelf: 'flex-end',
   },

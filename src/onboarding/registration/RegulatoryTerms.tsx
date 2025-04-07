@@ -1,28 +1,26 @@
 import * as React from 'react'
 import { Trans, WithTranslation } from 'react-i18next'
-import { Platform, ScrollView, SectionList, StyleSheet, Text, View } from 'react-native'
+import { Platform, ScrollView, StyleSheet, Text } from 'react-native'
 import { SafeAreaInsetsContext, SafeAreaView } from 'react-native-safe-area-context'
 import { connect } from 'react-redux'
 import { acceptTerms } from 'src/account/actions'
 import { recoveringFromStoreWipeSelector } from 'src/account/selectors'
+import AppAnalytics from 'src/analytics/AppAnalytics'
 import { OnboardingEvents } from 'src/analytics/Events'
-import ValoraAnalytics from 'src/analytics/ValoraAnalytics'
 import Button, { BtnSizes, BtnTypes } from 'src/components/Button'
 import DevSkipButton from 'src/components/DevSkipButton'
-import { PRIVACY_LINK, TOS_LINK } from 'src/config'
 import { withTranslation } from 'src/i18n'
-import Logo from 'src/icons/Logo'
+import Logo from 'src/images/Logo'
 import { nuxNavigationOptions } from 'src/navigator/Headers'
 import { navigate } from 'src/navigator/NavigationService'
 import { Screens } from 'src/navigator/Screens'
 import { firstOnboardingScreen } from 'src/onboarding/steps'
 import { RootState } from 'src/redux/reducers'
-import { getExperimentParams } from 'src/statsig'
-import { ExperimentConfigs } from 'src/statsig/constants'
-import { StatsigExperiments } from 'src/statsig/types'
+import { getDynamicConfigParams, getFeatureGate } from 'src/statsig'
+import { DynamicConfigs } from 'src/statsig/constants'
+import { StatsigDynamicConfigs, StatsigFeatureGates } from 'src/statsig/types'
 import Colors from 'src/styles/colors'
-import fontStyles, { typeScale } from 'src/styles/fonts'
-import { Spacing } from 'src/styles/styles'
+import { typeScale } from 'src/styles/fonts'
 import { navigateToURI } from 'src/utils/linking'
 
 const MARGIN = 24
@@ -52,8 +50,10 @@ export class RegulatoryTerms extends React.Component<Props> {
     }),
   }
 
+  links = getDynamicConfigParams(DynamicConfigs[StatsigDynamicConfigs.APP_CONFIG]).links
+
   onPressAccept = () => {
-    ValoraAnalytics.track(OnboardingEvents.terms_and_conditions_accepted)
+    AppAnalytics.track(OnboardingEvents.terms_and_conditions_accepted)
 
     this.props.acceptTerms()
     this.startOnboarding()
@@ -68,15 +68,16 @@ export class RegulatoryTerms extends React.Component<Props> {
   }
 
   onPressGoToTerms = () => {
-    navigateToURI(TOS_LINK)
+    navigateToURI(this.links.tos)
   }
 
   onPressGoToPrivacyPolicy = () => {
-    navigateToURI(PRIVACY_LINK)
+    navigateToURI(this.links.privacy)
   }
 
   renderTerms() {
     const { t } = this.props
+    const pointsEnabled = getFeatureGate(StatsigFeatureGates.SHOW_POINTS)
 
     return (
       <ScrollView
@@ -84,7 +85,7 @@ export class RegulatoryTerms extends React.Component<Props> {
         contentContainerStyle={styles.scrollContent}
         testID="scrollView"
       >
-        <Logo color={Colors.black} size={32} />
+        <Logo color={Colors.contentPrimary} size={32} />
         <Text style={styles.title}>{t('terms.title')}</Text>
         <Text style={styles.disclaimer}>
           <Trans i18nKey={'terms.info'}>
@@ -98,75 +99,15 @@ export class RegulatoryTerms extends React.Component<Props> {
           </Trans>
         </Text>
         <Text style={styles.header}>{t('terms.heading2')}</Text>
-        <Text style={styles.disclaimer}>{t('terms.goldDisclaimer')}</Text>
+        <Text style={styles.disclaimer}>
+          {pointsEnabled ? t('terms.goldDisclaimerWithPoints') : t('terms.goldDisclaimer')}
+        </Text>
       </ScrollView>
-    )
-  }
-
-  renderColloquialTerms() {
-    const { t } = this.props
-
-    return (
-      <SectionList
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
-        testID="colloquialTermsSectionList"
-        sections={[
-          {
-            title: t('termsColloquial.privacyHeading'),
-            data: [
-              { text: 'termsColloquial.privacy1', onPress: this.onPressGoToPrivacyPolicy },
-              { text: 'termsColloquial.privacy2' },
-              { text: 'termsColloquial.privacy3' },
-            ],
-          },
-          {
-            title: t('termsColloquial.walletHeading'),
-            data: [{ text: 'termsColloquial.wallet1' }, { text: 'termsColloquial.wallet2' }],
-          },
-        ]}
-        renderItem={({ item }) => {
-          return (
-            <View style={styles.itemContainer}>
-              <Text style={styles.item}>{'\u2022'}</Text>
-              {item.onPress ? (
-                <Text style={styles.item}>
-                  <Trans i18nKey={item.text}>
-                    <Text onPress={item.onPress} style={styles.link} />
-                  </Trans>
-                </Text>
-              ) : (
-                <Text style={styles.item}>
-                  <Trans i18nKey={item.text} />
-                </Text>
-              )}
-            </View>
-          )
-        }}
-        renderSectionHeader={({ section: { title } }) => (
-          <Text style={styles.sectionHeader}>{title}</Text>
-        )}
-        ListHeaderComponent={
-          <Text style={styles.titleColloquial}>{t('termsColloquial.title')}</Text>
-        }
-        ListFooterComponent={
-          <Text style={styles.fullTerms}>
-            <Trans i18nKey="termsColloquial.fullTerms">
-              <Text onPress={this.onPressGoToTerms} style={styles.link} />
-            </Trans>
-          </Text>
-        }
-        stickySectionHeadersEnabled={false}
-      />
     )
   }
 
   render() {
     const { t } = this.props
-
-    const { variant } = getExperimentParams(
-      ExperimentConfigs[StatsigExperiments.ONBOARDING_TERMS_AND_CONDITIONS]
-    )
 
     return (
       <SafeAreaView
@@ -176,7 +117,7 @@ export class RegulatoryTerms extends React.Component<Props> {
         edges={Platform.select({ ios: ['bottom', 'left', 'right'] })}
       >
         <DevSkipButton nextScreen={Screens.PincodeSet} />
-        {variant === 'colloquial_terms' ? this.renderColloquialTerms() : this.renderTerms()}
+        {this.renderTerms()}
         <SafeAreaInsetsContext.Consumer>
           {(insets) => (
             <Button
@@ -211,16 +152,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: MARGIN,
   },
   title: {
-    ...fontStyles.h1,
+    ...typeScale.titleMedium,
     marginTop: 30,
     marginBottom: 24,
   },
   header: {
-    ...fontStyles.h2,
+    ...typeScale.titleSmall,
     marginBottom: 10,
   },
   disclaimer: {
-    ...fontStyles.small,
+    ...typeScale.bodySmall,
     marginBottom: 15,
   },
   link: {
@@ -229,26 +170,5 @@ const styles = StyleSheet.create({
   button: {
     marginTop: MARGIN,
     marginHorizontal: MARGIN,
-  },
-  titleColloquial: {
-    ...typeScale.titleSmall,
-    marginBottom: Spacing.Small12,
-  },
-  sectionHeader: {
-    ...typeScale.labelSemiBoldSmall,
-    marginVertical: Spacing.Small12,
-  },
-  itemContainer: {
-    flexDirection: 'row',
-    gap: Spacing.Smallest8,
-  },
-  item: {
-    ...typeScale.bodySmall,
-    flexShrink: 1,
-  },
-  fullTerms: {
-    ...typeScale.labelSemiBoldSmall,
-    marginVertical: Spacing.Small12,
-    color: Colors.infoDark,
   },
 })

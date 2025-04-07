@@ -15,75 +15,115 @@ import TokenApprovalFeedItem from 'src/transactions/feed/TokenApprovalFeedItem'
 import TransferFeedItem from 'src/transactions/feed/TransferFeedItem'
 import {
   deduplicateTransactions,
-  getAllowedNetworkIds,
+  useAllowedNetworkIdsForTransfers,
   useFetchTransactions,
 } from 'src/transactions/feed/queryHelper'
 import {
   confirmedStandbyTransactionsSelector,
   pendingStandbyTransactionsSelector,
-  transactionsSelector,
-} from 'src/transactions/reducer'
-import { TokenTransaction } from 'src/transactions/types'
+} from 'src/transactions/selectors'
+import { TokenTransaction, TokenTransactionTypeV2, TransactionStatus } from 'src/transactions/types'
 import { groupFeedItemsInSections } from 'src/transactions/utils'
 
 function TransactionFeed() {
   const { loading, error, transactions, fetchingMoreTransactions, fetchMoreTransactions } =
     useFetchTransactions()
 
-  const cachedTransactions = useSelector(transactionsSelector)
-  const allPendingTransactions = useSelector(pendingStandbyTransactionsSelector)
+  const allPendingStandbyTransactions = useSelector(pendingStandbyTransactionsSelector)
   const allConfirmedStandbyTransactions = useSelector(confirmedStandbyTransactionsSelector)
-  const allowedNetworks = getAllowedNetworkIds()
+  const allowedNetworks = useAllowedNetworkIdsForTransfers()
+
+  const showUKCompliantVariant = getFeatureGate(StatsigFeatureGates.SHOW_UK_COMPLIANT_VARIANT)
 
   const confirmedFeedTransactions = useMemo(() => {
-    const confirmedTokenTransactions: TokenTransaction[] =
-      transactions.length > 0 ? transactions : cachedTransactions
-    const allConfirmedTransactions = deduplicateTransactions(
-      confirmedTokenTransactions,
-      allConfirmedStandbyTransactions
+    // Filter out received pending transactions that are also in the pending
+    // standby array because those will be displayed with the pending
+    // transactions
+    const completedOrNotPendingStandbyTransactions = transactions.filter(
+      (tx) =>
+        tx.status === TransactionStatus.Complete ||
+        !allPendingStandbyTransactions.find(
+          (pendingStandbyTx) =>
+            pendingStandbyTx.transactionHash === tx.transactionHash &&
+            pendingStandbyTx.networkId === tx.networkId
+        )
     )
+
+    const allConfirmedTransactions = deduplicateTransactions(
+      allConfirmedStandbyTransactions,
+      completedOrNotPendingStandbyTransactions
+    ).sort((a, b) => {
+      const diff = b.timestamp - a.timestamp
+      if (diff === 0) {
+        // if the timestamps are the same, most likely one of the transactions
+        // is an approval. on the feed we want to show the approval first.
+        return a.type === TokenTransactionTypeV2.Approval
+          ? 1
+          : b.type === TokenTransactionTypeV2.Approval
+            ? -1
+            : 0
+      }
+      return diff
+    })
+
     return allConfirmedTransactions.filter((tx) => {
       return allowedNetworks.includes(tx.networkId)
     })
-  }, [transactions, cachedTransactions, allowedNetworks, allConfirmedStandbyTransactions])
+  }, [
+    transactions,
+    allowedNetworks,
+    allConfirmedStandbyTransactions,
+    allPendingStandbyTransactions,
+  ])
 
   const pendingTransactions = useMemo(() => {
-    return allPendingTransactions.filter((tx) => {
+    return allPendingStandbyTransactions.filter((tx) => {
       return allowedNetworks.includes(tx.networkId)
     })
-  }, [allPendingTransactions, allowedNetworks])
+  }, [allPendingStandbyTransactions, allowedNetworks])
 
   const sections = useMemo(() => {
     if (confirmedFeedTransactions.length === 0 && pendingTransactions.length === 0) {
       return []
     }
 
-    return groupFeedItemsInSections(pendingTransactions, confirmedFeedTransactions)
+    const confirmedFeedTxHashes = new Set(confirmedFeedTransactions.map((tx) => tx.transactionHash))
+    return groupFeedItemsInSections(
+      pendingTransactions.filter((tx) => !confirmedFeedTxHashes.has(tx.transactionHash)),
+      confirmedFeedTransactions
+    )
   }, [pendingTransactions, confirmedFeedTransactions])
 
-  if (!sections.length) {
-    return getFeatureGate(StatsigFeatureGates.SHOW_GET_STARTED) ? (
-      <GetStarted />
-    ) : (
-      <NoActivity loading={loading} error={error} />
-    )
-  }
-
   function renderItem({ item: tx }: { item: TokenTransaction; index: number }) {
-    switch (tx.__typename) {
-      case 'TokenExchangeV3':
-        return <SwapFeedItem key={tx.transactionHash} exchange={tx} />
-      case 'TokenTransferV3':
+    switch (tx.type) {
+      case TokenTransactionTypeV2.Exchange:
+      case TokenTransactionTypeV2.SwapTransaction:
+      case TokenTransactionTypeV2.CrossChainSwapTransaction:
+        return <SwapFeedItem key={tx.transactionHash} transaction={tx} />
+      case TokenTransactionTypeV2.Sent:
+      case TokenTransactionTypeV2.Received:
         return <TransferFeedItem key={tx.transactionHash} transfer={tx} />
-      case 'NftTransferV3':
+      case TokenTransactionTypeV2.NftSent:
+      case TokenTransactionTypeV2.NftReceived:
         return <NftFeedItem key={tx.transactionHash} transaction={tx} />
-      case 'TokenApproval':
+      case TokenTransactionTypeV2.Approval:
         return <TokenApprovalFeedItem key={tx.transactionHash} transaction={tx} />
-      case 'EarnDeposit':
-      case 'EarnWithdraw':
-      case 'EarnClaimReward':
+      case TokenTransactionTypeV2.Deposit:
+      case TokenTransactionTypeV2.Withdraw:
+      case TokenTransactionTypeV2.ClaimReward:
+      case TokenTransactionTypeV2.CrossChainDeposit:
+        // These are handled by the FeedV2 only
+        return null
+      case TokenTransactionTypeV2.EarnDeposit:
+      case TokenTransactionTypeV2.EarnSwapDeposit:
+      case TokenTransactionTypeV2.EarnWithdraw:
+      case TokenTransactionTypeV2.EarnClaimReward:
         return <EarnFeedItem key={tx.transactionHash} transaction={tx} />
     }
+  }
+
+  if (!sections.length) {
+    return !showUKCompliantVariant ? <GetStarted /> : <NoActivity loading={loading} error={error} />
   }
 
   return (
@@ -99,7 +139,11 @@ function TransactionFeed() {
       />
       {fetchingMoreTransactions && (
         <View style={styles.centerContainer}>
-          <ActivityIndicator style={styles.loadingIcon} size="large" color={colors.primary} />
+          <ActivityIndicator
+            style={styles.loadingIcon}
+            size="large"
+            color={colors.loadingIndicator}
+          />
         </View>
       )}
     </>

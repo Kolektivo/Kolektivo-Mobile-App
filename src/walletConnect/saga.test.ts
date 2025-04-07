@@ -1,18 +1,18 @@
+import { WalletKitTypes } from '@reown/walletkit'
 import { CoreTypes, SessionTypes } from '@walletconnect/types'
 import { buildApprovedNamespaces } from '@walletconnect/utils'
-import { Web3WalletTypes } from '@walletconnect/web3wallet'
 import { expectSaga } from 'redux-saga-test-plan'
 import { call, select } from 'redux-saga-test-plan/matchers'
 import { EffectProviders, StaticProvider, throwError } from 'redux-saga-test-plan/providers'
 import { showMessage } from 'src/alert/actions'
 import { DappRequestOrigin, WalletConnectPairingOrigin } from 'src/analytics/types'
-import { walletConnectEnabledSelector } from 'src/app/selectors'
 import { activeDappSelector } from 'src/dapps/selectors'
 import i18n from 'src/i18n'
 import { isBottomSheetVisible, navigate } from 'src/navigator/NavigationService'
 import { Screens } from 'src/navigator/Screens'
-import { getDynamicConfigParams } from 'src/statsig'
-import { Network } from 'src/transactions/types'
+import { getFeatureGate } from 'src/statsig'
+import { StatsigFeatureGates } from 'src/statsig/types'
+import { Network, NetworkId } from 'src/transactions/types'
 import { publicClient } from 'src/viem'
 import { prepareTransactions } from 'src/viem/prepareTransactions'
 import {
@@ -28,23 +28,30 @@ import {
   _showActionRequest,
   _showSessionRequest,
   getDefaultSessionTrackedProperties,
+  getSessionFromRequest,
+  handlePendingState,
   initialiseWalletConnect,
   initialiseWalletConnectV2,
   normalizeTransaction,
   walletConnectSaga,
 } from 'src/walletConnect/saga'
 import { WalletConnectRequestType } from 'src/walletConnect/types'
-import { walletAddressSelector } from 'src/web3/selectors'
+import { demoModeEnabledSelector, walletAddressSelector } from 'src/web3/selectors'
+import { getSupportedNetworkIds } from 'src/web3/utils'
 import { createMockStore } from 'test/utils'
 import { mockAccount } from 'test/values'
 import { BaseError } from 'viem'
 import { getTransactionCount } from 'viem/actions'
 
 jest.mock('src/statsig')
+jest.mock('src/web3/utils', () => ({
+  ...jest.requireActual('src/web3/utils'),
+  getSupportedNetworkIds: jest.fn(),
+}))
 
 function createSessionProposal(
   proposerMetadata: CoreTypes.Metadata
-): Web3WalletTypes.EventArguments['session_proposal'] {
+): WalletKitTypes.EventArguments['session_proposal'] {
   return {
     id: 1669989187506938,
     params: {
@@ -84,10 +91,10 @@ function createSession(proposerMetadata: CoreTypes.Metadata): SessionTypes.Struc
     expiry: 1671006057,
     self: {
       metadata: {
-        icons: ['https://valoraapp.com/favicon.ico'],
+        icons: ['https://example.com/favicon.ico'],
         description: 'A mobile payments wallet that works worldwide',
-        name: 'Valora',
-        url: 'https://valoraapp.com/',
+        name: 'App Name',
+        url: 'https://example.com/',
       },
       publicKey: '61a2616b6d7394ed7dd430ea5921d1c32289b300ccd2d588af9e25c21f239612',
     },
@@ -122,8 +129,12 @@ function createSession(proposerMetadata: CoreTypes.Metadata): SessionTypes.Struc
 
 beforeEach(() => {
   jest.clearAllMocks()
-  jest.mocked(getDynamicConfigParams).mockReturnValue({
-    showWalletConnect: ['celo-alfajores'],
+  jest.mocked(getSupportedNetworkIds).mockReturnValue([NetworkId['celo-alfajores']])
+  jest.mocked(getFeatureGate).mockImplementation((featureGate) => {
+    if (featureGate === StatsigFeatureGates.DISABLE_WALLET_CONNECT_V2) {
+      return false
+    }
+    throw new Error(`Unexpected feature gate: ${featureGate}`)
   })
 })
 
@@ -177,7 +188,7 @@ describe('applyIconFixIfNeeded', () => {
     eachMetadata(
       'fixes the `icons` property when the metadata is $metadata',
       async ({ metadata, expected }) => {
-        const sessionProposal = createSessionProposal(metadata as Web3WalletTypes.Metadata)
+        const sessionProposal = createSessionProposal(metadata as WalletKitTypes.Metadata)
         _applyIconFixIfNeeded(sessionProposal)
         // eslint-disable-next-line jest/no-standalone-expect
         expect(sessionProposal.params.proposer.metadata?.icons).toStrictEqual(expected)
@@ -189,7 +200,7 @@ describe('applyIconFixIfNeeded', () => {
     eachMetadata(
       'fixes the `icons` property when the metadata is $metadata',
       async ({ metadata, expected }) => {
-        const session = createSession(metadata as Web3WalletTypes.Metadata)
+        const session = createSession(metadata as WalletKitTypes.Metadata)
         _applyIconFixIfNeeded(session)
         // eslint-disable-next-line jest/no-standalone-expect
         expect(session.peer.metadata?.icons).toStrictEqual(expected)
@@ -234,6 +245,28 @@ describe(walletConnectSaga, () => {
       supportedChains: ['eip155:44787'],
       version: 2,
     })
+  })
+
+  it('does nothing when pending length is greater than 1', async () => {
+    const sessionProposal = createSessionProposal({
+      url: 'someUrl',
+      icons: ['someIcon'],
+      description: 'someDescription',
+      name: 'someName',
+    })
+    const state = createMockStore({
+      walletConnect: {
+        pendingActions: [],
+        pendingSessions: [sessionProposal, sessionProposal],
+        sessions: [],
+      },
+    }).getState()
+
+    await expectSaga(walletConnectSaga)
+      .withState(state)
+      .dispatch(sessionProposalAction(sessionProposal))
+      .not.call(_showActionRequest, sessionProposal)
+      .run()
   })
 })
 
@@ -285,9 +318,9 @@ describe('showSessionRequest', () => {
   })
 
   it('includes all supported chains for session approval', async () => {
-    jest.mocked(getDynamicConfigParams).mockReturnValue({
-      showWalletConnect: ['celo-alfajores', 'ethereum-sepolia'],
-    })
+    jest
+      .mocked(getSupportedNetworkIds)
+      .mockReturnValue([NetworkId['celo-alfajores'], NetworkId['ethereum-sepolia']])
     const state = createMockStore({}).getState()
     await expectSaga(_showSessionRequest, sessionProposal)
       .withState(state)
@@ -482,7 +515,7 @@ describe('acceptSession', () => {
 })
 
 describe('showActionRequest', () => {
-  const actionRequest: Web3WalletTypes.EventArguments['session_request'] = {
+  const actionRequest: WalletKitTypes.EventArguments['session_request'] = {
     id: 1707297778331031,
     topic: '243b33442b6190b97055201b5a8817f4e604e3f37b5376e78ee0b3715cc6211c',
     params: {
@@ -641,6 +674,14 @@ describe('showActionRequest', () => {
       prepareTransactionErrorMessage: 'viem short message',
     })
   })
+
+  it('throws an error when client is missing', () => {
+    _setClientForTesting(null)
+
+    return expect(expectSaga(_showActionRequest, mockRequest).run()).rejects.toThrow(
+      'missing client'
+    )
+  })
 })
 
 const v2ConnectionString =
@@ -651,17 +692,19 @@ describe('initialiseWalletConnect', () => {
 
   it('initializes v2 if enabled', async () => {
     await expectSaga(initialiseWalletConnect, v2ConnectionString, origin)
-      .provide([
-        [select(walletConnectEnabledSelector), { v2: true }],
-        [call(initialiseWalletConnectV2, v2ConnectionString, origin), {}],
-      ])
+      .provide([[call(initialiseWalletConnectV2, v2ConnectionString, origin), {}]])
       .call(initialiseWalletConnectV2, v2ConnectionString, origin)
       .run()
   })
 
   it('doesnt initialize v2 if disabled', async () => {
+    jest.mocked(getFeatureGate).mockImplementation((featureGate) => {
+      if (featureGate === StatsigFeatureGates.DISABLE_WALLET_CONNECT_V2) {
+        return true
+      }
+      throw new Error(`Unexpected feature gate: ${featureGate}`)
+    })
     await expectSaga(initialiseWalletConnect, v2ConnectionString, origin)
-      .provide([[select(walletConnectEnabledSelector), { v2: false }]])
       .not.call(initialiseWalletConnectV2, v2ConnectionString, origin)
       .run()
   })
@@ -840,4 +883,140 @@ describe('normalizeTransaction', () => {
       })
     })
   }
+})
+
+const mockRequest = {
+  id: 1,
+  topic: 'topic',
+  params: {
+    request: { method: 'eth_sendTransaction', params: [] },
+    chainId: 'eip155:1',
+  },
+  verifyContext: {
+    verified: { origin: '', validation: 'UNKNOWN', verifyUrl: '' },
+  },
+} as any
+
+describe('handleIncomingActionRequest', () => {
+  beforeEach(() => {
+    _setClientForTesting(null)
+  })
+
+  it('throws an error when client is missing', () => {
+    return expect(expectSaga(_showActionRequest, mockRequest).run()).rejects.toThrow(
+      'missing client'
+    )
+  })
+})
+
+describe('getSessionFromRequest', () => {
+  beforeEach(() => {
+    _setClientForTesting(null)
+  })
+
+  it('throws an error when client is missing', () => {
+    return expect(expectSaga(getSessionFromRequest, mockRequest).run()).rejects.toThrow(
+      'missing client'
+    )
+  })
+})
+
+describe('handlePendingState', () => {
+  let mockClient: any
+
+  beforeEach(() => {
+    jest.clearAllMocks()
+    mockClient = {
+      approveSession: jest.fn(),
+      getActiveSessions: jest.fn(() => {
+        return Promise.resolve({})
+      }),
+    }
+    _setClientForTesting(mockClient as any)
+  })
+
+  afterEach(() => {
+    _setClientForTesting(null)
+  })
+
+  it('shows session request when pending session exists', async () => {
+    const sessionProposal = createSessionProposal({
+      url: 'someUrl',
+      icons: ['someIcon'],
+      description: 'someDescription',
+      name: 'someName',
+    })
+    const state = createMockStore({
+      walletConnect: {
+        pendingActions: [],
+        pendingSessions: [sessionProposal],
+        sessions: [],
+      },
+    }).getState()
+
+    await expectSaga(handlePendingState)
+      .withState(state)
+      .provide([[select(activeDappSelector), null]])
+      .call(_showSessionRequest, sessionProposal)
+      .run()
+
+    expect(navigate).toHaveBeenCalledWith(Screens.WalletConnectRequest, {
+      type: WalletConnectRequestType.Session,
+      pendingSession: sessionProposal,
+      namespacesToApprove: expect.anything(),
+      supportedChains: ['eip155:44787'],
+      version: 2,
+    })
+  })
+
+  it('shows action request when pending action exists', async () => {
+    mockClient.getActiveSessions.mockReturnValue(
+      Promise.resolve({
+        [mockRequest.topic]: createSession({
+          url: 'someUrl',
+          icons: ['someIcon'],
+          description: 'someDescription',
+          name: 'someName',
+        }),
+      })
+    )
+
+    const state = createMockStore({
+      walletConnect: {
+        pendingActions: [mockRequest],
+        pendingSessions: [],
+        sessions: [],
+      },
+    }).getState()
+
+    await expectSaga(handlePendingState)
+      .withState(state)
+      .provide([
+        [select(walletAddressSelector), mockAccount],
+        [select(demoModeEnabledSelector), false],
+        [
+          call(getTransactionCount, publicClient[Network.Ethereum], {
+            address: mockAccount,
+            blockTag: 'pending',
+          }),
+          123,
+        ],
+      ])
+      .call(_showActionRequest, mockRequest)
+      .run()
+  })
+
+  it('does nothing when no pending sessions or actions exist', async () => {
+    const state = createMockStore({
+      walletConnect: {
+        pendingActions: [],
+        pendingSessions: [],
+        sessions: [],
+      },
+    }).getState()
+
+    await expectSaga(handlePendingState).withState(state).run()
+
+    expect(navigate).not.toHaveBeenCalled()
+  })
 })

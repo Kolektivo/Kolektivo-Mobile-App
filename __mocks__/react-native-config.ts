@@ -3,6 +3,8 @@ export default {
   DEV_SETTINGS_ACTIVE_INITIALLY: 'false',
   SHOW_TESTNET_BANNER: 'true',
   DEFAULT_TESTNET: 'alfajores',
-  DYNAMIC_DOWNLOAD_LINK: 'https://vlra.app/invite',
   AUTH0_DOMAIN: 'auth0.com',
+  DEEP_LINK_URL_SCHEME: 'celo',
+  APP_REGISTRY_NAME: 'app',
+  ENABLED_NETWORK_IDS: 'celo-alfajores,ethereum-sepolia,arbitrum-sepolia,op-sepolia,base-sepolia',
 }

@@ -1,31 +1,31 @@
 import { useHeaderHeight } from '@react-navigation/elements'
-import { NativeStackScreenProps } from '@react-navigation/native-stack'
 import React, { ReactElement } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ScrollView, StyleSheet, Text, View } from 'react-native'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
+import AppAnalytics from 'src/analytics/AppAnalytics'
 import { EarnEvents } from 'src/analytics/Events'
-import ValoraAnalytics from 'src/analytics/ValoraAnalytics'
 import Button, { BtnSizes, BtnTypes } from 'src/components/Button'
-import { EARN_STABLECOINS_LEARN_MORE } from 'src/config'
+import { EarnTabType } from 'src/earn/types'
 import ArrowDown from 'src/icons/ArrowDown'
-import Blob from 'src/icons/Blob'
 import CircledIcon from 'src/icons/CircledIcon'
-import Logo from 'src/icons/Logo'
-import Palm from 'src/icons/Palm'
-import UpwardGraph from 'src/icons/UpwardGraph'
+import EarnCoins from 'src/icons/EarnCoins'
+import Manage from 'src/icons/Manage'
+import Blob from 'src/images/Blob'
+import Palm from 'src/images/Palm'
 import { headerWithCloseButton } from 'src/navigator/Headers'
 import { navigate } from 'src/navigator/NavigationService'
 import { Screens } from 'src/navigator/Screens'
-import { StackParamList } from 'src/navigator/types'
-import { getFeatureGate } from 'src/statsig'
-import { StatsigFeatureGates } from 'src/statsig/types'
+import { getDynamicConfigParams } from 'src/statsig'
+import { DynamicConfigs } from 'src/statsig/constants'
+import { StatsigDynamicConfigs } from 'src/statsig/types'
 import Colors from 'src/styles/colors'
 import { typeScale } from 'src/styles/fonts'
 import { Spacing } from 'src/styles/styles'
 
-const ICON_SIZE = 24
-const ICON_BACKGROUND_CIRCLE_SIZE = 36
+const ICON_SIZE = 20
+const ARROW_ICON_SIZE = 24
+const ICON_BACKGROUND_CIRCLE_SIZE = 32
 
 function DetailsItem({
   icon,
@@ -40,7 +40,11 @@ function DetailsItem({
 }) {
   return (
     <View style={styles.detailsItemContainer}>
-      <CircledIcon backgroundColor={Colors.gray2} radius={ICON_BACKGROUND_CIRCLE_SIZE}>
+      <CircledIcon
+        backgroundColor={Colors.backgroundSecondary}
+        borderColor={Colors.borderPrimary}
+        radius={ICON_BACKGROUND_CIRCLE_SIZE}
+      >
         {icon}
       </CircledIcon>
       <View style={styles.flex}>
@@ -52,12 +56,9 @@ function DetailsItem({
   )
 }
 
-type Props = NativeStackScreenProps<StackParamList, Screens.EarnInfoScreen>
-
-export default function EarnInfoScreen({ route }: Props) {
+export default function EarnInfoScreen() {
   const { t } = useTranslation()
-  const { tokenId } = route.params
-  const isGasSubsidized = getFeatureGate(StatsigFeatureGates.SUBSIDIZE_STABLECOIN_EARN_GAS_FEES)
+  const { links } = getDynamicConfigParams(DynamicConfigs[StatsigDynamicConfigs.APP_CONFIG])
 
   const headerHeight = useHeaderHeight()
   const { bottom } = useSafeAreaInsets()
@@ -68,27 +69,22 @@ export default function EarnInfoScreen({ route }: Props) {
   return (
     <SafeAreaView style={[styles.safeAreaContainer, { paddingTop: headerHeight }]} edges={[]}>
       <ScrollView>
-        <Text style={styles.title}>{t('earnFlow.earnInfo.title')}</Text>
+        <Text style={styles.title} testID="EarnInfoScreen/Title">
+          {t('earnFlow.earnInfo.title')}
+        </Text>
         <View style={styles.detailsContainer}>
           <DetailsItem
-            icon={<UpwardGraph size={ICON_SIZE} color={Colors.black} />}
-            title={
-              isGasSubsidized
-                ? t('earnFlow.earnInfo.details.earn.titleGasSubsidy')
-                : t('earnFlow.earnInfo.details.earn.title')
-            }
-            subtitle={t('earnFlow.earnInfo.details.earn.subtitle')}
-            footnote={
-              isGasSubsidized ? t('earnFlow.earnInfo.details.earn.footnoteSubsidy') : undefined
-            }
+            icon={<EarnCoins size={ICON_SIZE} color={Colors.contentPrimary} />}
+            title={t('earnFlow.earnInfo.details.work.title')}
+            subtitle={t('earnFlow.earnInfo.details.work.subtitle')}
           />
           <DetailsItem
-            icon={<Logo size={ICON_SIZE} color={Colors.black} />}
-            title={t('earnFlow.earnInfo.details.manage.title')}
-            subtitle={t('earnFlow.earnInfo.details.manage.subtitle')}
+            icon={<Manage size={ICON_SIZE} color={Colors.contentPrimary} />}
+            title={t('earnFlow.earnInfo.details.manage.titleV1_94')}
+            subtitle={t('earnFlow.earnInfo.details.manage.subtitleV1_94')}
           />
           <DetailsItem
-            icon={<ArrowDown size={ICON_SIZE} color={Colors.black} />}
+            icon={<ArrowDown size={ARROW_ICON_SIZE} color={Colors.contentPrimary} />}
             title={t('earnFlow.earnInfo.details.access.title')}
             subtitle={t('earnFlow.earnInfo.details.access.subtitle')}
           />
@@ -97,8 +93,8 @@ export default function EarnInfoScreen({ route }: Props) {
       <View style={[styles.buttonContainer, insetsStyle]}>
         <Button
           onPress={() => {
-            ValoraAnalytics.track(EarnEvents.earn_info_learn_press)
-            navigate(Screens.WebViewScreen, { uri: EARN_STABLECOINS_LEARN_MORE })
+            AppAnalytics.track(EarnEvents.earn_info_learn_press)
+            navigate(Screens.WebViewScreen, { uri: links.earnStablecoinsLearnMore })
           }}
           text={t('earnFlow.earnInfo.action.learn')}
           type={BtnTypes.SECONDARY}
@@ -106,8 +102,8 @@ export default function EarnInfoScreen({ route }: Props) {
         />
         <Button
           onPress={() => {
-            ValoraAnalytics.track(EarnEvents.earn_info_earn_press, { tokenId })
-            navigate(Screens.EarnEnterAmount, { tokenId })
+            AppAnalytics.track(EarnEvents.earn_info_earn_press)
+            navigate(Screens.EarnHome, { activeEarnTab: EarnTabType.AllPools })
           }}
           text={t('earnFlow.earnInfo.action.earn')}
           type={BtnTypes.PRIMARY}
@@ -150,7 +146,6 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   title: {
-    color: Colors.black,
     textAlign: 'center',
     marginBottom: Spacing.Thick24,
     ...typeScale.titleLarge,
@@ -163,17 +158,14 @@ const styles = StyleSheet.create({
     gap: Spacing.Regular16,
   },
   detailsItemTitle: {
-    color: Colors.black,
-    ...typeScale.labelSemiBoldSmall,
+    ...typeScale.labelSemiBoldMedium,
   },
   detailsItemSubtitle: {
-    color: Colors.black,
-    ...typeScale.bodyXSmall,
+    ...typeScale.bodySmall,
   },
   detailsItemFootnote: {
-    color: Colors.black,
     marginTop: Spacing.Smallest8,
-    ...typeScale.bodyXXSmall,
+    ...typeScale.bodyXSmall,
   },
   buttonContainer: {
     gap: Spacing.Smallest8,

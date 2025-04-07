@@ -1,12 +1,12 @@
+import * as Keychain from '@divvi/react-native-keychain'
 import * as Sentry from '@sentry/react-native'
-import * as Keychain from 'react-native-keychain'
-import ValoraAnalytics from 'src/analytics/ValoraAnalytics'
+import AppAnalytics from 'src/analytics/AppAnalytics'
 import { resetStateOnInvalidStoredAccount } from 'src/utils/accountChecker'
-import { clearStoredAccounts } from 'src/web3/KeychainLock'
+import { clearStoredAccounts } from 'src/web3/KeychainAccounts'
 import { walletAddressSelector } from 'src/web3/selectors'
 import { getMockStoreData } from 'test/utils'
 
-jest.mock('src/web3/KeychainLock')
+jest.mock('src/web3/KeychainAccounts')
 
 const mockedKeychain = jest.mocked(Keychain)
 
@@ -48,7 +48,7 @@ describe('resetStateOnInvalidStoredAccount', () => {
       password: 'some hash',
       username: 'username',
       service: 'service',
-      storage: 'storage',
+      storage: Keychain.STORAGE_TYPE.RSA,
     })
     const state = getMockStoreData()
     expect(walletAddressSelector(state)).toEqual('0x0000000000000000000000000000000000007e57')
@@ -68,7 +68,7 @@ describe('resetStateOnInvalidStoredAccount', () => {
     expect(result === undefined).toEqual(true)
     expect(clearStoredAccounts).toHaveBeenCalledTimes(1)
     expect(Sentry.captureException).toHaveBeenCalledTimes(0)
-    expect(ValoraAnalytics.track).toHaveBeenCalledWith('redux_no_matching_keychain_account', {
+    expect(AppAnalytics.track).toHaveBeenCalledWith('redux_no_matching_keychain_account', {
       walletAddress: '0x0000000000000000000000000000000000007e57',
     })
   })

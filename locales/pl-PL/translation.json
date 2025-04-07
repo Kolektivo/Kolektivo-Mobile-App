@@ -6,7 +6,7 @@
   "licenses": "Licencje",
   "removeAccountTitle": "Resetuj aplikację Kolektivo",
   "removeAccountDetails": "Zresetowanie spowoduje usunięcie Twojego konta z tego urządzenia. Twoje środki pozostaną na koncie, ale będą dostępne tylko przy użyciu frazy odzyskiwania",
-  "deleteAccountTitle": "Usuń konto",
+  "deleteAccountTitle": "Usuń {{appName}}",
   "deleteAccountDetails": "Usunięcie konta spowoduje usunięcie go z {{appName}}. Twoje środki pozostaną na koncie, ale będą dostępne tylko przy użyciu frazy odzyskiwania",
   "deleteAccountWarning": {
     "title": "Czy na pewno?",
@@ -16,7 +16,9 @@
   },
   "legal": "Informacje prawne",
   "appPreferences": "Preferencje aplikacji",
+  "preferences": "Preferencje",
   "security": "Bezpieczeństwo",
+  "securityPrivacy": "Bezpieczeństwo i prywatność",
   "changePin": "Zmień kod PIN",
   "pinChanged": "Kod PIN został zmieniony",
   "pinChangeFailed": "Zmiana kodu PIN nie powiodła się",
@@ -29,6 +31,7 @@
   "dataSaver": "Oszczędzanie danych",
   "enableDataSaver": "Włącz oszczędzanie danych",
   "dataSaverDetail": "Tryb oszczędzania danych umożliwia komunikację z siecią poprzez zaufany węzeł. Zawsze możesz zmienić ten tryb w ustawieniach aplikacji.",
+  "keylessBackupSetupTitle": "Utwórz login",
   "keylessBackupSettingsTitle": "Kopia zapasowa poczty e-mail i telefonu",
   "keylessBackupSettingsDeleteError": "Twoja kopia zapasowa nie mogła zostać usunięta, poczekaj i spróbuj ponownie później.",
   "setup": "Ustaw",
@@ -72,7 +75,9 @@
   },
   "recoveryPhrase": {
     "title": "Twoja fraza odzyskiwania",
+    "titleV1_90": "Twoja fraza odzyskiwania",
     "body": "Zapisz te 12 słów w bezpiecznym miejscu, gdzie nie mogą zostać skradzione lub zniszczone.",
+    "bodyV1_90": "Jeśli stracisz swoją frazę odzyskiwania, stracisz również dostęp do wszystkich funduszy przechowywanych w {{appName}}.",
     "continue": "Mam to zapisane",
     "copy": "Kopiuj do schowka",
     "mnemonicCopied": "Fraza skopiowana do schowka",
@@ -102,9 +107,17 @@
   },
   "signInWithEmail": {
     "title": "Zaloguj się za pomocą adresu e-mail",
-    "subtitle": "Zaloguj się za pomocą swojego adresu e-mail, aby wykorzystać go do tworzenia kopii zapasowych.\n\nW przypadku utraty portfela zostaniesz poproszony(-a) o ponowne zalogowanie się.",
+    "subtitle": "Zaloguj się za pomocą adresu e-mail, aby wykorzystać go do utworzenia kopii zapasowej. W przypadku utraty portfela poprosimy Cię o ponowne zalogowanie się.",
     "subtitleRestore": "Zaloguj się za pomocą adresu e-mail, którego użyto do konfiguracji kopii zapasowej portfela.",
-    "google": "Zaloguj się przez Google"
+    "google": "Zaloguj się przez Google",
+    "apple": "Zaloguj się za pomocą konta Apple",
+    "signInAnotherWay": "Zaloguj się w inny sposób",
+    "bottomSheet": {
+      "title": "Zapisz swoją frazę odzyskiwania, aby utworzyć portfel",
+      "description": "Wkrótce dostępna będzie obsługa innych dostawców poczty e-mail, ale w międzyczasie musisz zapisać swoją frazę odzyskiwania, aby zakończyć tworzenie portfela.",
+      "continue": "Kontynuuj",
+      "skip": "Pomiń (niezalecane)"
+    }
   },
   "keylessBackupPhoneInput": {
     "setup": {
@@ -161,6 +174,8 @@
   "termsOfServiceLink": "Warunki użytkowania",
   "privacyPolicy": "Polityka prywatności",
   "editProfile": "Edytuj profil",
+  "profileName": "Nazwa profilu",
+  "profile": "Profil",
   "confirmNumber": "Podłącz numer telefonu",
   "cancel": "Anuluj",
   "changeProfilePhoto": "Zmień zdjęcie profilowe",
@@ -172,6 +187,7 @@
   "continue": "Kontynuuj",
   "yourName": "Twoja nazwa",
   "version": "Wersja {{appVersion}}",
+  "appVersion": "Wersja",
   "addressCopied": "Adres skopiowany do schowka",
   "support": "Wsparcie",
   "contact": "Kontakt",
@@ -184,6 +200,7 @@
   "supportLegalCheckbox": "Przesyłając zgłoszenie, wyrażam zgodę na udostępnienie powyższych informacji oraz wszelkich załączonych danych z dziennika aplikacji Działowi wsparcia aplikacji {{appName}}.",
   "contactSuccess": "Twój problem został pomyślnie zgłoszony. Wkrótce otrzymasz wiadomość e-mail z odpowiedzią!",
   "namePictureSaved": "Twoja nazwa oraz zdjęcie zostały pomyślnie zapisane.",
+  "nameSaved": "Imię i nazwisko zostały pomyślnie zapisane.",
   "addPhoto": "Dodaj zdjęcie",
   "chooseFromLibrary": "Wybierz z Biblioteki",
   "takePhoto": "Zrób zdjęcie",
@@ -215,7 +232,7 @@
   "keylessBackupNotification": "Skonfiguruj swój adres e-mail i numer telefonu, aby utworzyć kopię zapasową frazy seed",
   "backupKeyCTA": "Zakończ tworzenie kopii zapasowej",
   "backupKeySummary": "Znajdź miejsce na osobności i zapisz swoją frazę odzyskiwania. Przechowuj ją w bezpiecznym miejscu. Nie zapisuj jej w swoim telefonie.",
-  "backupKeyWarning": "Jeśli stracisz swoją frazę odzyskiwania, stracisz również dostęp do wszystkich funduszy przechowywanych w Valorze.",
+  "backupKeyWarning": "Jeśli stracisz swoją frazę odzyskiwania, stracisz również dostęp do wszystkich funduszy przechowywanych w {{appName}}.",
   "copied": "Fraza skopiowana do schowka",
   "moreInfo": "Więcej informacji",
   "savedConfirmation": "Tak, zapisałem(-am) frazę.",
@@ -286,7 +303,7 @@
     "dismiss": "Odrzuć"
   },
   "superchargingTitle": "Wymagana aktualizacja aplikacji",
-  "superchargingDescription": "Zaktualizuj aplikację Valora, aby kontynuować otrzymywanie cotygodniowych nagród w programie Supercharge.",
+  "superchargingDescription": "Zaktualizuj aplikację {{appName}}, aby nadal otrzymywać cotygodniowe nagrody Supercharge.",
   "superchargingTitleV1_54": "Program Supercharge dobiega końca",
   "superchargingDescriptionV1_54": "Nagrody tygodniowe będzie można odbierać do wtorku, 28 maja, do godziny 23:59 UTC. Od 29 maja nie będzie już można odbierać nagród w ramach programu Supercharge.",
   "superchargeRewardsAvailable": "Masz {{amount}} {{token}} dostępne do odbioru!",
@@ -369,6 +386,7 @@
   "accountAddressLabel": "Adres konta",
   "celoAmountLabel": "Kwota (CELO)",
   "maxSymbol": "Maks.",
+  "percentage": "{{percentage}}%",
   "withdrawCeloReview": "Analizuj",
   "withdrawCeloTo": "Wypłać na",
   "withdrawCeloAmount": "Kwota (CELO)",
@@ -693,7 +711,7 @@
       "body": "Zaproś swoich znajomych i rodzinę do pobrania {{appName}}, a każdy z Was otrzyma ekskluzywny NFT"
     },
     "rewardsActiveCUSD": {
-      "title": "ZYSKAJ DO 12 cUSD za zaproszenie znajomych do Valory!",
+      "title": "ZYSKAJ NAWET 12 cUSD za zaproszenie znajomych do {{appName}}!",
       "body": "Zyskaj 0,50 cUSD za każdego znajomego, którego zaprosisz do {{appName}}. Gdy połączą swój numer, dodadzą środki i utrzymają je przez 7 dni, otrzymacie po 0,50 cUSD. Pospiesz się, środki są ograniczone! (Ograniczenie do 25 znajomych)."
     }
   },
@@ -804,6 +822,7 @@
     "spend": "Wykorzystuj swoje kryptowaluty do zakupu ulubionych marek"
   },
   "enableBiometry": {
+    "title": "Zabezpiecz swój portfel",
     "description": "{{biometryType}} zabezpiecza portfel i ułatwia korzystanie z aplikacji {{appName}}",
     "cta": "Włącz {{biometryType}}",
     "guideTitle": "Chcesz dodać {{biometryType}}?",
@@ -826,9 +845,9 @@
     "createNewWallet": "Utwórz portfel",
     "restoreWallet": "Przywróć portfel",
     "hasWallet": "Mam już portfel",
+    "hasWalletV1_88": "Mam portfel",
     "header": "Witamy w {{appName}}! Stwórzmy Twój portfel kryptowalutowy.",
-    "getStarted": "Rozpocznij",
-    "agreeToTerms": "Tworząc portfel, zgadzasz się na nasze <0>Warunki</0>"
+    "getStarted": "Rozpocznij"
   },
   "accessContacts": {
     "disclosure": {
@@ -888,13 +907,13 @@
   },
   "phoneVerificationScreen": {
     "screenTitle": "Numer telefonu",
-    "title": "Podłącz swój numer telefonu z Valorą",
+    "title": "Połącz swój numer telefonu z {{appName}}",
     "description": "Powoduje to połączenie Twojego adresu portfela z Twoim numerem telefonu, dzięki czemu wysyłanie kryptowalut jest proste",
     "startButtonLabel": "Podłącz",
     "learnMore": {
       "buttonLabel": "Czy podłączenie numeru jest konieczne?",
       "title": "Czy podłączenie numeru jest konieczne?",
-      "body": "Podłączenie numeru telefonu pozwoli Ci na wysyłanie pieniędzy do znajomych z książki adresowej i innych numerów telefonów. \n \n Jeśli pominiesz ten krok, nie będziesz mieć dostępu do swoich kontaktów i będziesz w stanie wysyłać pieniądze tylko za pomocą kodu QR lub adresu portfela."
+      "body": "Podłączenie numeru telefonu pozwoli Ci wysyłać pieniądze do znajomych z książki adresowej i innych numerów telefonów. \n\nJeśli zdecydujesz się pominąć ten krok, nie będziesz mieć dostępu do swoich kontaktów i będziesz mógł wysyłać pieniądze tylko za pomocą kodu QR lub adresu portfela."
     },
     "skip": {
       "title": "Czy na pewno?",
@@ -910,9 +929,11 @@
     "codeInputPlaceholder": "123456",
     "helpDialog": {
       "title": "Pomoc",
-      "body": "Wysłaliśmy wiadomość SMS pod Twój numer telefonu. Sprawdź swoje wiadomości tekstowe, aby znaleźć 6-cyfrowy kod. \n\nJeśli masz problemy z odbieraniem wiadomości, możesz pominąć ten krok i spróbować ponownie później.",
+      "body": "Wysłaliśmy wiadomość SMS na Twój numer telefonu. Sprawdź swoje wiadomości tekstowe, aby znaleźć 6-cyfrowy kod. \n\nJeśli masz problemy z odbieraniem wiadomości, możesz na razie pominąć ten krok i spróbować ponownie później.",
+      "bodyCloudBackupOnboarding": "Wysłaliśmy wiadomość SMS na Twój numer telefonu. Sprawdź swoje wiadomości tekstowe, aby znaleźć 6-cyfrowy kod. \n\nJeśli masz problemy z odbieraniem wiadomości, zalecamy utworzenie kopii zapasowej za pomocą frazy odzyskiwania. Możesz spróbować zalogować się za pomocą adresu e-mail i telefonu później.",
       "skip": "Pomiń",
-      "dismiss": "Wróć"
+      "dismiss": "Wróć",
+      "useRecoveryPhrase": "Użyj frazy odzyskiwania"
     },
     "verificationFailure": "Coś poszło nie tak, spróbuj ponownie później.",
     "resendButtonNotYetAvailable": "Możliwość ponownego wysłania za {{secondsRemaining}} sek.",
@@ -923,6 +944,7 @@
     "header": "Przywróć portfel",
     "title": "Wprowadź frazę odzyskiwania",
     "description": "Użyj zapisanej frazy składającej się z 12 lub 24 słów podczas konfigurowania przywracania portfela.",
+    "descriptionV1_90": "Twoja fraza odzyskiwania to fraza składająca się z 12 lub 24 słów zapisana i zachowana podczas konfigurowania portfela. Wprowadź ją tutaj, aby przywrócić swój portfel.",
     "emptyWalletDialog": {
       "description": "W tym portfelu nie ma żadnych środków. Czy nadal chcesz z niego korzystać?",
       "action": "Użyj Portfela",
@@ -938,7 +960,7 @@
     },
     "recoveryPhrase": {
       "title": "Z frazy odzyskiwania",
-      "description": "Wprowadź składającą się z 12 słów frazę odzyskiwania, aby odzyskać dostęp do Valory"
+      "description": "Wprowadź składającą się z 12 słów frazę odzyskiwania, aby odzyskać dostęp do {{appName}}"
     }
   },
   "verificationInput": {
@@ -1039,7 +1061,7 @@
   "inviteWithoutPayment": "Cześć! Korzystam z aplikacji {{appName}} do przesyłania kryptowalut z dowolnego miejsca na świecie. To bardzo proste. Może Ty też spróbujesz? Skorzystaj z tego linku: {{link}}",
   "inviteWithEscrowedPayment": "Cześć! Korzystam z aplikacji {{appName}} do przesyłania kryptowalut z dowolnego miejsca na świecie. Przesyłam Ci właśnie {{amount}} {{token}}. Pobierz aplikację {{appName}} i odbierz {{token}}, korzystając z tego linku: {{link}}",
   "inviteWithRewards": "Cześć! 👋 Używam {{appName}} jako mojego portfela kryptowalut. Aplikację możesz szybko pobrać i połączyć z Twoim numerem telefonu. Do tego w nagrodę otrzymamy specjalną edycję NFT. 💫 \n\nUżyj tego linku, aby pobrać: {{link}}",
-  "inviteWithRewardsCUSD": "Hej! W tej chwili oboje możemy otrzymać darmową nagrodę w wysokości 0,50 USD, jeśli zarejestrujesz się, połączysz swój numer i zasilisz portfel Valora. Używam go do powiększania moich oszczędności w USD i kryptowalutach, a Ty możesz go skonfigurować w kilka sekund, podając tylko numer telefonu. Zarejestruj się za pomocą mojego linku polecającego tutaj: \n\n{{link}} \n\n Pospiesz się, promocja kończy się wkrótce.",
+  "inviteWithRewardsCUSD": "Cześć! W tej chwili możemy we dwójkę otrzymać darmową nagrodę w wysokości 0,50 USD, jeśli zarejestrujesz się, połączysz swój numer i zasilisz portfel {{appName}}. Używam go do powiększania moich oszczędności w USD i kryptowalutach, a Ty możesz go skonfigurować w kilka sekund, podając tylko numer telefonu. Zarejestruj się za pomocą mojego linku polecającego tutaj: \n\n{{link}} \n\n Pospiesz się, promocja kończy się wkrótce.",
   "loadingContacts": "Wyszukiwanie kontaktów",
   "myCode": "Mój kod",
   "scanCode": "Skanuj",
@@ -1439,11 +1461,15 @@
   "dappsScreen": {
     "title": "Dapps",
     "titleDiscover": "Odkryj",
+    "exploreDapps": "Dapps",
+    "exploreAll": "Zobacz wszystkie",
     "message": "Przeglądaj sposoby korzystania ze swoich aktywów",
     "errorMessage": "Wystąpił błąd podczas ładowania Dapps",
     "featuredDapp": "Polecane",
     "allDapps": "Wszystkie",
     "favoriteDapps": "Moje ulubione",
+    "mostPopularDapps": "Najpopularniejsze",
+    "mostPopularDapps_UK": "Inne aplikacje Dapp",
     "favoriteDappsAndAll": "Moje ulubione i wszystkie",
     "searchPlaceHolder": "Wyszukaj dapps",
     "noFavorites": {
@@ -1459,7 +1485,8 @@
       "message": "Zastosowano filtr <0>{{filter}}</0>",
       "removeFilter": "Usuń filtr",
       "searchMessage": "Nie znaleziono pasujących wyników dla <0>„{{searchTerm}}”</0>"
-    }
+    },
+    "disclaimer_UK": "To jest lista aplikacji Dapp innych firm. Opis każdej z nich ma jedynie charakter informacyjny i nie stanowi zaproszenia do korzystania."
   },
   "dappRankings": {
     "title": "Rankingi aplikacji dapp",
@@ -1512,6 +1539,7 @@
     "somePaymentsUnavailable": "Zakupy są obsługiwane przez naszych partnerów. Opłaty mogą się różnić. Niektóre metody płatności są niedostępne w Twoim regionie.",
     "disclaimerWithSomePaymentsUnavailable": "Płatności są obsługiwane przez partnerów sieciowych. Opłaty mogą się różnić. Niektóre metody płatności są niedostępne w Twoim regionie. <0>Dowiedz się więcej.</0>",
     "disclaimer": "Płatności są obsługiwane przez partnerów sieciowych. Opłaty mogą się różnić. <0>Dowiedz się więcej.</0>",
+    "disclaimerUK": "Nie jest to zachęta do kupowania kryptowalut. Udostępniamy jedynie listę dostawców, którzy sprzedają kryptowaluty, wraz z informacjami o cenach i łączem do ich witryny.",
     "learnMore": "Dowiedz się więcej.",
     "whyMissingPayments": "Dlaczego nie widzę więcej metod płatności?",
     "dismiss": "Odrzuć",
@@ -1574,7 +1602,7 @@
     "button": "Ustaw weryfikację tożsamości"
   },
   "fiatConnectKycStatusScreen": {
-    "contactSupportPrefill": "Mam problem z weryfikacją mojej tożsamości w Valorze.",
+    "contactSupportPrefill": "Mam problem z weryfikacją mojej tożsamości w {{appName}}.",
     "contactSupport": "Skontaktuj się z Działem wsparcia",
     "pending": {
       "title": "Trwa weryfikacja Twojej tożsamości.",
@@ -1673,6 +1701,7 @@
       "selectCurrencyTitle": "Dodaj środki",
       "exchangeAmountTitle": "Dodaj {{currency}}",
       "selectProviderHeader": "Wybierz metodę płatności",
+      "selectProviderHeader_UK": "Szczegóły dostawcy",
       "depositExchangeTitle": "Wpłata kryptowalut"
     },
     "cashOut": {
@@ -1763,11 +1792,13 @@
     "title": "Zamieniaj",
     "review": "Analizuj",
     "confirmSwap": "Potwierdź swap",
+    "confirmSwap_UK": "Chcę wymienić",
     "swapFrom": "Z",
     "swapTo": "NA",
     "insufficientFunds": "Niewystarczające saldo {{token}}. Spróbuj wpłacić mniejszą kwotę lub wybierz inny aktyw.",
     "fetchSwapQuoteFailed": "Przepraszamy za opóźnienie! Przetwarzanie trwa dłużej niż zwykle, aby uzyskać najlepszy kurs wymiany. Spróbuj ponownie za kilka minut.",
     "disclaimer": "Najlepsza stawka określona przez zdecentralizowane źródła. <0>Dowiedz się więcej</0>",
+    "disclaimer_UK": "Nie jest to zachęta do sprzedaży lub kupowania kryptowalut. Klikając pozycję Chcę wymienić, zlecasz zewnętrznemu podmiotowi zajmującemu się wymianą transakcję wymiany po najlepszym kursie. Są to najlepsze kursy oferowane przez partnerów sieci. <0>Dowiedz się więcej</0>",
     "swapFromTokenSelection": "ZAMIANA Z",
     "swapToTokenSelection": "ZAMIANA NA",
     "tokenUsdValueUnknown": "-",
@@ -1775,6 +1806,24 @@
     "selectTokenLabel": "Wybierz token",
     "tokenBottomSheetTitle": "Wybierz token",
     "onNetwork": "w {{networkName}}",
+    "crossChainNotification": "Tokeny wymienne pomiędzy różnymi sieciami",
+    "crossChainFeeWarning": {
+      "title": "Potrzebujesz więcej {{tokenSymbol}}",
+      "body": "Potrzebujesz więcej {{tokenSymbol}} w sieci {{networkName}}, aby zapłacić opłaty za wymianę międzyłańcuchową. Dodaj kolejne {{tokenSymbol}} ({{tokenAmount}}), aby kontynuować."
+    },
+    "insufficientBalanceWarning": {
+      "title": "Potrzebujesz więcej {{tokenSymbol}}",
+      "body": "Niewystarczające saldo {{tokenSymbol}}. Spróbuj wpłacić mniejszą kwotę lub wybierz inny aktyw."
+    },
+    "unsupportedTokensWarning": {
+      "title": "Niezgodny wybór",
+      "body": "Nie można wymieniać wybranych tokenów między sobą. Wybierz inny token, który jest zgodny z bieżącym wyborem."
+    },
+    "decreaseSwapAmountForGasWarning": {
+      "title": "Potrzebujesz więcej {{feeTokenSymbol}} na gaz",
+      "body": "Dodaj {{feeTokenSymbol}}, aby pokryć opłaty za gaz lub skoryguj wymienianą kwotę.",
+      "cta": "Wymień mniejszą kwotę"
+    },
     "switchedToNetworkWarning": {
       "title": "Przełączono do sieci {{networkName}}",
       "body_swapFrom": "Aby kontynuować, wybierz token do wymiany w sieci {{networkName}}.",
@@ -1836,12 +1885,30 @@
       "networkFeeInfo": "Dokonujesz wymiany w sieci {{networkName}}.\n\nTa szacunkowa opłata sieciowa jest wymagana do przeprowadzenia transakcji w sieci {{networkName}}. Opłata ta zabezpiecza Twoją transakcję i przeznaczana jest na utrzymanie działania sieci.",
       "networkFeeInfoV1_76": "Dokonujesz wymiany w sieci {{networkName}}.\n\nDo przeprowadzenia transakcji w sieci {{networkName}} wymagana jest opłata sieciowa. Zabezpiecza ona Twoją transakcję i jest wypłacana weryfikatorom sieci.\n\nWarunki sieciowe określają dokładną kwotę, dlatego podane szacunki przedstawiają oczekiwaną przez nas opłatę. Nie przekroczy ona maksymalnej kwoty opłaty.",
       "slippageToleranceInfo": "Tolerancja poślizgu\n\nTwój swap zostanie zrealizowany w ramach procentowej tolerancji poślizgu. Jeśli cena zmieni się bardziej niż tolerancja poślizgu, {{appName}} chroni Cię, uniemożliwiając realizację transakcji.",
+      "slippageToleranceInfoV1_90": "Wymiana zostanie zrealizowana zgodnie z ustawionym procentem tolerancji poślizgu. Jeśli zmiana ceny jest większa niż tolerancja poślizgu, {{appName}} chroni Cię, uniemożliwiając realizację transakcji.",
       "networkFeeInfoDismissButton": "Rozumiem",
       "exchangeRate": "Kurs wymiany",
       "exchangeRateInfo": "Kurs wymiany\n\nZnaleźliśmy dla Ciebie najlepszy kurs wymiany. Twoja transakcja zostanie zrealizowana po cenie mieszczącej się w przedziale {{slippagePercentage}}% wartości szacunkowej lub zostanie anulowana, a środki zostaną zwrócone do Twojego portfela.",
+      "exchangeRateInfoV1_90": "Znaleźliśmy dla Ciebie najlepszy kurs wymiany. Twoja transakcja zostanie zrealizowana po cenie mieszczącej się w przedziale {{slippagePercentage}}% wartości szacunkowej lub zostanie anulowana, a środki zostaną zwrócone do Twojego portfela.",
       "exchangeRateInfo_withAppFee": "Kurs wymiany\n\nZnaleźliśmy dla Ciebie najlepszy kurs wymiany. Twoja transakcja zostanie zrealizowana po cenie mieszczącej się w przedziale {{slippagePercentage}}% wartości szacunkowej lub zostanie anulowana, a środki zostaną zwrócone do Twojego portfela.\n\nSzacowany kurs obejmuje opłatę {{appName}} w wysokości {{appFeePercentage}}%.",
       "exchangeRateInfoDismissButton": "Rozumiem",
-      "estimatedValue": "Szacunkowa wartość"
+      "estimatedValue": "Szacunkowa wartość",
+      "estimatedTransactionTime": "Szacowany czas transakcji",
+      "estimatedTransactionTimeInMinutes": "≈ {{minutes}} min",
+      "estimatedTransactionTimeInfo": "To dostawca określa czas zakończenia transakcji.\n\nJeśli wymiana następuje między różnymi łańcuchami, transakcja może potrwać nieco dłużej.",
+      "infoDismissButton": "Rozumiem",
+      "fees": "Opłaty",
+      "feesCalculationError": "Brak możliwości obliczenia opłat",
+      "estimatedCrossChainFee": "Szacowane opłaty cross-chain",
+      "maxCrossChainFee": "Maksymalne opłaty cross-chain",
+      "feesBreakdown": "Podział",
+      "feeAmount": "≈ {{localCurrencySymbol}}{{feeAmountInLocalCurrency}} ({{tokenAmount}} {{tokenSymbol}})",
+      "feeAmount_noFiatPrice": "{{tokenAmount}} {{tokenSymbol}}",
+      "feesMoreInfoLabel": "Więcej informacji",
+      "feesInfo_sameChain": "Należy wnieść opłatę sieciową, aby sieć mogła przetworzyć transakcję.",
+      "feesInfo_crossChain": "Należy wnieść opłatę sieciową, aby sieć mogła przetworzyć transakcję. Opłata za wymianę między łańcuchami jest pobierana przez dostawcę świadczącego usługi wymiany między łańcuchami.",
+      "feesInfo_sameChainWithAppFee": "Należy wnieść opłatę sieciową, aby sieć mogła przetworzyć transakcję. Opłata {{appName}} w wysokości {{appFeePercentage}}% jest pobierana za korzystanie z naszego produktu.",
+      "feesInfo_crossChainWithAppFee": "Należy wnieść opłatę sieciową, aby sieć mogła przetworzyć transakcję. Opłata za wymianę między łańcuchami jest pobierana przez dostawcę świadczącego usługi wymiany między łańcuchami. Opłata {{appName}} w wysokości {{appFeePercentage}}% jest pobierana za korzystanie z naszego produktu."
     },
     "fundYourWalletBottomSheet": {
       "title": "Zasil swój portfel",
@@ -1853,6 +1920,8 @@
     "swapFrom": "Zamień z",
     "swapTo": "Zamień na",
     "rate": "Stawka",
+    "network": "Sieć",
+    "networkValue": "{{fromNetwork}} → {{toNetwork}}",
     "estimatedFee": "Szacunkowa opłata sieciowa",
     "networkFee": "Opłata sieciowa",
     "viewOnExplorer": "Wyświetl w CeloExplorer"
@@ -1934,10 +2003,12 @@
     "subtitle": "Co chcesz zrobić najpierw?",
     "later": "Odkryję później",
     "options": {
-      "add": "Dodaj środki",
+      "add": "Dodaj środki do swojego portfela",
       "dapp": "Znajdź sposoby korzystania z kryptowalut",
-      "profile": "Zbuduj mój profil",
-      "learn": "Dowiedz się więcej o Celo"
+      "earn": "Poznaj możliwości zarobkowe",
+      "profile": "Stwórz swój profil",
+      "learn": "Dowiedz się więcej o Celo",
+      "learnPoints": "Dowiedz się więcej o punktach {{appName}}"
     }
   },
   "reverifyUsingCPVHomecard": {
@@ -1962,7 +2033,8 @@
       "network": "Sieć {{networkName}}",
       "selectNetwork": "Sieć",
       "stablecoins": "Stablecoiny",
-      "gasTokens": "Tokeny gazowe"
+      "gasTokens": "Tokeny gazowe",
+      "tokens": "Token"
     }
   },
   "homeActions": {
@@ -2056,25 +2128,29 @@
   },
   "sendSelectRecipient": {
     "searchText": "Szukaj według nazwy, telefonu, portfela…",
+    "searchInputLabel": "Do",
+    "searchInputPlaceholder": "Adres portfela lub numer telefonu",
     "paste": "Wklej ze schowka",
     "title": "Wybierz odbiorcę",
     "contactsTitle": "Wybierz kontakt",
+    "header": "Wysyłaj",
+    "contactsHeader": "Wyślij do kontaktów",
     "recents": "Najnowsze",
     "results": "Wyniki",
     "qr": {
-      "title": "Zeskanuj lub pokaż kod QR",
-      "subtitle": "Szybko znajdź adresy w Valorze"
+      "title": "Wyślij za pomocą kodu QR",
+      "subtitle": "Dotknij, aby zeskanować lub wyświetlić adres"
     },
     "invite": {
-      "title": "Wyślij kryptowalutę do znajomego",
-      "subtitle": "Wyślij środki lub zaproszenie do swoich kontaktów"
+      "title": "Wyślij do kontaktu",
+      "subtitle": "Wysyłaj środki do swoich kontaktów"
     },
     "jumpstart": {
       "title": "Wyślij za pomocą aktywnego linku",
       "subtitle": "Udostępnij link, aby wysłać kryptowalutę jako tekst"
     },
     "getStarted": {
-      "title": "Sposoby wysyłania środków w Valorze",
+      "title": "Sposoby wysyłania środków w {{appName}}",
       "subtitle": "ROZPOCZNIJ",
       "options": {
         "one": {
@@ -2091,7 +2167,7 @@
         },
         "four": {
           "title": "Nazwa profilu",
-          "subtitle": "Możesz wyszukać istniejących użytkowników w Valorze"
+          "subtitle": "Możesz wyszukać istniejących użytkowników w {{appName}}"
         }
       }
     },
@@ -2127,10 +2203,12 @@
   "viewOnOPSepoliaExplorer": "Wyświetl w OP Sepolia Explorer",
   "viewOnPolygonPoSScan": "Wyświetl w PolygonScan",
   "viewOnBaseScan": "Wyświetl w BaseScan",
+  "viewOnAxelarScan": "Wyświetl w AxelarScan",
   "sendEnterAmountScreen": {
     "title": "Wprowadź kwotę",
     "selectToken": "Wybierz token",
     "networkFee": "Opłata sieciowa za {{networkName}}",
+    "networkFeeV1_97": "Opłata sieciowa",
     "lowerAmount": "Wprowadź niższą kwotę",
     "maxAmountWarning": {
       "title": "Wysyłanie maksymalnej kwoty",
@@ -2143,6 +2221,27 @@
     "prepareTransactionError": {
       "title": "Coś poszło nie tak!",
       "description": "Nie było możliwe przygotowanie transakcji dla tego tokena."
+    },
+    "insufficientBalanceWarning": {
+      "title": "Potrzebujesz więcej {{tokenSymbol}}",
+      "description": "Niewystarczające saldo {{tokenSymbol}}. Spróbuj wpłacić mniejszą kwotę lub wybierz inny aktyw."
+    }
+  },
+  "jumpstartIntro": {
+    "title": "Udostępniaj kryptowaluty jak wiadomości tekstowe",
+    "description": "Linki online to sposób na przesyłanie kryptowalut do znajomego w sieci Celo za pomocą linku",
+    "noFundsHint": "Na początek musisz mieć w swoim portfelu środki w sieci Celo.",
+    "haveFundsButton": "Wyślij za pomocą aktywnego linku",
+    "addFundsCelo": {
+      "title": "Pobierz aktywa do Celo",
+      "info": "Łącza dynamiczne to doskonały sposób na wysyłanie znajomym kryptowalut w sieci Celo.\nAby móc korzystać z tej funkcji, musisz mieć aktywa CELO w swoim portfelu.",
+      "description": "Po dodaniu aktywów do Celo musisz się cofnąć, aby utworzyć łącze dynamiczne.",
+      "cta": "Pobierz aktywa do Celo",
+      "actionDescriptions": {
+        "add": "Kupuj aktywa w sieci Celo, korzystając z usług jednego z naszych zaufanych dostawców",
+        "swap": "Zamień inne aktywa na aktywa w sieci Celo",
+        "transfer": "Użyj dowolnego portfela lub giełdy zgodnych z Celo, aby wpłacać aktywa do Celo"
+      }
     }
   },
   "jumpstartEnterAmountScreen": {
@@ -2184,6 +2283,9 @@
     "approvalTransactionTitle": "Zatwierdzenie",
     "estimatedNetworkFee": "Szacowana opłata sieciowa",
     "networkFee": "Opłata sieciowa",
+    "appFee": "Opłata za aplikację",
+    "estimatedCrossChainFee": "Szacowana opłata za wymianę między łańcuchami",
+    "crossChainFee": "Opłata za wymianę między łańcuchami",
     "finiteApprovalDescription": "Zatwierdzono {{approvedAmount}} {{tokenSymbol}} do wymiany",
     "infiniteApprovalDescription": "Zatwierdzono nieskończoną ilość {{tokenSymbol}} do wymiany",
     "revokeApprovalDescription": "Cofnięto {{tokenSymbol}} do wymiany",
@@ -2202,7 +2304,7 @@
     "body": "Kupuj lub przesyłaj kompatybilne tokeny, aby wysyłać kryptowaluty i odkrywać web3!",
     "titleV1_86": "Dodaj środki do swojego portfela",
     "exploreTokens": "Poznaj wszystkie tokeny",
-    "exploreTokensBody": "Możesz kupić do 10+ tokenów w Valorze. Sprawdź je!"
+    "exploreTokensBody": "Możesz kupić nawet 10 tokenów w {{appName}}. Sprawdź teraz!"
   },
   "nftCelebration": {
     "bottomSheet": {
@@ -2290,6 +2392,17 @@
         "swap": {
           "title": "Zamieniaj",
           "subtitle": "{{fromToken}} do {{toToken}}"
+        },
+        "createLiveLink": {
+          "title": "Aktywny link",
+          "subtitle": {
+            "erc20": "Wysłano {{tokenSymbol}}",
+            "erc721": "Wysłane NFT"
+          }
+        },
+        "depositEarn": {
+          "title": "Wpłacono",
+          "subtitle": "do puli {{network}}"
         }
       },
       "title": "Moja aktywność w zakresie punktów",
@@ -2324,7 +2437,7 @@
       "retryCta": "Spróbuj ponownie"
     },
     "infoCard": {
-      "title": "Więcej sposobów na zdobywanie punktów już wkrótce 🚀",
+      "title": "Więcej sposobów na zdobywanie punktów już wkrótce",
       "body": "Pracujemy nad dodaniem kolejnych sposobów na zdobywanie punktów za pomocą aplikacji. Sprawdzaj na bieżąco aktualizacje."
     },
     "activitySection": {
@@ -2343,26 +2456,49 @@
         "title": "Dokonaj swapu aktywów",
         "bottomSheet": {
           "title": "Dokonaj swapu aktywów",
-          "body": "Zdobywaj punkty {{pointsValue}} za każdym razem, gdy wymieniasz aktywa za pomocą {{appName}}. \n\nKliknij poniżej, aby rozpocząć wymianę i zarabianie!",
+          "body": "Zdobywaj punkty {{pointsValue}} przy każdej wymianie aktywów za pomocą aplikacji {{appName}}.\n\nDotknij poniżej, aby rozpocząć wymienianie i zarabianie.",
           "cta": "Rozpocznij wymianę"
         }
       },
       "moreComing": {
         "title": "Więcej już wkrótce!"
+      },
+      "createLiveLink": {
+        "title": "Wyślij za pomocą aktywnego linku",
+        "bottomSheet": {
+          "title": "Wyślij za pomocą aktywnego linku",
+          "body": "Zdobywaj punkty {{pointsValue}} przy każdej wysyłce środków za pomocą Live Link w {{appName}}. \n\nKliknij poniżej, aby rozpocząć wysyłanie i zarabianie.",
+          "cta": "Wyślij za pomocą aktywnego linku"
+        }
+      },
+      "depositEarn": {
+        "title": "Dokonaj wpłaty do puli zarobków na stronie {{appName}}.",
+        "bottomSheet": {
+          "title": "Dokonaj wpłaty do puli zarobków",
+          "body": "Zdobywaj punkty {{pointsValue}} przy każdej wpłacie środków do puli zarobków na {{appName}}. \n\nKliknij poniżej, aby rozpocząć zarabianie i zdobywanie punktów!",
+          "cta": "Przejdź do pul zarobków"
+        }
       }
     },
     "discoverCard": {
       "title": "Punkty {{appName}}",
-      "description": "Łatwo zdobywaj punkty dzięki {{appName}}. Korzystanie z aplikacji, włączając w to dokonywanie swapów, prowadzi do zdobywania punktów!"
+      "description": "Łatwo zdobywaj punkty dzięki {{appName}}. Korzystanie z aplikacji, włączając w to dokonywanie swapów, prowadzi do zdobywania punktów!",
+      "balance": "punkty {{pointsBalance}}"
     },
     "intro": {
       "title": "Zdobywaj punkty bez wysiłku",
       "description": "Poznaj nowy sposób zarabiania! Twoje działania w {{appName}} przynoszą teraz punkty. Zacznij zarabiać już dziś i odblokuj niesamowite korzyści.",
       "cta": "Rozpocznij swoją podróż po punkty"
+    },
+    "disclaimer": {
+      "learnMoreCta": "<0>Dowiedz się więcej</0> o punktach {{appName}}",
+      "title": "Więcej informacji o punktach {{appName}}",
+      "body": "Punkty są przyznawane w programie lojalnościowym {{appName}}. Otrzymuje się je za korzystanie z aplikacji. Punktów nie można wydawać, zamieniać ani przekazywać.",
+      "dismiss": "Rozumiem"
     }
   },
   "earnFlow": {
-    "gasSubsidized": "Valora pokrywa koszty gazu dla tej transakcji!",
+    "gasSubsidized": "Opłaty transakcyjne są pokrywane przez ograniczony czas",
     "addCryptoBottomSheet": {
       "title": "Dodaj {{tokenSymbol}} w {{tokenNetwork}}",
       "description": "Po dodaniu tokenów konieczny będzie powrót, aby dokończyć wpłatę do puli.",
@@ -2378,26 +2514,34 @@
       }
     },
     "cta": {
-      "title": "Zarabiaj na swoich stablecoinach",
+      "title": "Zarabiaj na swoich kryptowalutach",
       "subtitle": "Dokonaj wpłaty już dziś i zarabiaj",
       "description": "Zobacz, ile możesz zarobić, zasilając pulę pożyczkową"
     },
     "earnInfo": {
-      "title": "Zarabiaj na swoich\nstablecoinach",
+      "title": "Zarabiaj na swoich kryptowalutach",
       "details": {
         "earn": {
           "titleGasSubsidy": "Maksymalizuj zarobki bez opłat za gaz*",
-          "title": "Maksymalizuj zarobki",
-          "subtitle": "Zarabiaj na stablecoinach i otrzymuj nagrody za zasilenie puli.",
-          "footnoteSubsidy": "* Opłaty za gaz są tymczasowo pokrywane przez Valorę"
+          "title": "Przejrzyj i porównaj pule",
+          "subtitle": "Porównaj potencjał zarobkowy i ryzyko. Wymieniaj, kupuj lub przesyłaj tokeny, aby dołączyć do najlepszej puli.",
+          "footnoteSubsidy": "* Opłaty za paliwo są tymczasowo pokrywane przez {{appName}}"
+        },
+        "work": {
+          "title": "Zaprzęgnij swoje aktywa do pracy",
+          "subtitle": "Zacznij zarabiać na kryptowalutach, wpłacając środki do puli płynności. "
         },
         "manage": {
-          "title": "Zarządzaj bezpośrednio z Valory",
-          "subtitle": "Zajmiemy się konfiguracją, abyś mógł/mogła zarządzać swoją pozycją bezpośrednio z Valory."
+          "title": "Zarządzaj bezpośrednio z {{appName}}",
+          "titleV1_92": "Zarządzaj bezpośrednio z {{appName}}",
+          "titleV1_94": "Zarządzaj swoimi pozycjami",
+          "subtitle": "Automatycznie połączymy Twój portfel, aby można było zarządzać pulami bez zamykania aplikacji {{appName}}.",
+          "subtitleV1_92": "Automatycznie połączymy Twój portfel, aby można było zarządzać pulami bez zamykania aplikacji {{appName}}.",
+          "subtitleV1_94": "Wybierz interesującą Cię pulę, dodaj swoje tokeny i monitoruj swoje zyski."
         },
         "access": {
           "title": "Łatwy dostęp do Twoich środków",
-          "subtitle": "Zbieraj środki bez problemów za pomocą jednego dotknięcia. Ciesz się takim samym natychmiastowym dostępem, jak bezpośrednio przez ulubione protokoły."
+          "subtitle": "Zbieraj środki jednym dotknięciem, gdy nadejdzie odpowiedni moment."
         }
       },
       "action": {
@@ -2410,22 +2554,58 @@
       "subtitle": "Kup {{symbol}}",
       "description": "Zarabiaj około {{apy}}% rocznie, dodając {{symbol}} do puli"
     },
+    "entrypoint": {
+      "title": "Zarabiaj na swoich kryptowalutach",
+      "subtitle": "Wpłacaj i zarabiaj",
+      "description": "Zarabiaj, pożyczając swoje aktywa krytpowalutowe w pulach płynności.",
+      "totalDepositAndEarnings": "Suma wpłat i zarobków"
+    },
     "enterAmount": {
+      "title": "Ile chcesz wpłacić?",
+      "titleWithdraw": "Ile chcesz wypłacić?",
+      "deposit": "Wpłatę",
+      "fees": "Opłaty",
+      "available": "Dostępne",
+      "swap": "Zamieniaj",
+      "estimatedDuration": "Szac. czas transakcji",
+      "claimingReward": "Odbieranie nagrody",
       "earnUpToLabel": "Możesz zarobić do:",
       "rateLabel": "Stawka (szac.)",
       "earnUpTo": "~{{amount}}{{fiatSymbol}} / rok",
+      "earnUpToV1_87": "<0></0> / rok",
       "rate": "{{rate}}% APY",
       "continue": "Kontynuuj",
       "info": "Ta pula jest zapewniana przez Aave",
-      "infoBottomSheet": {
-        "title": "Dlaczego ta pula?",
-        "description": "Ta pula Aave ma ponad 150 mln USD TVL i ponad 6000 uczestników, co wskazuje na dużą płynność i wiarygodność. Wykorzystuje również USDC jako token i Abritrum jako sieć, co zmniejsza zmienność i zapewnia użytkownikom niskie opłaty za gaz.\n\nWszystko to sprawia, że jest to bezpieczna i atrakcyjna opcja z konkurencyjnym APY, zapewniająca korzystne możliwości inwestycyjne dla naszych użytkowników.\n\nMożesz zapoznać się z innymi pulami Aave <0>tutaj</0>.",
-        "dismiss": "Odrzuć"
-      },
+      "infoV1_93": "Obsługiwane przez {{providerName}}",
       "notEnoughBalanceForGasWarning": {
         "title": "Potrzebujesz więcej {{feeTokenSymbol}}, aby kontynuować",
         "description": "Dodaj {{feeTokenSymbol}} w {{network}}, aby pokryć opłaty za gaz",
         "noGasCta": "Kup {{feeTokenSymbol}} w {{network}}"
+      },
+      "feeBottomSheet": {
+        "feeDetails": "Dane opłat",
+        "moreInformation": "Więcej informacji",
+        "estNetworkFee": "Szac. opłata sieciowa",
+        "maxNetworkFee": "Maksymalna opłata sieciowa",
+        "estCrossChainFee": "Szac. opłata cross-chain",
+        "maxCrossChainFee": "Maks. opłaty cross-chain",
+        "description_deposit": "Należy wnieść opłatę sieciową, aby sieć mogła przetworzyć transakcję wpłaty.",
+        "description_withdraw": "Należy wnieść opłatę sieciową, aby sieć mogła przetworzyć transakcję wypłaty.",
+        "description_depositSwapFee": "Należy wnieść opłatę sieciową, aby sieć mogła przetworzyć transakcje wpłaty. Opłata {{appName}} w wysokości {{appFeePercentage}}% jest pobierana za korzystanie z naszego produktu.",
+        "description_depositCrossChain": "Należy wnieść opłatę sieciową, aby sieć mogła przetworzyć transakcję wpłaty. Opłata za wymianę między łańcuchami jest pobierana przez dostawcę świadczącego usługi wymiany między łańcuchami.",
+        "description_depositCrossChainWithSwapFee": "Należy wnieść opłatę sieciową, aby sieć mogła przetworzyć transakcje wpłaty. Opłata {{appName}} w wysokości {{appFeePercentage}}% jest pobierana za korzystanie z naszego produktu. Opłata za wymianę między łańcuchami jest pobierana przez dostawcę świadczącego usługi wymiany między łańcuchami.",
+        "appSwapFee": "Opłata w aplikacji {{appName}}"
+      },
+      "swapBottomSheet": {
+        "swapDetails": "Dane wymiany",
+        "swapFrom": "Zamień z",
+        "swapTo": "Zamień na",
+        "whySwap": "Dlaczego dokonuję wymiany?",
+        "swapDescription": "Aby można było wpłacić środki do puli, token jest wymieniany na token puli."
+      },
+      "withdrawingAndClaimingCard": {
+        "title": "Wypłaty i odbieranie",
+        "description": "{{providerName}} wymaga odebrania wszystkich dostępnych nagród przy każdej wypłacie."
       }
     },
     "activePools": {
@@ -2434,27 +2614,44 @@
       "apy": "~{{apy}}% APY",
       "exitPool": "Wyjdź z puli",
       "depositMore": "Wpłać więcej",
-      "viewPools": "Pokaż pule"
+      "viewPools": "Pokaż pule",
+      "poolsSupplied": "Dostępne pule",
+      "totalSupplied": "Dostępne ogółem",
+      "depositAndEarnings": "Wpłaty i zarobki",
+      "myPools": "Moje pule",
+      "explore": "Przeglądaj otwarte"
     },
     "depositBottomSheet": {
       "title": "Przegląd i wpłata",
       "description": "Przed dokonaniem wpłaty do puli Aave zapoznaj się z poniższymi szczegółami transakcji",
+      "descriptionV1_93": "Przed dokonaniem wpłaty do puli {{providerName}} zapoznaj się z poniższymi szczegółami transakcji",
       "amount": "Kwota wpłacona",
       "fee": "Szac. opłaty za gaz",
       "provider": "Dostawca zarobków",
       "network": "Sieć",
       "footer": "Wpłacając kryptowaluty do puli Aave, akceptujesz ryzyko związane z korzystaniem z Aave. <0>Warunki</0>",
+      "footerV1_93": "Wpłacając kryptowaluty do puli {{providerName}}, akceptujesz ryzyko związane z korzystaniem z {{providerName}}. <0>Warunki</0>",
+      "noTermsUrlFooter": "Ponosisz odpowiedzialność za swoje działania w aplikacji {{appName}}. Producent aplikacji {{appName}} zrzeka się wszelkiej odpowiedzialności za Twoje aktywa lub interakcje z dostawcą {{providerName}}. Możesz zapoznać się z dokumentami dostawcy {{providerName}} <0>tutaj</0>, a naszymi warunkami <1>tutaj</1>.",
       "primaryCta": "Zakończ",
-      "secondaryCta": "Anuluj"
+      "secondaryCta": "Anuluj",
+      "yieldRate": "Stopa zwrotu (szac.)",
+      "apy": "{{apy}}%"
     },
     "collect": {
       "title": "Gratulacje! Przejrzyj i odbierz swoje zarobki",
+      "titleClaim": "Zamierzasz odebrać:",
+      "titleCollect": "Zamierzasz zebrać:",
+      "titleWithdraw": "Zamierzasz wypłacić:",
       "total": "RAZEM",
       "plus": "PLUS",
+      "reward": "NAGRODA",
       "rate": "Stawka (szac.)",
       "apy": "{{apy}}% APY",
       "fee": "Opłata za gaz",
       "cta": "Zbieraj zarobki",
+      "ctaWithdraw": "Wycofaj",
+      "ctaReward": "Odbierz nagrodę",
+      "ctaExit": "Wyjdź z puli",
       "errorTitle": "Coś poszło nie tak",
       "errorDescription": "Nie można pobrać szczegółów wpłaty. Spróbuj ponownie.",
       "noGasTitle": "Potrzebujesz więcej {{symbol}}, aby kontynuować",
@@ -2479,8 +2676,191 @@
       "earnDepositDetails": "Kwota wpłacona",
       "earnWithdrawTitle": "Wycofano",
       "earnWithdrawSubtitle": "Wycofano {{tokenSymbol}} z puli {{providerName}}",
-      "earnWithdrawDetails": "Wypłacona kwota"
+      "earnWithdrawDetails": "Wypłacona kwota",
+      "swap": "Zamieniaj",
+      "network": "Sieć",
+      "fees": "Opłaty"
+    },
+    "home": {
+      "title": "Zarabiaj",
+      "learnMore": "<0>Dowiedz się więcej</0> o pulach zysku.",
+      "learnMoreBottomSheet": {
+        "bottomSheetTitle": "Dowiedz się więcej o pulach zysku",
+        "apySubtitle": "Co to jest APY?",
+        "apyDescription": "Roczny zysk procentowy (APY) jest wskaźnikiem używanym do obliczania rocznego zwrotu z inwestycji w kryptowaluty. To kluczowy wskaźnik potencjalnego zwrotu i rentowności kryptowaluty.",
+        "tvlSubtitle": "Co to jest TVL?",
+        "tvlDescription": "TVL to skrót oznaczający łączną wartość zablokowanych aktywów i jest wskaźnikiem używanym w branży kryptowalut do pomiaru wartości cyfrowych aktywów zablokowanych w sieci łańcucha bloków. Oblicza się go przez zsumowanie wartości wszystkich cyfrowych aktywów zablokowanych w protokole DeFi lub inteligentnym kontrakcie. Środkami są między innymi kryptowaluty, tokeny płatnicze i inne tokeny.",
+        "yieldPoolSubtitle": "Czym jest pula zysków?",
+        "yieldPoolDescription": "Pule zysków lub pule płynności to połączone fundusze udostępniane przez posiadaczy tokenów, które umożliwiają handel na zdecentralizowanych giełdach. Stając się uczestnikiem puli, będziesz dostawać odsetki od innych osób, które pożyczają te środki.",
+        "chooseSubtitle": "Jak wybrać pulę? ",
+        "chooseDescription": "Każda decyzja finansowa jest osobistym wyborem. Zebraliśmy wybrane pule z różnych protokołów, ale każda pula zapewnia inne korzyści i wiąże się z innym ryzykiem. Dokładamy wszelkich starań, aby zapewnić przydatne informacje o wszystkich pulach, ale lepiej zrobić własne rozeznanie w razie jakichkolwiek wątpliwości."
+      },
+      "noPoolsTitle": "Nie dołączono jeszcze do żadnej puli",
+      "noPoolsDescription": "Odkryj dostępne pule, wybierz taką, która odpowiada Twoim celom, i w pełni wykorzystaj swoje kryptowaluty.",
+      "errorTitle": "Nie można wczytać pul",
+      "errorDescription": "Wystąpił błąd podczas próby wczytania informacji o puli. Spróbuj ponownie.",
+      "errorButton": "Spróbuj ponownie"
+    },
+    "poolCard": {
+      "onNetwork": "w {{networkName}}",
+      "rate": "Stawka (szac.)",
+      "yieldRate": "Stopa zwrotu (szac.)",
+      "reward": "Nagroda",
+      "tvl": "TVL",
+      "exitPool": "Wyjdź z puli",
+      "addToPool": "Dodaj do puli",
+      "apy": "{{apy}}% APY",
+      "percentage": "{{percentage}}%",
+      "poweredBy": "Obsługiwane przez {{providerName}}",
+      "deposited": "Dostarczone",
+      "depositAndEarnings": "Wpłaty i zarobki"
+    },
+    "poolFilters": {
+      "allPools": "Wszystkie pule",
+      "myPools": "Moje pule"
+    },
+    "poolInfoScreen": {
+      "chainName": "Łańcuch: <0>{{networkName}}</0>",
+      "protocolName": "Protokół: <0>{{providerName}}</0>",
+      "yieldRate": "Stopa zwrotu",
+      "dailyYieldRate": "Dzienna stopa zwrotu",
+      "ratePercent": "{{rate}}%",
+      "rewards": "Nagrody",
+      "noRewards": "Brak nagród",
+      "safetyScore": "Ocena bezpieczeństwa",
+      "tvl": "TVL",
+      "ageOfPool": "Wiek puli",
+      "learnMoreOnProvider": "Wyświetl pulę w {{providerName}}",
+      "deposit": "Wpłatę",
+      "depositAndEarnings": "Wpłaty i zarobki",
+      "withdraw": "Wycofaj",
+      "withdrawBottomSheet": {
+        "title": "Wybierz typ wypłaty",
+        "withdrawAndClaim": "Wypłać i odbierz",
+        "withdrawDescription": "Wypłać określoną kwotę dowolnych zdeponowanych w puli tokenów",
+        "withdrawAndClaimRewardsDescription": "Wypłać określoną kwotę dowolnych zdeponowanych w puli tokenów i automatycznie odbierz swoje nagrody",
+        "withdrawAndClaimEarningsDescription": "Wypłać określoną kwotę dowolnych zdeponowanych w puli tokenów i automatycznie odbierz swoje zarobki",
+        "claimRewards": "Odbierz nagrody",
+        "claimRewardsDescription": "Odbierz swoje nagrody. Nie można odebrać częściowej kwoty nagrody",
+        "claimEarnings": "Odbierz zarobki",
+        "claimEarningsDescription": "Odbierz zarobki z depozytu. Nie można odebrać kwot częściowych",
+        "exit": "Zakończ",
+        "exitDescription": "Zakończenie spowoduje wypłatę wszystkich środków z puli",
+        "exitWithRewardsDescription": "Zakończenie spowoduje wypłatę wszystkich środków z puli, w tym nagród",
+        "exitWithEarningsDescription": "Zakończenie spowoduje wypłatę wszystkich środków z puli, w tym zarobków"
+      },
+      "totalDepositAndEarnings": "Suma wpłat i zarobków",
+      "titleLocalAmountDisplay": "{{localCurrencySymbol}}{{localCurrencyAmount}}",
+      "lineItemAmountDisplay": "{{localCurrencySymbol}}{{localCurrencyAmount}} ({{cryptoAmount}} {{cryptoSymbol}})",
+      "infoBottomSheet": {
+        "gotIt": "Rozumiem",
+        "depositDescription": "Jest to zestawienie zdeponowanej kwoty, uzyskanych odsetek od tej kwoty oraz wszelkich dodatkowych korzyści związanych z udziałem w puli.",
+        "depositNoBreakdownDescription": "Ta liczba obejmuje dostarczone tokeny oraz wszystkie zarobione odsetki i korzyści.\n\nNiektóre protokoły, takie jak {{providerName}}, nie oferują zestawień zarobków. Jest to całkowicie normalne. Zamiast tego dodają zarobki bezpośrednio do zdeponowanej kwoty, co daje jeszcze większe odsetki w kolejnych okresach. ",
+        "tvlTitle": "Całkowita wartość zablokowana (TVL)",
+        "tvlDescription": "Wskaźnik TVL odnosi się do łącznej wartości aktywów wpłaconych do puli płynności. Można go używać do wskazywania zaufania i przydatności puli. Zwykle im wyższy wskaźnik TVL, tym niższe ryzyko, ale żadna pula nie jest całkowicie pozbawiona ryzyka.",
+        "ageTitle": "Wiek puli",
+        "ageDescription": "Starsze pule płynności mogą mieć dobre referencje i cieszyć się zaufaniem społeczności. Ze względu na to niektóre osoby mogą uznawać te pule za bezpieczniejsze.\n\nNie ma idealnego sposobu na określanie ryzyka, dlatego wykorzystaj te informacje w swoich ogólnych badaniach, aby podjąć najlepszą dla siebie decyzję.",
+        "yieldRateTitle": "Stopa zwrotu",
+        "yieldRateDescription": "Większość pul oferuje zarobki w postaci tokenów pul płynności. Niektóre z nich oferują dodatkowe tokeny jako nagrody lub dodatkowe zachęty.\n\nAplikacja {{appName}} agreguje pule z wielu protokołów, dlatego połączyliśmy wszystkie stawki zarobków i nagród w pojedynczą, ogólną stawkę zysku, która ułatwia ocenę potencjału zarobków. Wartość ta jest tylko szacunkiem, gdyż wartości zarobków i nagród nie są stałe.\n\nWięcej informacji o podziale zysków możesz uzyskać, odwiedzając stronę <0>{{providerName}}</0>.",
+        "dailyYieldRateTitle": "Dzienna stopa zwrotu",
+        "dailyYieldRateDescription": "Wyświetlana dzienna stopa zwrotu odzwierciedla dzienną stopę zwrotu oferowaną przez {{providerName}}.",
+        "dailyYieldRateLink": "Zobacz więcej szczegółów na temat dziennych stóp zwrotu na stronie {{providerName}}",
+        "safetyScoreTitle": "Ocena bezpieczeństwa",
+        "safetyScoreDescription": "Ocena bezpieczeństwa dzieli bezpieczeństwo aktywów w sejfie na kilka kluczowych czynników. Jej celem jest zwrócenie uwagi użytkownika na ryzyko, jakie należy wziąć pod uwagę przed dokonaniem inwestycji, a także poinformowanie o szczegółach technicznych, których użytkownik może nie być w stanie ocenić samodzielnie. Choć pełna sytuacja zawsze jest bardziej skomplikowana, ocena bezpieczeństwa służy uproszczeniu kluczowych kwestii związanych z ryzykiem i bezpieczeństwem oraz umożliwia użytkownikowi rozpoczęcie własnej analizy due diligence. Nasz zespół starannie rozważa każdy czynnik przed wdrożeniem sejfu i uważnie monitoruje każdy zasób, łańcuch i protokół zintegrowane przez {{providerName}}.",
+        "safetyScoreRateLink": "Wyświetl więcej szczegółów na temat oceny bezpieczeństwa na stronie {{providerName}}"
+      },
+      "viewMoreDetails": "Wyświetl więcej szczegółów",
+      "viewLessDetails": "Wyświetl mniej szczegółów"
+    },
+    "beforeDepositBottomSheet": {
+      "youNeedTitle": "Aby dokonać wpłaty, potrzebny jest {{tokenSymbol}} w {{tokenNetwork}}",
+      "depositTitle": "Wpłata do puli",
+      "crossChainAlternativeDescription": "Jeśli nie chcesz użyć swoich tokenów w {{tokenNetwork}}, wybierz poniższą opcję. Trzeba będzie tu wrócić, aby później sfinalizować wpłatę do puli.",
+      "alternativeDescription": "Jeśli nie chcesz użyć swoich tokenów, wybierz poniższą opcję. Trzeba będzie tu wrócić, aby później sfinalizować wpłatę do puli.",
+      "beforeYouCanDepositTitle": "Zanim będzie można dokonać wpłaty...",
+      "beforeYouCanDepositDescription": "Musisz dodać jeden z tokenów puli. Po dodaniu musisz tu wrócić, aby sfinalizować wpłatę do puli.",
+      "beforeYouCanDepositDescriptionV1_101": "Musisz dodać {{tokenSymbol}} do {{tokenNetwork}}. Po dodaniu musisz tu wrócić, aby sfinalizować wpłatę do puli.",
+      "action": {
+        "swapAndDeposit": "Wymiana i wpłata",
+        "swapAndDepositDescription": "Wybierz dowolny token w {{tokenNetwork}}. Wymienimy go i jednocześnie wpłacimy za Ciebie.",
+        "swapAndDepositAllTokensDescription": "Wybierz dowolny token. Wymienimy go i jednocześnie wpłacimy za Ciebie.",
+        "crossChainSwap": "Wymiana międzyłańcuchowa",
+        "crossChainSwapDescription": "Wymień token z innej sieci na {{tokenSymbol}}",
+        "swap": "Zamieniaj",
+        "swapDescription": "Wymień inny token w swoim portfelu na {{tokenSymbol}} w {{tokenNetwork}}",
+        "add": "Kup",
+        "addDescription": "Kup {{tokenSymbol}} w {{tokenNetwork}}, korzystając z usług jednego z naszych zaufanych dostawców",
+        "transfer": "Transfer",
+        "transferDescription": "Użyj dowolnego portfela lub giełdy kompatybilnej z {{tokenNetwork}}, aby wpłacić {{tokenSymbol}}",
+        "addMore": "Kup więcej {{tokenSymbol}}",
+        "deposit": "Wpłać swoje {{tokenSymbol}}",
+        "depositDescription": "Masz {{amount}} {{tokenSymbol}}"
+      }
     }
+  },
+  "addFundsActions": {
+    "add": "Kup",
+    "transfer": "Transfer",
+    "swap": "Zamieniaj"
+  },
+  "duration_lessThanADay": "Mniej niż jeden dzień",
+  "duration_day_one": "1 dzień",
+  "duration_day_other": "Liczba dni: {{count}}",
+  "duration_month_one": "1 miesiąc",
+  "duration_month_other": "Liczba miesięcy: {{count}}",
+  "duration_year_one": "1 rok",
+  "duration_year_other": "Liczba lat: {{count}}",
+  "duration_yearMonth_one": "1 rok, 1 miesiąc",
+  "duration_yearMonth_other": "Liczba lat: {{count}}, liczba miesięcy: {{count2}}",
+  "tokenEnterAmount": {
+    "availableBalance": "Dostępna: <0></0>",
+    "selectToken": "Wybierz token",
+    "fiatPriceUnavailable": "Cena niedostępna",
+    "tokenDescription": "{{tokenName}} w {{tokenNetwork}}"
+  },
+  "gasFeeWarning": {
+    "title": "Potrzebujesz więcej {{tokenSymbol}} na opłaty za gaz",
+    "title_Dapp": "Masz niewystarczające saldo żetonów gazu",
+    "descriptionMaxAmount_Send": "Dodaj {{tokenSymbol}} do opłat za benzynę lub obniż wysyłaną kwotę.",
+    "descriptionMaxAmount_Swap": "Dodaj {{tokenSymbol}} do opłat za paliwo lub obniż kwotę wymiany.",
+    "descriptionMaxAmount_Deposit": "Dodaj {{tokenSymbol}} do opłat za benzynę lub obniż kwotę, którą wpłacasz.",
+    "descriptionMaxAmount_Withdraw": "Dodaj stronę {{tokenSymbol}} na opłaty za gaz lub obniż kwotę, którą wypłacasz.",
+    "descriptionDapp": "Dodaj {{tokenSymbol}} , aby zakończyć tę transakcję",
+    "ctaBuy": "Kup {{tokenSymbol}}",
+    "ctaAction_Send": "Wyślij mniejszą kwotę",
+    "ctaAction_Swap": "Wymień mniejszą kwotę",
+    "ctaAction_Deposit": "Wpłać mniejszą kwotę",
+    "ctaAction_Withdraw": "Wypłać mniejszą kwotę"
+  },
+  "reviewTransaction": {
+    "title": "Wyślij recenzję",
+    "totalPlusFees": "Razem plus opłaty",
+    "multipleTokensWithPlusSign": "≈ {{amount1}} {{symbol1}} + {{amount2}} {{symbol2}}"
+  },
+  "tokenAmount": "{{tokenAmount}} {{tokenSymbol}}",
+  "localAmount": "{{localCurrencySymbol}}{{localAmount}}",
+  "localAmount_noFiatPrice": "Cena niedostępna",
+  "tokenAndLocalAmount": "{{tokenAmount}} {{tokenSymbol}} <0>({{localCurrencySymbol}}{{localAmount}})</0>",
+  "tokenAmountApprox": "≈ {{tokenAmount}} {{tokenSymbol}}",
+  "localAmountApprox": "≈ {{localCurrencySymbol}}{{localAmount}}",
+  "tokenAndLocalAmountApprox": "≈ {{tokenAmount}} {{tokenSymbol}} <0>({{localCurrencySymbol}}{{localAmount}})</0>",
+  "demoMode": {
+    "confirmEnter": {
+      "title": "Tryb demonstracyjny",
+      "info": "Za chwilę przejdziesz do trybu demonstracyjnego. Możesz swobodnie poznawać funkcje aplikacji bez dokonywania jakichkolwiek transakcji",
+      "cta": "Wprowadź wersję demonstracyjną"
+    },
+    "confirmExit": {
+      "title": "W trybie demonstracyjnym",
+      "info": "Aktualnie przeglądasz aplikację w trybie demonstracyjnym",
+      "cta": "Exit Demo"
+    },
+    "restrictedAccess": {
+      "title": "W trybie demonstracyjnym",
+      "info": "Nie możesz wykonać tej czynności, ponieważ przeglądasz aplikację w trybie demonstracyjnym",
+      "cta": "Exit Demo"
+    },
+    "inAppIndicatorLabel": "Tryb demonstracyjny"
   },
   "celoDollarAmount_0": "<0></0> Celo Dolar",
   "celoDollarAmount_1": "&amp;lt;0&amp;gt;&amp;lt;/0&amp;gt; Celo Dolary",

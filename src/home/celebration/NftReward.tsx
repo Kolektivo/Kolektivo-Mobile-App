@@ -4,10 +4,10 @@ import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import AppAnalytics from 'src/analytics/AppAnalytics'
 import { HomeEvents } from 'src/analytics/Events'
-import ValoraAnalytics from 'src/analytics/ValoraAnalytics'
 import { openDeepLink } from 'src/app/actions'
-import { BottomSheetRefType } from 'src/components/BottomSheet'
+import { BottomSheetModalRefType } from 'src/components/BottomSheet'
 import BottomSheetBase from 'src/components/BottomSheetBase'
 import Button, { BtnSizes, BtnTypes } from 'src/components/Button'
 import { nftRewardDisplayed } from 'src/home/actions'
@@ -41,7 +41,7 @@ export default function NftRewardBottomSheet() {
   const insets = useSafeAreaInsets()
   const insetsStyle = { paddingBottom: Math.max(insets.bottom, Spacing.Regular16) }
 
-  const bottomSheetRef = useRef<BottomSheetRefType>(null)
+  const bottomSheetRef = useRef<BottomSheetModalRefType>(null)
 
   const isReminder = nftCelebration?.status === NftCelebrationStatus.reminderReadyToDisplay
 
@@ -50,12 +50,12 @@ export default function NftRewardBottomSheet() {
 
   const { pillStyle, labelStyle } = isReminder
     ? {
-        pillStyle: { backgroundColor: Colors.warningLight },
-        labelStyle: { color: Colors.warningDark },
+        pillStyle: { backgroundColor: Colors.warningSecondary },
+        labelStyle: { color: Colors.warningPrimary },
       }
     : {
-        pillStyle: { backgroundColor: Colors.gray1 },
-        labelStyle: { color: Colors.black },
+        pillStyle: { backgroundColor: Colors.info },
+        labelStyle: { color: Colors.contentPrimary },
       }
 
   const copyText = isReminder ? 'rewardReminderBottomSheet' : 'rewardBottomSheet'
@@ -78,7 +78,7 @@ export default function NftRewardBottomSheet() {
 
     if (index === -1) {
       if (!rewardAccepted) {
-        ValoraAnalytics.track(HomeEvents.nft_reward_dismiss, {
+        AppAnalytics.track(HomeEvents.nft_reward_dismiss, {
           networkId: nftCelebration.networkId,
           contractAddress: nftCelebration.contractAddress,
           remainingDays: differenceInDays(rewardExpirationDate, Date.now()),
@@ -94,7 +94,7 @@ export default function NftRewardBottomSheet() {
       return // This should never happen
     }
 
-    ValoraAnalytics.track(HomeEvents.nft_reward_accept, {
+    AppAnalytics.track(HomeEvents.nft_reward_accept, {
       networkId: nftCelebration.networkId,
       contractAddress: nftCelebration.contractAddress,
       remainingDays: differenceInDays(rewardExpirationDate, Date.now()),
@@ -153,7 +153,7 @@ const styles = StyleSheet.create({
   description: {
     marginTop: Spacing.Regular16,
     ...typeScale.bodySmall,
-    color: Colors.gray3,
+    color: Colors.contentSecondary,
   },
   button: {
     marginTop: Spacing.XLarge48,

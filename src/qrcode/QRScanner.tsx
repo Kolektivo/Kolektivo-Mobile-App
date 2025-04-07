@@ -10,7 +10,7 @@ import TextButton from 'src/components/TextButton'
 import NotAuthorizedView from 'src/qrcode/NotAuthorizedView'
 import { QrCode } from 'src/send/types'
 import colors from 'src/styles/colors'
-import fontStyles from 'src/styles/fonts'
+import { typeScale } from 'src/styles/fonts'
 
 interface QRScannerProps {
   onQRCodeDetected: (qrCode: QrCode) => void
@@ -25,11 +25,14 @@ const SeeThroughOverlay = () => {
 
   // TODO(jeanregisser): Investigate why the mask is pixelated on iOS.
   // It's visible on the rounded corners but since they are small, I'm ignoring it for now.
+
+  // Node that the Mask component is using hard coded color values solely to
+  // create the "cutout" effect.
   return (
     <Svg height={height} width={width} viewBox={`0 0 ${width} ${height}`}>
       <Defs>
         <Mask id="mask" x="0" y="0" height="100%" width="100%">
-          <Rect height="100%" width="100%" fill="#fff" />
+          <Rect height="100%" width="100%" fill="#FFFFFF" />
           <Rect
             x={margin}
             y={(height - centerBoxSize) / 2}
@@ -37,11 +40,11 @@ const SeeThroughOverlay = () => {
             ry={centerBoxBorderRadius}
             width={centerBoxSize}
             height={centerBoxSize}
-            fill="#000"
+            fill="#000000"
           />
         </Mask>
       </Defs>
-      <Rect height="100%" width="100%" fill="rgba(0,0,0,0.5)" mask="url(#mask)" />
+      <Rect height="100%" width="100%" fill={`${colors.backgroundScrim}80`} mask="url(#mask)" />
     </Svg>
   )
 }
@@ -150,29 +153,28 @@ const styles = StyleSheet.create({
     left: 9,
     right: 9,
     bottom: 32,
-    ...fontStyles.small600,
+    ...typeScale.labelSemiBoldSmall,
     lineHeight: undefined,
-    color: colors.white,
+    color: colors.qrTabBarSecondary,
     textAlign: 'center',
     paddingHorizontal: 30,
   },
   manualInput: {
-    ...fontStyles.regular,
+    ...typeScale.bodyMedium,
     marginBottom: 12,
     paddingHorizontal: 12,
     paddingVertical: 0,
     marginTop: 8,
     alignItems: 'flex-start',
-    borderColor: colors.gray3,
+    borderColor: colors.contentSecondary,
     borderRadius: 4,
     borderWidth: 1.5,
-    color: colors.black,
     height: 80,
     maxHeight: 150,
   },
   manualTitle: {
     marginBottom: 6,
-    ...fontStyles.h2,
+    ...typeScale.titleSmall,
   },
   actions: {
     flexDirection: 'row',
@@ -181,6 +183,6 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
   },
   cancelButton: {
-    color: colors.gray5,
+    color: colors.contentSecondary,
   },
 })

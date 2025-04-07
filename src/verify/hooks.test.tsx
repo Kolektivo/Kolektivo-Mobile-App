@@ -1,8 +1,8 @@
+import * as Keychain from '@divvi/react-native-keychain'
 import { act, fireEvent, render } from '@testing-library/react-native'
 import { FetchMock } from 'jest-fetch-mock/types'
 import React from 'react'
 import { Text } from 'react-native'
-import * as Keychain from 'react-native-keychain'
 import { Provider } from 'react-redux'
 import { phoneNumberRevoked } from 'src/app/actions'
 import Touchable from 'src/components/Touchable'
@@ -17,7 +17,7 @@ mockedKeychain.getGenericPassword.mockResolvedValue({
   username: 'some username',
   password: 'someSignedMessage',
   service: 'some service',
-  storage: 'some string',
+  storage: Keychain.STORAGE_TYPE.RSA,
 })
 
 function TestComponent() {
@@ -50,7 +50,7 @@ describe('useRevokeCurrentPhoneNumber', () => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        authorization: 'Valora 0x0000000000000000000000000000000000007e57:someSignedMessage',
+        authorization: `${networkConfig.authHeaderIssuer} 0x0000000000000000000000000000000000007e57:someSignedMessage`,
       },
       body: '{"phoneNumber":"+14155556666","clientPlatform":"android","clientVersion":"0.0.1"}',
     })
@@ -76,7 +76,7 @@ describe('useRevokeCurrentPhoneNumber', () => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        authorization: 'Valora 0x0000000000000000000000000000000000007e57:someSignedMessage',
+        authorization: `${networkConfig.authHeaderIssuer} 0x0000000000000000000000000000000000007e57:someSignedMessage`,
       },
       body: '{"phoneNumber":"+14155556666","clientPlatform":"android","clientVersion":"0.0.1"}',
     })

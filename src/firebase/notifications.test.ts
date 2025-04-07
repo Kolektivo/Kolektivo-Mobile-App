@@ -4,6 +4,7 @@ import { expectSaga } from 'redux-saga-test-plan'
 import { select } from 'redux-saga/effects'
 import { showMessage } from 'src/alert/actions'
 import { openUrl } from 'src/app/actions'
+import { DEEP_LINK_URL_SCHEME } from 'src/config'
 import { handleNotification } from 'src/firebase/notifications'
 import { navigate } from 'src/navigator/NavigationService'
 import { Screens } from 'src/navigator/Screens'
@@ -79,7 +80,7 @@ describe(handleNotification, () => {
   })
 
   describe("with a notification with an 'open url' semantic and a deep link", () => {
-    const expectedUrl = `celo://wallet/openScreen?screen=${Screens.TabNavigator}`
+    const expectedUrl = `${DEEP_LINK_URL_SCHEME}://wallet/openScreen?screen=${Screens.TabNavigator}`
     const message: FirebaseMessagingTypes.RemoteMessage = {
       notification: { title: 'My title', body: 'My Body' },
       data: { ou: expectedUrl },
@@ -95,7 +96,7 @@ describe(handleNotification, () => {
 
   describe('with a payment received notification', () => {
     const message: FirebaseMessagingTypes.RemoteMessage = {
-      fcmOptions: { link: 'https://valoraapp.com' },
+      fcmOptions: { link: 'https://example.com' },
       notification: { title: 'My title', body: 'My Body' },
       data: {
         type: NotificationTypes.PAYMENT_RECEIVED,
@@ -105,7 +106,6 @@ describe(handleNotification, () => {
         timestamp: '1',
         blockNumber: '42',
         txHash: '0xTXHASH',
-        comment: 'Tea',
         name: 'Alice',
         imageUrl: 'https://example.com/image.png',
       },
@@ -124,7 +124,6 @@ describe(handleNotification, () => {
 
       expect(navigate).toHaveBeenCalledWith(Screens.TransactionDetailsScreen, {
         transaction: {
-          __typename: 'TokenTransferV3',
           networkId: NetworkId['celo-alfajores'],
           type: 'RECEIVED',
           transactionHash: '0xTXHASH',
@@ -139,7 +138,6 @@ describe(handleNotification, () => {
           metadata: {
             title: 'Alice',
             image: 'https://example.com/image.png',
-            comment: 'Tea',
           },
           fees: [],
           status: TransactionStatus.Complete,

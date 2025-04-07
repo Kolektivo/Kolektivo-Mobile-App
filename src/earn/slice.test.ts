@@ -1,3 +1,5 @@
+import { NetworkId } from 'src/transactions/types'
+import { mockEarnPositions } from 'test/values'
 import reducer, {
   depositCancel,
   depositError,
@@ -13,14 +15,28 @@ describe('Earn Slice', () => {
   it('should handle deposit start', () => {
     const updatedState = reducer(
       undefined,
-      depositStart({ amount: '100', tokenId: 'tokenId', preparedTransactions: [] })
+      depositStart({
+        amount: '100',
+        pool: mockEarnPositions[0],
+        preparedTransactions: [],
+        mode: 'deposit',
+        fromTokenAmount: '100',
+        fromTokenId: 'some-token-id',
+      })
     )
 
     expect(updatedState).toHaveProperty('depositStatus', 'loading')
   })
 
   it('should handle deposit success', () => {
-    const updatedState = reducer(undefined, depositSuccess())
+    const updatedState = reducer(
+      undefined,
+      depositSuccess({
+        tokenId: 'tokenId',
+        networkId: NetworkId['celo-alfajores'],
+        transactionHash: '0x3',
+      })
+    )
 
     expect(updatedState).toHaveProperty('depositStatus', 'success')
   })
@@ -40,7 +56,12 @@ describe('Earn Slice', () => {
   it('should handle withdraw start', () => {
     const updatedState = reducer(
       undefined,
-      withdrawStart({ amount: '100', tokenId: 'tokenId', preparedTransactions: [], rewards: [] })
+      withdrawStart({
+        preparedTransactions: [],
+        rewardsTokens: [],
+        pool: mockEarnPositions[0],
+        mode: 'withdraw',
+      })
     )
 
     expect(updatedState).toHaveProperty('withdrawStatus', 'loading')

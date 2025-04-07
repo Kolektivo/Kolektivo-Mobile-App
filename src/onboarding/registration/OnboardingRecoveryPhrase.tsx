@@ -1,18 +1,18 @@
 import Clipboard from '@react-native-clipboard/clipboard'
 import { NativeStackScreenProps } from '@react-navigation/native-stack'
-import React, { useLayoutEffect, useState } from 'react'
+import React, { useLayoutEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ScrollView, StyleSheet, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { recoveryPhraseInOnboardingCompleted } from 'src/account/actions'
+import AppAnalytics from 'src/analytics/AppAnalytics'
 import { OnboardingEvents } from 'src/analytics/Events'
-import ValoraAnalytics from 'src/analytics/ValoraAnalytics'
 import BackupPhraseContainer, {
   BackupPhraseContainerMode,
   BackupPhraseType,
 } from 'src/backup/BackupPhraseContainer'
 import { useAccountKey } from 'src/backup/utils'
-import BottomSheetLegacy from 'src/components/BottomSheetLegacy'
+import BottomSheet, { BottomSheetModalRefType } from 'src/components/BottomSheet'
 import Button, { BtnSizes, BtnTypes } from 'src/components/Button'
 import TextButton from 'src/components/TextButton'
 import CopyIcon from 'src/icons/CopyIcon'
@@ -27,16 +27,22 @@ import {
 } from 'src/onboarding/steps'
 import { useDispatch, useSelector } from 'src/redux/hooks'
 import colors from 'src/styles/colors'
-import fontStyles from 'src/styles/fonts'
+import { typeScale } from 'src/styles/fonts'
+import { Spacing } from 'src/styles/styles'
 import Logger from 'src/utils/Logger'
 
 type Props = NativeStackScreenProps<StackParamList, Screens.OnboardingRecoveryPhrase>
 
-function OnboardingRecoveryPhrase({ navigation }: Props) {
+function OnboardingRecoveryPhrase({ navigation, route }: Props) {
+  const infoBottomSheetRef = useRef<BottomSheetModalRefType>(null)
+
   const onboardingProps = useSelector(onboardingPropsSelector)
-  const { step, totalSteps } = getOnboardingStepValues(Screens.ProtectWallet, onboardingProps)
+  // Use a lower step count for CAB onboarding
+  const { step, totalSteps } = getOnboardingStepValues(
+    route.params?.origin === 'cabOnboarding' ? Screens.SignInWithEmail : Screens.ProtectWallet,
+    onboardingProps
+  )
   const accountKey = useAccountKey()
-  const [showBottomSheet, setShowBottomSheet] = useState(false)
   const dispatch = useDispatch()
 
   const { t } = useTranslation()
@@ -56,27 +62,27 @@ function OnboardingRecoveryPhrase({ navigation }: Props) {
           testID="helpButton"
           title={t('help')}
           onPress={onPressHelp}
-          titleStyle={{ color: colors.onboardingBrownLight }}
+          titleStyle={{ color: colors.accent }}
         />
       ),
     })
   }, [navigation, step, totalSteps])
 
   const onPressHelp = () => {
-    ValoraAnalytics.track(OnboardingEvents.protect_wallet_help)
-    setShowBottomSheet(true)
+    AppAnalytics.track(OnboardingEvents.protect_wallet_help)
+    infoBottomSheetRef.current?.snapToIndex(0)
   }
   const onPressDismissBottomSheet = () => {
-    ValoraAnalytics.track(OnboardingEvents.protect_wallet_help_dismiss)
-    setShowBottomSheet(false)
+    AppAnalytics.track(OnboardingEvents.protect_wallet_help_dismiss)
+    infoBottomSheetRef.current?.close()
   }
   const onPressCopy = () => {
-    ValoraAnalytics.track(OnboardingEvents.protect_wallet_copy_phrase)
+    AppAnalytics.track(OnboardingEvents.protect_wallet_copy_phrase)
     Clipboard.setString(accountKey ?? '')
     Logger.showMessage(t('recoveryPhrase.mnemonicCopied'))
   }
   const onPressContinue = () => {
-    ValoraAnalytics.track(OnboardingEvents.protect_wallet_complete)
+    AppAnalytics.track(OnboardingEvents.protect_wallet_complete)
     dispatch(recoveryPhraseInOnboardingCompleted())
     goToNextOnboardingScreen({ firstScreenInCurrentStep: Screens.ProtectWallet, onboardingProps })
   }
@@ -84,8 +90,7 @@ function OnboardingRecoveryPhrase({ navigation }: Props) {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.contentContainer}>
-        <Text style={styles.recoveryPhraseTitle}>{t('recoveryPhrase.title')}</Text>
-        <Text style={styles.recoveryPhraseBody}>{t('recoveryPhrase.body')}</Text>
+        <Text style={styles.recoveryPhraseTitle}>{t('recoveryPhrase.titleV1_90')}</Text>
         <BackupPhraseContainer
           readOnlyStyle={styles.backupPhrase}
           value={accountKey}
@@ -93,49 +98,46 @@ function OnboardingRecoveryPhrase({ navigation }: Props) {
           type={BackupPhraseType.BACKUP_KEY}
           includeHeader={false}
         />
-        <View style={styles.bottomSection}>
-          <TextButton
-            style={styles.copyButtonStyle}
-            onPress={onPressCopy}
-            testID={'protectWalletCopy'}
-          >
-            <View style={styles.copyIconStyle}>
-              <CopyIcon color={colors.successDark} />
-            </View>
-            {t('recoveryPhrase.copy')}
-          </TextButton>
-          <Button
-            onPress={onPressContinue}
-            text={t('recoveryPhrase.continue')}
-            size={BtnSizes.FULL}
-            type={BtnTypes.PRIMARY}
-            testID={'protectWalletBottomSheetContinue'}
-          />
-        </View>
+        <Text style={styles.recoveryPhraseBody}>{t('recoveryPhrase.bodyV1_90')}</Text>
       </ScrollView>
+      <View style={styles.bottomSection}>
+        <TextButton
+          style={styles.copyButtonStyle}
+          onPress={onPressCopy}
+          testID={'protectWalletCopy'}
+        >
+          <View style={styles.copyIconStyle}>
+            <CopyIcon color={colors.accent} />
+          </View>
+          {t('recoveryPhrase.copy')}
+        </TextButton>
+        <Button
+          onPress={onPressContinue}
+          text={t('recoveryPhrase.continue')}
+          size={BtnSizes.FULL}
+          type={BtnTypes.PRIMARY}
+          testID={'protectWalletBottomSheetContinue'}
+        />
+      </View>
 
-      <BottomSheetLegacy
-        testID="OnboardingRecoveryPhraseBottomSheet"
-        isVisible={showBottomSheet}
-        onBackgroundPress={onPressDismissBottomSheet}
+      <BottomSheet
+        forwardedRef={infoBottomSheetRef}
+        title={t('recoveryPhrase.bottomSheet.title')}
+        testId="OnboardingRecoveryPhraseBottomSheet"
       >
-        <View>
-          <Text style={styles.bottomSheetTitle}>{t('recoveryPhrase.bottomSheet.title')}</Text>
-          <Text style={styles.bottomSheetBody}>
-            {t('recoveryPhrase.bottomSheet.writeDownPhrase')}
-          </Text>
-          <Text style={styles.bottomSheetBody}>
-            {t('recoveryPhrase.bottomSheet.phraseLocation')}
-          </Text>
-          <TextButton
-            style={styles.buttonStyle}
-            onPress={onPressDismissBottomSheet}
-            testID={'ProtectWalletBottomSheetContinue'}
-          >
-            {t('dismiss')}
-          </TextButton>
-        </View>
-      </BottomSheetLegacy>
+        <Text style={styles.bottomSheetBody}>
+          {t('recoveryPhrase.bottomSheet.writeDownPhrase')}
+        </Text>
+        <Text style={styles.bottomSheetBody}>{t('recoveryPhrase.bottomSheet.phraseLocation')}</Text>
+        <Button
+          text={t('dismiss')}
+          onPress={onPressDismissBottomSheet}
+          size={BtnSizes.FULL}
+          type={BtnTypes.SECONDARY}
+          style={styles.buttonStyle}
+          testID="ProtectWalletBottomSheetContinue"
+        />
+      </BottomSheet>
     </SafeAreaView>
   )
 }
@@ -148,36 +150,31 @@ const styles = StyleSheet.create({
   bottomSection: {
     flexGrow: 1,
     justifyContent: 'flex-end',
+    padding: 24,
   },
   copyIconStyle: {
     paddingRight: 10,
   },
   copyButtonStyle: {
-    flex: 1,
     alignSelf: 'center',
+    justifyContent: 'center',
     paddingBottom: 30,
-    color: colors.successDark,
+    color: colors.accent,
   },
   buttonStyle: {
-    marginTop: 37,
-    marginBottom: 9,
-    textAlign: 'center',
-    color: colors.onboardingBrownLight,
-  },
-  bottomSheetTitle: {
-    ...fontStyles.h2,
+    marginTop: Spacing.Thick24,
   },
   bottomSheetBody: {
-    ...fontStyles.regular,
+    ...typeScale.bodyMedium,
     marginTop: 12,
     paddingBottom: 10,
   },
   backupPhrase: {
     borderWidth: 1,
-    borderColor: colors.gray2,
+    borderColor: colors.borderPrimary,
     borderRadius: 8,
     marginTop: 0,
-    backgroundColor: colors.white,
+    backgroundColor: colors.backgroundSecondary,
   },
   contentContainer: {
     flexGrow: 1,
@@ -187,17 +184,14 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    backgroundColor: colors.onboardingBackground,
   },
   recoveryPhraseBody: {
-    textAlign: 'center',
-    marginTop: 16,
-    ...fontStyles.regular,
-    paddingBottom: 20,
+    marginTop: 28,
+    ...typeScale.labelSmall,
   },
   recoveryPhraseTitle: {
-    textAlign: 'center',
     marginTop: 36,
-    ...fontStyles.h1,
+    marginBottom: 18,
+    ...typeScale.titleSmall,
   },
 })

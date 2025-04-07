@@ -20,6 +20,10 @@ Ensure you have Xcode installed.
 
 Install [AppleSimulatorUtils](https://github.com/wix/AppleSimulatorUtils#installing) which is used in e2e scripts to launch the iOS simulator.
 
+### Setting up secrets for local runs
+
+An `.env` example is present at `e2e/env.example` rename this file to `.env` and populate the secrets from Google Cloud Platform. Do not commit the newly created `e2e/.env` file.
+
 ## Running the tests
 
 ```sh
@@ -119,7 +123,7 @@ yarn e2e:test:android-release sample-suite.spec.js -t "Test Name" -r
 
 ```JavaScript
 // Sample <TestSuiteName>.spec.js setup
-import { quickOnboarding, getDeviceModel } from './utils/utils'
+import { quickOnboarding } from './utils/utils'
 import { reloadReactNative } from '../utils/retries'
 
 import AddedUsecase from './usecases/AddedUsecase'
@@ -180,7 +184,7 @@ You should make your testIDs unique by describing the purpose of the element wit
 
 ### Adding TestIDs to custom components
 
-Usually, you will want to pass the testID as a prop from your custom component to some child component. Sometimes is makes sense to automatically generate the testID based on existing props. If you need to identify multiple child components, you should generate their testID from the testID of your custom component, for example:
+Usually, you will want to pass the testID as a prop from your custom component to some child component. Sometimes it makes sense to automatically generate the testID based on existing props. If you need to identify multiple child components, you should generate their testID from the testID of your custom component, for example:
 
 ```jsx
 class ExampleInput extends React.Component {
@@ -196,16 +200,6 @@ class ExampleInput extends React.Component {
 ```
 
 It is recommended to follow the scheme parentID/ChildDescription.
-
-## Setting remote config defaults for e2e tests
-
-We do not read remote config values from firebase for e2e tests, so default remote config values are used. A custom set of remote config
-defaults may be needed for some tests which differs from production configuration. For example, in production code,
-we do not wish to show FiatConnect cash-outs by default, but to test FiatConnect cash-outs end-to-end, we need
-`fiatConnectCashOutEnabled` to be `true`.
-
-To set remote config values specifically for end-to-end tests, see `remoteConfigValuesDefaults.e2e.ts` and make
-whatever changes are needed there.
 
 ## The e2e banner
 

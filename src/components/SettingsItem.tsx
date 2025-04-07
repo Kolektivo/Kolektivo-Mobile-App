@@ -1,20 +1,23 @@
 import * as React from 'react'
-import { StyleSheet, Switch, Text, View } from 'react-native'
+import { StyleSheet, Text, View } from 'react-native'
 import ListItem from 'src/components/ListItem'
-import TextInput from 'src/components/TextInput'
+import Switch from 'src/components/Switch'
 import ForwardChevron from 'src/icons/ForwardChevron'
+import OpenLinkIcon from 'src/icons/OpenLinkIcon'
 import colors from 'src/styles/colors'
-import fontStyles from 'src/styles/fonts'
+import { typeScale } from 'src/styles/fonts'
+import { Spacing } from 'src/styles/styles'
 
 interface WrapperProps {
   testID?: string
   onPress?: () => void
   children: React.ReactNode
+  borderless?: boolean
 }
 
-function Wrapper({ testID, onPress, children }: WrapperProps) {
+function Wrapper({ testID, onPress, borderless, children }: WrapperProps) {
   return (
-    <ListItem testID={testID} onPress={onPress}>
+    <ListItem testID={testID} onPress={onPress} borderless={borderless}>
       {children}
     </ListItem>
   )
@@ -26,12 +29,14 @@ function Title({ value }: { value: string }) {
 
 type BaseProps = {
   title: string
+  icon?: React.ReactNode
 } & Omit<WrapperProps, 'children'>
 
 type SettingsItemTextValueProps = {
   value?: string | null
   showChevron?: boolean
   isValueActionable?: boolean
+  isExternalLink?: boolean
 } & BaseProps
 
 export function SettingsItemTextValue({
@@ -41,10 +46,14 @@ export function SettingsItemTextValue({
   showChevron,
   onPress,
   isValueActionable,
+  icon,
+  borderless,
+  isExternalLink,
 }: SettingsItemTextValueProps) {
   return (
-    <Wrapper testID={testID} onPress={onPress}>
+    <Wrapper borderless={borderless} testID={testID} onPress={onPress}>
       <View style={styles.container}>
+        {!!icon && <View style={styles.iconContainer}>{icon}</View>}
         <Title value={title} />
         <View style={styles.right}>
           {!!value && (
@@ -56,8 +65,12 @@ export function SettingsItemTextValue({
             </Text>
           )}
           {(!!value || showChevron) && (
-            <ForwardChevron color={isValueActionable ? colors.primary : undefined} />
+            <ForwardChevron
+              height={12}
+              color={isValueActionable ? colors.accent : colors.contentSecondary}
+            />
           )}
+          {isExternalLink && <OpenLinkIcon size={16} color={colors.contentPrimary} />}
         </View>
       </View>
     </Wrapper>
@@ -101,10 +114,13 @@ export function SettingsExpandedItem({
   title,
   details,
   onPress,
+  borderless,
+  icon,
 }: SettingsExpandedItemProps) {
   return (
-    <Wrapper testID={testID} onPress={onPress}>
+    <Wrapper testID={testID} onPress={onPress} borderless={borderless}>
       <View style={styles.container}>
+        {!!icon && <View style={styles.iconContainer}>{icon}</View>}
         <Title value={title} />
       </View>
       {!!details && (
@@ -116,58 +132,24 @@ export function SettingsExpandedItem({
   )
 }
 
-type SettingsItemInputProps = {
-  value: string
-  placeholder?: string
-  onValueChange: (value: string) => void
-} & Omit<BaseProps, 'onPress'>
-
-export function SettingsItemInput({
-  testID,
-  title,
-  onValueChange,
-  value,
-  placeholder,
-}: SettingsItemInputProps) {
-  const onFocus = () => {
-    setInputColor(colors.black)
-  }
-  const onBlur = () => {
-    setInputColor(colors.gray4)
-  }
-
-  const [inputColor, setInputColor] = React.useState(colors.gray4)
-  return (
-    <Wrapper>
-      <View style={styles.container}>
-        <Title value={title} />
-        <TextInput
-          testID={testID}
-          style={styles.input}
-          inputStyle={[styles.innerInput, { color: inputColor }]}
-          onFocus={onFocus}
-          onBlur={onBlur}
-          value={value}
-          placeholder={placeholder}
-          onChangeText={onValueChange}
-          showClearButton={false}
-          multiline={true}
-        />
-      </View>
-    </Wrapper>
-  )
-}
-
 type SettingsItemCtaProps = {
   cta: JSX.Element
+  showChevron?: boolean
 } & BaseProps
 
-export function SettingsItemCta({ testID, title, cta, onPress }: SettingsItemCtaProps) {
+export function SettingsItemCta({
+  testID,
+  showChevron,
+  title,
+  cta,
+  onPress,
+}: SettingsItemCtaProps) {
   return (
     <Wrapper testID={testID} onPress={onPress}>
       <View style={styles.container}>
         <Title value={title} />
         <View style={styles.right}>{cta}</View>
+        {showChevron && <ForwardChevron height={12} color={colors.contentSecondary} />}
       </View>
     </Wrapper>
   )
@@ -178,29 +160,27 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingRight: 16,
   },
   left: {
     justifyContent: 'center',
     flex: 1,
   },
   title: {
-    ...fontStyles.regular,
-    color: colors.black,
+    ...typeScale.bodyMedium,
   },
   value: {
-    ...fontStyles.regular,
-    color: colors.gray4,
+    ...typeScale.bodyMedium,
+    color: colors.contentSecondary,
     marginRight: 8,
   },
   valueActionable: {
-    ...fontStyles.regular,
-    color: colors.primary,
+    ...typeScale.bodyMedium,
+    color: colors.accent,
     marginRight: 8,
   },
   details: {
-    ...fontStyles.small,
-    color: colors.gray4,
+    ...typeScale.bodySmall,
+    color: colors.contentSecondary,
     paddingTop: 16,
     paddingRight: 16,
   },
@@ -208,14 +188,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
-  input: {
-    justifyContent: 'flex-end',
-    paddingLeft: 16,
-  },
-  innerInput: {
-    minWidth: 160,
-    textAlign: 'right',
-    paddingVertical: 0,
-    color: colors.gray4,
+  iconContainer: {
+    paddingRight: Spacing.Smallest8,
   },
 })

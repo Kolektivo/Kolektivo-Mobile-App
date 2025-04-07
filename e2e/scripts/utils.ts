@@ -1,37 +1,52 @@
+import { Address, createPublicClient, erc20Abi, http } from 'viem'
+import { celo } from 'viem/chains'
 import { REFILL_TOKENS } from './consts'
 
-export const Web3 = require('web3')
-export const ContractKit = require('@celo/contractkit')
-export const dotenv = require('dotenv')
-export const web3 = new Web3('https://alfajores-forno.celo-testnet.org')
-export const kit = ContractKit.newKitFromWeb3(web3)
-
 export async function checkBalance(
-  address: string,
+  address: Address,
   minBalance = 10,
   tokenSymbols: string[] = REFILL_TOKENS
 ) {
-  const balance = (await getBalance(address)) ?? {}
+  const balance = (await getCeloTokensBalance(address)) ?? {}
   for (const [tokenSymbol, tokenBalance] of Object.entries(balance)) {
     if (tokenSymbols.includes(tokenSymbol) && tokenBalance < minBalance) {
       throw new Error(
-        `${balance} balance of ${address} is below ${minBalance}. Please refill from the faucet https://celo.org/developers/faucet or run ./fund-e2e-accounts.ts if a Valora Dev.`
+        `${balance} balance of ${address} is below ${minBalance}. Please refill from the faucet or run ./fund-e2e-accounts.ts if a Valora Dev.`
       )
     }
   }
 }
 
-export async function getBalance(address: string) {
+export async function getCeloTokensBalance(walletAddress: Address) {
   try {
-    const balanceObj: Record<string, number> = {}
-    // Get Balances
-    let balances = await kit.celoTokens.balancesOf(address)
-    // Convert and add to balance object
-    for (const value in balances) {
-      balanceObj[value] = balances[value] / 10 ** 18
-    }
-    // Return balance object
-    return balanceObj
+    const supportedTokenAddresses: Address[] = [
+      '0x765de816845861e75a25fca122bb6898b8b1282a',
+      '0xd8763cba276a3738e6de85b4b3bf5fded6d6ca73',
+      '0x471ece3750da237f93b8e339c536989b8978a438',
+      '0xe8537a3d056da446677b9e9d6c5db704eaab4787',
+    ] // cUSD, cEUR, CELO, cREAL
+    const supportedTokenSymbols: string[] = ['cUSD', 'cEUR', 'CELO', 'cREAL']
+
+    const celoClient = createPublicClient({
+      chain: celo,
+      transport: http(),
+    })
+
+    const results = await celoClient.multicall({
+      contracts: supportedTokenAddresses.map((tokenAddress) => ({
+        address: tokenAddress as Address,
+        abi: erc20Abi,
+        functionName: 'balanceOf',
+        args: [walletAddress],
+      })),
+      allowFailure: false,
+    })
+
+    const balances: Record<string, number> = {}
+    results.forEach((result, index) => {
+      balances[supportedTokenSymbols[index]] = Number(BigInt(result) / BigInt(10 ** 18))
+    })
+    return balances
   } catch (err) {
     console.log(err)
   }

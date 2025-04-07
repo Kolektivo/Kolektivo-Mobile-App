@@ -5,8 +5,8 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { connect } from 'react-redux'
 import { hideAlert, showError } from 'src/alert/actions'
+import AppAnalytics from 'src/analytics/AppAnalytics'
 import { OnboardingEvents } from 'src/analytics/Events'
-import ValoraAnalytics from 'src/analytics/ValoraAnalytics'
 import BackupPhraseContainer, {
   BackupPhraseContainerMode,
   BackupPhraseType,
@@ -25,7 +25,7 @@ import { TopBarTextButton } from 'src/navigator/TopBarButton'
 import { StackParamList } from 'src/navigator/types'
 import { RootState } from 'src/redux/reducers'
 import colors from 'src/styles/colors'
-import fontStyles from 'src/styles/fonts'
+import { typeScale } from 'src/styles/fonts'
 import variables from 'src/styles/variables'
 import { currentAccountSelector } from 'src/web3/selectors'
 
@@ -96,7 +96,7 @@ class BackupPhrase extends React.Component<Props, State> {
   }
 
   onPressContinue = () => {
-    ValoraAnalytics.track(OnboardingEvents.backup_continue)
+    AppAnalytics.track(OnboardingEvents.backup_continue)
     navigate(Screens.BackupQuiz, { isAccountRemoval: this.isAccountRemoval() })
   }
 
@@ -163,7 +163,7 @@ export const navOptionsForBackupPhrase = {
 function HeaderRight() {
   const { t } = useTranslation()
   const onMoreInfoPressed = () => {
-    ValoraAnalytics.track(OnboardingEvents.backup_more_info)
+    AppAnalytics.track(OnboardingEvents.backup_more_info)
     pushToStack(Screens.AccountKeyEducation)
   }
   return <TopBarTextButton onPress={onMoreInfoPressed} title={t('moreInfo')} />
@@ -179,7 +179,7 @@ const styles = StyleSheet.create({
     padding: variables.contentPadding,
   },
   body: {
-    ...fontStyles.regular,
+    ...typeScale.bodyMedium,
     marginTop: 16,
   },
   confirmationSwitchContainer: {
@@ -190,11 +190,11 @@ const styles = StyleSheet.create({
   },
   confirmationSwitchLabel: {
     flex: 1,
-    ...fontStyles.regular,
+    ...typeScale.bodyMedium,
     paddingLeft: 8,
   },
   cancelButton: {
-    color: colors.gray4,
+    color: colors.navigationTopSecondary,
   },
   continueButton: {
     paddingHorizontal: variables.contentPadding,

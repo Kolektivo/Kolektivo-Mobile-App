@@ -2,6 +2,7 @@ import { FetchMock } from 'jest-fetch-mock/types'
 import { expectSaga } from 'redux-saga-test-plan'
 import * as matchers from 'redux-saga-test-plan/matchers'
 import { select } from 'redux-saga/effects'
+import { DEEP_LINK_URL_SCHEME } from 'src/config'
 import { Actions, celebratedNftFound, nftRewardReadyToDisplay } from 'src/home/actions'
 import { NftCelebrationStatus } from 'src/home/reducers'
 import { nftCelebrationSelector } from 'src/home/selectors'
@@ -12,11 +13,16 @@ import { getDynamicConfigParams, getFeatureGate } from 'src/statsig'
 import { StatsigFeatureGates } from 'src/statsig/types'
 import { NetworkId } from 'src/transactions/types'
 import Logger from 'src/utils/Logger'
+import networkConfig from 'src/web3/networkConfig'
 import { walletAddressSelector } from 'src/web3/selectors'
 import { createMockStore } from 'test/utils'
 import { mockNftAllFields, mockNftMinimumFields } from 'test/values'
 
 jest.mock('src/statsig')
+jest.mock('src/config', () => ({
+  ...jest.requireActual('src/config'),
+  ENABLED_NETWORK_IDS: ['celo-alfajores', 'ethereum-sepolia'],
+}))
 
 const loggerDebugSpy = jest.spyOn(Logger, 'debug')
 const loggerErrorSpy = jest.spyOn(Logger, 'error')
@@ -36,7 +42,7 @@ const mockCelebratedNft = {
 
 const mockRemoteConfig = {
   celebratedNft: mockCelebratedNft,
-  deepLink: 'celo://test',
+  deepLink: `${DEEP_LINK_URL_SCHEME}://test`,
   rewardExpirationDate: '3000-12-01T00:00:00.000Z',
   rewardReminderDate: '3000-01-01T00:00:00.000Z',
 }
@@ -53,7 +59,7 @@ const mockNftCelebrationStore = (status: NftCelebrationStatus) => {
       nftCelebration: {
         networkId: mockNftAllFields.networkId,
         contractAddress: mockNftAllFields.contractAddress,
-        deepLink: 'celo://test',
+        deepLink: `${DEEP_LINK_URL_SCHEME}://test`,
         rewardExpirationDate: '3000-12-01T00:00:00.000Z',
         rewardReminderDate: '3000-01-01T00:00:00.000Z',
         status,
@@ -68,9 +74,6 @@ describe('Given Nfts saga', () => {
     beforeEach(() => {
       mockFetch.resetMocks()
       jest.clearAllMocks()
-      jest.mocked(getDynamicConfigParams).mockReturnValue({
-        showNfts: [NetworkId['celo-alfajores'], NetworkId['ethereum-sepolia']],
-      })
     })
 
     it("should fetch user's NFTs", async () => {
@@ -90,7 +93,7 @@ describe('Given Nfts saga', () => {
         .run()
 
       expect(mockFetch).toHaveBeenCalledWith(
-        'https://api.alfajores.valora.xyz/getNfts?address=0xabc&networkId=celo-alfajores',
+        `${networkConfig.getNftsByOwnerAddressUrl}?address=0xabc&networkId=celo-alfajores`,
         {
           headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
           method: 'GET',
@@ -98,7 +101,7 @@ describe('Given Nfts saga', () => {
         }
       )
       expect(mockFetch).toHaveBeenCalledWith(
-        'https://api.alfajores.valora.xyz/getNfts?address=0xabc&networkId=ethereum-sepolia',
+        `${networkConfig.getNftsByOwnerAddressUrl}?address=0xabc&networkId=ethereum-sepolia`,
         {
           headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
           method: 'GET',

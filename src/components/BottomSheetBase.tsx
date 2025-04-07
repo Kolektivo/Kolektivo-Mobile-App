@@ -1,16 +1,16 @@
-import GorhomBottomSheet, { BottomSheetBackdrop, BottomSheetProps } from '@gorhom/bottom-sheet'
+import { BottomSheetBackdrop, BottomSheetModal, BottomSheetProps } from '@gorhom/bottom-sheet'
 import { BottomSheetDefaultBackdropProps } from '@gorhom/bottom-sheet/lib/typescript/components/bottomSheetBackdrop/types'
-import React, { useCallback } from 'react'
-import { Keyboard, StyleSheet } from 'react-native'
-import { useSafeAreaFrame, useSafeAreaInsets } from 'react-native-safe-area-context'
-import Colors from 'src/styles/colors'
+import React, { useCallback, useEffect } from 'react'
+import { Keyboard } from 'react-native'
+import { useReducedMotion } from 'react-native-reanimated'
+import styles from 'src/styles/styles'
 
 interface BottomSheetBaseProps {
-  forwardedRef: React.RefObject<GorhomBottomSheet>
+  forwardedRef: React.RefObject<BottomSheetModal>
   children?: React.ReactNode | React.ReactNode[]
-  onChange?: BottomSheetProps['onChange']
   onClose?: () => void
   onOpen?: () => void
+  onChange?: BottomSheetProps['onChange']
   snapPoints?: (string | number)[]
   handleComponent?: BottomSheetProps['handleComponent']
   backgroundStyle?: BottomSheetProps['backgroundStyle']
@@ -20,20 +20,24 @@ interface BottomSheetBaseProps {
 const BottomSheetBase = ({
   forwardedRef,
   children,
-  onChange,
   onClose,
   onOpen,
+  onChange,
   snapPoints,
   handleComponent,
   backgroundStyle,
-  handleIndicatorStyle = styles.handle,
+  handleIndicatorStyle,
 }: BottomSheetBaseProps) => {
-  const { height } = useSafeAreaFrame()
-  const insets = useSafeAreaInsets()
+  const reduceMotionEnabled = useReducedMotion()
 
   const renderBackdrop = useCallback(
     (props: BottomSheetDefaultBackdropProps) => (
-      <BottomSheetBackdrop {...props} disappearsOnIndex={-1} appearsOnIndex={0} />
+      <BottomSheetBackdrop
+        {...props}
+        style={[props.style, styles.bottomSheetBackdrop]}
+        disappearsOnIndex={-1}
+        appearsOnIndex={0}
+      />
     ),
     []
   )
@@ -51,36 +55,33 @@ const BottomSheetBase = ({
     }
   }
 
-  const handleClose = () => {
-    onClose?.()
-  }
+  useEffect(() => {
+    // Mount the modal on first render
+    forwardedRef.current?.present()
+  }, [])
 
   return (
-    <GorhomBottomSheet
+    <BottomSheetModal
       ref={forwardedRef}
       index={-1}
-      enableDynamicSizing={!snapPoints}
       snapPoints={snapPoints}
+      enableDynamicSizing={!snapPoints}
       enablePanDownToClose
       backdropComponent={renderBackdrop}
       handleComponent={handleComponent}
-      handleIndicatorStyle={handleIndicatorStyle}
-      backgroundStyle={backgroundStyle}
+      handleIndicatorStyle={[styles.bottomSheetHandleIndicator, handleIndicatorStyle]}
+      backgroundStyle={[styles.bottomSheetBackground, backgroundStyle]}
       onAnimate={handleAnimate}
-      onClose={handleClose}
+      onDismiss={onClose}
       onChange={onChange}
-      maxDynamicContentSize={height - insets.top}
+      enableOverDrag={false}
+      animateOnMount={!reduceMotionEnabled}
+      enableDismissOnClose={false}
+      stackBehavior="push"
     >
       {children}
-    </GorhomBottomSheet>
+    </BottomSheetModal>
   )
 }
-
-const styles = StyleSheet.create({
-  handle: {
-    backgroundColor: Colors.gray2,
-    width: 40,
-  },
-})
 
 export default BottomSheetBase

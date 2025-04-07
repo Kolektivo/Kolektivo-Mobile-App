@@ -6,7 +6,7 @@
   "licenses": "Licenças",
   "removeAccountTitle": "Redefinir a Kolektivo",
   "removeAccountDetails": "A redefinição removerá sua conta deste dispositivo. Seus fundos permanecerão na conta, mas só estarão acessíveis com a Frase de Recuperação.",
-  "deleteAccountTitle": "Excluir conta",
+  "deleteAccountTitle": "Excluir {{appName}}",
   "deleteAccountDetails": "A exclusão da sua conta a removerá da {{appName}}. Seus fundos permanecerão na conta, mas você só poderá acessá-los com sua frase de recuperação",
   "deleteAccountWarning": {
     "title": "Tem certeza?",
@@ -16,7 +16,9 @@
   },
   "legal": "Jurídico",
   "appPreferences": "Preferências do app",
+  "preferences": "Preferências",
   "security": "Segurança",
+  "securityPrivacy": "Segurança e Privacidade",
   "changePin": "Alterar PIN",
   "pinChanged": "PIN alterado",
   "pinChangeFailed": "Falha ao alterar o PIN",
@@ -29,6 +31,7 @@
   "dataSaver": "Economia de Dados",
   "enableDataSaver": "Ativar Economia de Dados",
   "dataSaverDetail": "O modo de Economia de Dados permite a comunicação com a rede por meio de um nó confiável. Você sempre pode alterar esse modo nas configurações do aplicativo.",
+  "keylessBackupSetupTitle": "Criar login",
   "keylessBackupSettingsTitle": "Backup com e-mail e telefone",
   "keylessBackupSettingsDeleteError": "Seu backup não pôde ser excluído, aguarde e tente novamente mais tarde.",
   "setup": "Configurar",
@@ -72,7 +75,9 @@
   },
   "recoveryPhrase": {
     "title": "Sua frase de recuperação",
+    "titleV1_90": "Sua Frase de Recuperação",
     "body": "Escreva essas 12 palavras em um lugar seguro, onde não possam ser roubadas ou danificadas.",
+    "bodyV1_90": "Se você perder sua frase de recuperação, perderá o acesso a todos os fundos mantidos na {{appName}}.",
     "continue": "Já salvei",
     "copy": "Copiar para área de transferência",
     "mnemonicCopied": "Frase de recuperação copiada para a área de transferência",
@@ -102,9 +107,17 @@
   },
   "signInWithEmail": {
     "title": "Entrar com e-mail",
-    "subtitle": "Entre com seu e-mail para configurá-lo como um backup.\n\nSerá solicitado que você entre novamente se perder sua carteira.",
+    "subtitle": "Entre com seu e-mail para configurá-lo como um backup. Será solicitado que você entre novamente se perder sua carteira.",
     "subtitleRestore": "Entre com o e-mail que você usou para configurar seu backup de carteira.",
-    "google": "Entrar com o Google"
+    "google": "Entrar com o Google",
+    "apple": "Entrar com a Apple",
+    "signInAnotherWay": "Entrar de outra forma",
+    "bottomSheet": {
+      "title": "Salve sua frase de recuperação para criar uma carteira",
+      "description": "Vamos oferecer suporte a outros provedores de e-mail em breve. Enquanto isso, você terá que salvar sua frase de recuperação para terminar de criar a carteira.",
+      "continue": "Continuar",
+      "skip": "Pular (não recomendado)"
+    }
   },
   "keylessBackupPhoneInput": {
     "setup": {
@@ -161,7 +174,9 @@
   "termsOfServiceLink": "Termos de serviço",
   "privacyPolicy": "Política de Privacidade",
   "editProfile": "Editar perfil",
-  "confirmNumber": "Conectar o número de celular",
+  "profileName": "Nome do perfil",
+  "profile": "Perfil",
+  "confirmNumber": "Conectar número de celular",
   "cancel": "Cancelar",
   "changeProfilePhoto": "Mudar a foto do perfil",
   "name": "Nome",
@@ -172,6 +187,7 @@
   "continue": "Continuar",
   "yourName": "Seu nome",
   "version": "Versão {{appVersion}}",
+  "appVersion": "Versão",
   "addressCopied": "Endereço copiado para a área de transferência",
   "support": "Suporte",
   "contact": "Contato",
@@ -184,6 +200,7 @@
   "supportLegalCheckbox": "Ao enviar, concordo em compartilhar as informações acima e todos os dados de registro do aplicativo anexados com o serviço de suporte da {{appName}}.",
   "contactSuccess": "Seu problema foi relatado com sucesso! Aguarde uma resposta por e-mail em breve!",
   "namePictureSaved": "Seu nome e foto foram salvos com sucesso.",
+  "nameSaved": "Seu nome foi salvo com sucesso.",
   "addPhoto": "Carregar foto",
   "chooseFromLibrary": "Escolha na galeria",
   "takePhoto": "Tirar Foto",
@@ -286,7 +303,7 @@
     "dismiss": "Ignorar"
   },
   "superchargingTitle": "Atualização do app necessária",
-  "superchargingDescription": "Atualize o app da Valora para continuar recebendo recompensas do Supercharge semanalmente.",
+  "superchargingDescription": "Atualize o app da {{appName}} para continuar recebendo recompensas do Supercharge semanalmente.",
   "superchargingTitleV1_54": "O Supercharge está acabando",
   "superchargingDescriptionV1_54": "Você poderá resgatar as recompensas semanais até terça-feira, 28 de maio, às 23h59 UTC. A partir de 29 de maio, não será mais possível resgatar as recompensas do Supercharge.",
   "superchargeRewardsAvailable": "Você tem {{amount}} {{token}} disponíveis para resgatar!",
@@ -369,6 +386,7 @@
   "accountAddressLabel": "Endereço de Conta",
   "celoAmountLabel": "Quantia (CELO)",
   "maxSymbol": "Máx.",
+  "percentage": "{{percentage}}%",
   "withdrawCeloReview": "Revisar",
   "withdrawCeloTo": "Para",
   "withdrawCeloAmount": "Quantia (CELO)",
@@ -678,8 +696,8 @@
     "body": "Depois que seu amigo configurar a carteira dele e conectar o seu número de celular, vocês receberão um NFT."
   },
   "inviteRewardsBannerCUSD": {
-    "title": "Convide amigos e ganhe até 12 cUSD",
-    "body": "Depois que a pessoa conectar seu número e adicionar fundos à {{appName}}, vocês dois receberão 0,50 cUSD."
+    "title": "Indique um amigo e ganhe USDT",
+    "body": "Depois que a pessoa conectar seu número à {{appName}}, vocês dois receberão 1 USDT."
   },
   "inviteWithUrl": {
     "title": "Convide um amigo",
@@ -687,14 +705,14 @@
     "button": "Enviar convite",
     "error": "Ocorreu um erro ao criar um link compartilhável",
     "share": "Oi! Inscreva-se na carteira {{appName}}. Com ela, eu aumento minhas economias em USD e cripto. Você só precisa de um número de celular para configurá-la em segundos. Não deixe de se inscrever com meu link de indicação aqui: {{shareUrl}}.",
-    "help": "Para receber essa recompensa, o convidado deve fazer o download por meio do link de indicação, conectar o número de celular, adicionar fundos e mantê-los em sua carteira {{appName}} por 7 dias. <0>Exibir todos os termos</0>",
+    "help": "Para receber essa recompensa, o convidado deve fazer o download por meio do link de indicação e conectar o número de celular para sua carteira {{appName}}. <0>Exibir todos os termos</0>",
     "rewardsActive": {
       "title": "Convide amigos e colete NFTs",
       "body": "Convide seus amigos e familiares para baixar o app {{appName}} e cada um de vocês ganhará um NFT exclusivo"
     },
     "rewardsActiveCUSD": {
-      "title": "GANHE ATÉ 12 cUSD convidando seus amigos para a Valora!",
-      "body": "Ganhe 0,50 cUSD para cada amigo que você convidar para a {{appName}}. Quando seu amigo conectar seu número, adicionar fundos e os mantiver por 7 dias, vocês dois receberão 0,50 cUSD. Corra, pois os fundos são limitados! (Limite de 25 amigos)."
+      "title": "Indique um amigo para {{appName}} e ganhe USDT",
+      "body": "A única coisa que seu amigo precisa fazer é baixar a Valora usando seu link e conectar seu número de telefone para vocês dois receber 1 USDT. Corra, pois os fundos são limitados!"
     }
   },
   "getReward": "Receba ${{reward}}",
@@ -804,6 +822,7 @@
     "spend": "Use suas criptos para comprar suas marcas favoritas"
   },
   "enableBiometry": {
+    "title": "Proteja sua carteira",
     "description": "{{biometryType}} protege sua conta e faz com que seja mais fácil usar {{appName}}",
     "cta": "Ativar {{biometryType}}",
     "guideTitle": "Deseja ativar {{biometryType}}?",
@@ -826,9 +845,9 @@
     "createNewWallet": "Criar carteira",
     "restoreWallet": "Restaurar carteira",
     "hasWallet": "Já tenho uma carteira",
+    "hasWalletV1_88": "Eu tenho uma carteira",
     "header": "Nossas boas-vindas! Vamos criar a sua carteira cripto.",
-    "getStarted": "Começar",
-    "agreeToTerms": "Ao criar uma carteira, você concorda com nossos <0>Termos e condições</0>"
+    "getStarted": "Começar"
   },
   "accessContacts": {
     "disclosure": {
@@ -894,7 +913,7 @@
     "learnMore": {
       "buttonLabel": "Preciso conectar o número?",
       "title": "Preciso conectar o número?",
-      "body": "Conectar seu número de telefone permitirá que você envie dinheiro para amigos em sua agenda de endereços e outros números de telefone. \n \nSe você optar por pular esta etapa, não poderá acessar seus contatos e só poderá enviar dinheiro via código QR ou endereço de carteira."
+      "body": "Conectar seu número de telefone permitirá que você envie dinheiro para amigos em seu catálogo de endereços e outros números de telefone. \n\nSe você optar por pular essa etapa, não poderá acessar seus contatos e só poderá enviar dinheiro por meio do código QR ou do endereço da carteira."
     },
     "skip": {
       "title": "Tem certeza?",
@@ -910,9 +929,11 @@
     "codeInputPlaceholder": "123456",
     "helpDialog": {
       "title": "Ajuda",
-      "body": "Enviamos um SMS para o seu número de celular com um código de 6 dígitos.\n\nSe você estiver tendo problemas para receber mensagens, pode pular esta etapa e tentar novamente mais tarde.",
+      "body": "Enviamos um SMS para o seu número de telefone. Verifique suas mensagens de texto para encontrar o código de 6 dígitos. \n\nSe estiver com problemas para receber mensagens, você pode pular esta etapa por enquanto e tentar novamente mais tarde.",
+      "bodyCloudBackupOnboarding": "Enviamos um SMS para o seu número de telefone. Verifique suas mensagens de texto para encontrar o código de 6 dígitos. \n\nSe você estiver tendo problemas para receber mensagens, recomendamos fazer backup com uma frase de recuperação. Você pode tentar fazer login com seu e-mail e telefone mais tarde.",
       "skip": "Pular",
-      "dismiss": "Voltar"
+      "dismiss": "Voltar",
+      "useRecoveryPhrase": "Usar frase de recuperação"
     },
     "verificationFailure": "Algo deu errado, tente novamente mais tarde.",
     "resendButtonNotYetAvailable": "Reenvio disponível em {{secondsRemaining}} segundo(s)",
@@ -923,6 +944,7 @@
     "header": "Restaurar carteira",
     "title": "Insira a sua frase de recuperação",
     "description": "Use a frase de 12 ou 24 palavras que você salvou quando configurou sua carteira para restaurar.",
+    "descriptionV1_90": "Sua frase de recuperação é uma frase de 12 ou 24 palavras que você anotou e salvou ao configurar sua carteira. Insira-a aqui para restaurar sua carteira.",
     "emptyWalletDialog": {
       "description": "Esta carteira não tem fundos. Você ainda gostaria de usá-la?",
       "action": "Usar carteira",
@@ -1035,7 +1057,7 @@
   "inviteWithoutPayment": "Olá! Estou usando a {{appName}} para enviar cripto para o mundo inteiro. É muito fácil de usar e eu gostaria de convidar você para conferir com este link: {{link}}",
   "inviteWithEscrowedPayment": "Olá! Estou usando a {{appName}} para enviar cripto para o mundo inteiro. Acabei de enviar {{amount}} {{token}} para você. Instale o aplicativo da {{appName}} e resgate seus {{token}} usando este link: {{link}}",
   "inviteWithRewards": "Oi! 👋 Estou usando a {{appName}} como minha carteira cripto. É super rápido baixar o app e conectar seu número de celular — além disso, nós dois receberemos um NFT de edição especial como recompensa. 💫 \n\nUse este link para baixar: {{link}}",
-  "inviteWithRewardsCUSD": "Oi! Nós dois podemos receber uma recompensa gratuita de US$ 0,50 se você se inscrever, conectar seu número e depositar fundos na sua carteira Valora. Com ela, eu aumento minhas economias em USD e cripto. Você só precisa de um número de celular para configurá-la em segundos. Não deixe de se inscrever com meu link de indicação aqui: \n\n{{link}} \n\nCorra, pois a promoção de indicação termina em breve.",
+  "inviteWithRewardsCUSD": "Oi! Nós dois podemos receber uma recompensa gratuita de 1 USDT se você se inscrever e conectar seu número de celular para {{appName}}. Não deixe de se inscrever com meu link de indicação aqui: \n\n{{link}} \n\nCorra, pois a promoção de indicação termina em breve.",
   "loadingContacts": "Encontrar seus contatos",
   "myCode": "Meu código",
   "scanCode": "Escanear",
@@ -1403,7 +1425,7 @@
       "disabledDescription": "Suporte bancário em breve! Avisaremos quando você puder conectar sua conta bancária ao Kolektivo.",
       "disabledCta": "Em breve!",
       "title": "Insira os dados bancários",
-      "description": "Falta pouco! Insira os dados bancários para vincular sua conta.",
+      "description": "Está quase tudo pronto! Insira os dados bancários para vincular sua conta à {{appName}}.",
       "cta": "Vincular uma conta bancária",
       "error": {
         "title": "Não foi possível vincular sua conta.",
@@ -1435,11 +1457,15 @@
   "dappsScreen": {
     "title": "Dapps",
     "titleDiscover": "Descobrir",
+    "exploreDapps": "Dapps",
+    "exploreAll": "Ver todos",
     "message": "Explore formas de usar seus ativos",
     "errorMessage": "Ocorreu um erro ao carregar os dapps",
     "featuredDapp": "Em destaque",
     "allDapps": "Todos",
     "favoriteDapps": "Meus favoritos",
+    "mostPopularDapps": "Mais populares",
+    "mostPopularDapps_UK": "Outros Dapps",
     "favoriteDappsAndAll": "Meus favoritos e todos",
     "searchPlaceHolder": "Pesquisar dapps",
     "noFavorites": {
@@ -1455,7 +1481,8 @@
       "message": "Filtro <0>{{filter}}</0> aplicado",
       "removeFilter": "Remover filtro",
       "searchMessage": "Nenhum resultado correspondente encontrado para <0>\"{{searchTerm}}\"</0>"
-    }
+    },
+    "disclaimer_UK": "Esta é uma lista de Dapps de terceiros. A descrição de cada Dapp é puramente informativa e não é um convite para usá-los."
   },
   "dappRankings": {
     "title": "Ranking de dapps",
@@ -1508,6 +1535,7 @@
     "somePaymentsUnavailable": "As compras são fornecidas por nossos fornecedores parceiros. As taxas podem variar. Algumas formas de pagamento não estão disponíveis na sua região.",
     "disclaimerWithSomePaymentsUnavailable": "Os pagamentos são fornecidos por parceiros de rede. As taxas podem variar. Algumas formas de pagamento não estão disponíveis em sua região. <0>Saiba mais.</0>",
     "disclaimer": "Os pagamentos são fornecidos por parceiros de rede. As taxas podem variar. <0>Saiba mais.</0>",
+    "disclaimerUK": "Este não é um convite para você comprar criptoativos. Fornecemos apenas uma lista de provedores de criptoativos com informações de preço e um link para o site deles.",
     "learnMore": "Saiba mais.",
     "whyMissingPayments": "Porque não vejo mais métodos de pagamento?",
     "dismiss": "Ignorar",
@@ -1669,6 +1697,7 @@
       "selectCurrencyTitle": "Adicionar Fundos",
       "exchangeAmountTitle": "Adicionar {{currency}}",
       "selectProviderHeader": "Método de pagamento",
+      "selectProviderHeader_UK": "Detalhes do provedor",
       "depositExchangeTitle": "Depositar cripto"
     },
     "cashOut": {
@@ -1759,11 +1788,13 @@
     "title": "Trocar",
     "review": "Revisar",
     "confirmSwap": "Confirmar troca",
+    "confirmSwap_UK": "Quero fazer uma troca",
     "swapFrom": "DE",
     "swapTo": "PARA",
     "insufficientFunds": "Saldo de {{token}} insuficiente. Insira um valor menor ou escolha um ativo diferente.",
     "fetchSwapQuoteFailed": "Lamentamos o atraso! A obtenção da melhor taxa de câmbio está demorando mais do que o normal. Tente novamente mais tarde.",
     "disclaimer": "A melhor taxa determinada por fontes descentralizadas. <0>Saiba mais</0>",
+    "disclaimer_UK": "Este não é um convite para você vender ou comprar criptoativos. Ao clicar em Quero fazer uma troca, você está instruindo um roteador de swap de terceiros a executar sua transação de swap com a melhor taxa. A melhor taxa é fornecida pelos parceiros da rede. <0>Saiba mais</0>",
     "swapFromTokenSelection": "TROCA DE",
     "swapToTokenSelection": "TROCA PARA",
     "tokenUsdValueUnknown": "-",
@@ -1771,6 +1802,24 @@
     "selectTokenLabel": "Selecionar token",
     "tokenBottomSheetTitle": "Selecionar token",
     "onNetwork": "na {{networkName}}",
+    "crossChainNotification": "Troca de tokens entre redes diferentes",
+    "crossChainFeeWarning": {
+      "title": "Você precisa de mais {{tokenSymbol}}",
+      "body": "Você precisa de mais {{tokenSymbol}} na {{networkName}} para pagar as taxas de troca entre cadeias. Adicione mais {{tokenAmount}} {{tokenSymbol}} para continuar."
+    },
+    "insufficientBalanceWarning": {
+      "title": "Você precisa de mais {{tokenSymbol}}",
+      "body": "Saldo de {{tokenSymbol}} insuficiente. Insira um valor menor ou escolha um ativo diferente."
+    },
+    "unsupportedTokensWarning": {
+      "title": "Seleção incompatível",
+      "body": "Os tokens selecionados não podem ser trocados uns pelos outros. Escolha outro token que seja compatível com a sua seleção."
+    },
+    "decreaseSwapAmountForGasWarning": {
+      "title": "Você precisa de mais {{feeTokenSymbol}} para o Gas",
+      "body": "Adicione {{feeTokenSymbol}} para cobrir suas taxas de gás ou ajuste a quantia que você está trocando",
+      "cta": "Trocar uma quantia menor"
+    },
     "switchedToNetworkWarning": {
       "title": "Você mudou para a rede {{networkName}}",
       "body_swapFrom": "Selecione um token de origem para trocar na rede {{networkName}} para continuar.",
@@ -1832,12 +1881,30 @@
       "networkFeeInfo": "Você está trocando na rede {{networkName}}.\n\nEsta taxa de rede estimada é necessária para realizar uma transação na rede {{networkName}}. Essa taxa protege a sua transação e visa manter a rede operacional.",
       "networkFeeInfoV1_76": "Você está trocando na rede {{networkName}}.\n\nUma taxa de rede é necessária para realizar uma transação na rede {{networkName}}. Essa taxa protege sua transação e é paga aos validadores da rede.\n\nComo as condições da rede determinam a quantia exata, a estimativa listada é o que esperamos que seja a taxa real. A taxa não excederá a quantia máxima da taxa.",
       "slippageToleranceInfo": "Tolerância de slippage\n\nSua troca será executada dentro da porcentagem de tolerância de slippage. Se o preço mudar mais do que a tolerância de slippage, a {{appName}} protege você impedindo a execução da negociação.",
+      "slippageToleranceInfoV1_90": "Sua troca será executada dentro da porcentagem de tolerância de slippage. Se o preço mudar mais do que a tolerância de slippage, a {{appName}} protege você impedindo a execução da transação.",
       "networkFeeInfoDismissButton": "Entendi",
       "exchangeRate": "Taxa de câmbio",
       "exchangeRateInfo": "Taxa de câmbio\n\nEncontramos a melhor taxa de câmbio para você. Sua transação será concluída a um preço de {{slippagePercentage}}% da estimativa ou a transação será cancelada e os fundos serão devolvidos à sua carteira.",
+      "exchangeRateInfoV1_90": "Encontramos a melhor taxa de câmbio para você. Sua transação será concluída a um preço de {{slippagePercentage}}% da estimativa ou a transação será cancelada e os fundos serão devolvidos à sua carteira.",
       "exchangeRateInfo_withAppFee": "Taxa de câmbio\n\nEncontramos a melhor taxa de câmbio para você. Sua transação será concluída a um preço de {{slippagePercentage}}% da estimativa ou a transação será cancelada e os fundos serão devolvidos à sua carteira.\n\nA taxa estimada inclui uma taxa da {{appName}} de {{appFeePercentage}}%.",
       "exchangeRateInfoDismissButton": "Entendi",
-      "estimatedValue": "Valor estimado"
+      "estimatedValue": "Valor estimado",
+      "estimatedTransactionTime": "Tempo estimado da transação",
+      "estimatedTransactionTimeInMinutes": "≈ {{minutes}} min",
+      "estimatedTransactionTimeInfo": "O tempo para concluir a transação é determinado pelo fornecedor.\n\nSe estiver trocando entre cadeias diferentes, a transação poderá demorar um pouco mais para ser concluída.",
+      "infoDismissButton": "Entendi",
+      "fees": "Taxas",
+      "feesCalculationError": "Não é possível calcular as taxas",
+      "estimatedCrossChainFee": "Estimativa de taxas entre cadeias",
+      "maxCrossChainFee": "Taxas máximas entre cadeias",
+      "feesBreakdown": "Detalhamento",
+      "feeAmount": "≈ {{localCurrencySymbol}}{{feeAmountInLocalCurrency}} ({{tokenAmount}} {{tokenSymbol}})",
+      "feeAmount_noFiatPrice": "{{tokenAmount}} {{tokenSymbol}}",
+      "feesMoreInfoLabel": "Mais informações",
+      "feesInfo_sameChain": "A taxa de rede é exigida pela rede para processar a transação.",
+      "feesInfo_crossChain": "A taxa de rede é exigida pela rede para processar a transação. A taxa de cadeia cruzada é cobrada pelo provedor de cadeia cruzada.",
+      "feesInfo_sameChainWithAppFee": "A taxa de rede é exigida pela rede para processar a transação. A taxa de {{appFeePercentage}}% do {{appName}} é cobrada pelo uso que você faz do nosso produto.",
+      "feesInfo_crossChainWithAppFee": "A taxa de rede é exigida pela rede para processar a transação. A taxa de cadeia cruzada é cobrada pelo provedor de cadeia cruzada. A taxa de {{appFeePercentage}}% do {{appName}} é cobrada pelo uso que você faz do nosso produto."
     },
     "fundYourWalletBottomSheet": {
       "title": "Adicione fundos à sua carteira",
@@ -1849,6 +1916,8 @@
     "swapFrom": "Trocar de",
     "swapTo": "Trocar para",
     "rate": "Taxa",
+    "network": "Rede",
+    "networkValue": "{{fromNetwork}} → {{toNetwork}}",
     "estimatedFee": "Taxa de rede est.",
     "networkFee": "Taxa de rede",
     "viewOnExplorer": "Ver no CeloExplorer"
@@ -1930,10 +1999,12 @@
     "subtitle": "O que você gostaria de fazer primeiro?",
     "later": "Explorarei mais tarde",
     "options": {
-      "add": "Adicionar Fundos",
+      "add": "Adicione fundos à sua carteira",
       "dapp": "Encontrar formas de usar as cripto",
-      "profile": "Criar meu perfil",
-      "learn": "Aprender sobre Celo"
+      "earn": "Explore oportunidades de ganhos",
+      "profile": "Crie o seu perfil",
+      "learn": "Saiba mais sobre a Celo",
+      "learnPoints": "Saiba mais sobre os Pontos {{appName}}"
     }
   },
   "reverifyUsingCPVHomecard": {
@@ -1958,7 +2029,8 @@
       "network": "Rede {{networkName}}",
       "selectNetwork": "Rede",
       "stablecoins": "Stablecoins",
-      "gasTokens": "Tokens de gás"
+      "gasTokens": "Tokens de gás",
+      "tokens": "Token"
     }
   },
   "homeActions": {
@@ -1996,7 +2068,7 @@
     "bannerTitle": "Visualização de hooks ativada, toque para desativar"
   },
   "assets": {
-    "claimRewards": "Reivindicar Recompensas",
+    "claimRewards": "Resgatar recompensas",
     "bridge": "Ponte via {{bridge}}",
     "networkName": "Rede {{networkName}}",
     "tabBar": {
@@ -2052,9 +2124,13 @@
   },
   "sendSelectRecipient": {
     "searchText": "Pesquise por nome, telefone, carteira...",
+    "searchInputLabel": "Para",
+    "searchInputPlaceholder": "Endereço da carteira ou número de celular",
     "paste": "Colar da área de transferência",
     "title": "Selecione um destinatário",
     "contactsTitle": "Selecione um contato",
+    "header": "Enviar",
+    "contactsHeader": "Enviar para contatos",
     "recents": "Recentes",
     "results": "Resultados",
     "qr": {
@@ -2062,8 +2138,8 @@
       "subtitle": "Encontre endereços rapidamente na Kolektivo"
     },
     "invite": {
-      "title": "Envie criptos para seus amigos",
-      "subtitle": "Envie fundos ou um convite para seus contatos"
+      "title": "Enviar para um contato",
+      "subtitle": "Envie fundos para seus contatos"
     },
     "jumpstart": {
       "title": "Envie com um link ativo",
@@ -2123,10 +2199,12 @@
   "viewOnOPSepoliaExplorer": "Ver no OP Sepolia Explorer",
   "viewOnPolygonPoSScan": "Ver no PolygonScan",
   "viewOnBaseScan": "Ver no BaseScan",
+  "viewOnAxelarScan": "Ver no AxelarScan",
   "sendEnterAmountScreen": {
     "title": "Insira o valor",
     "selectToken": "Selecione um token",
     "networkFee": "Taxa da rede {{networkName}}",
+    "networkFeeV1_97": "Taxa de rede",
     "lowerAmount": "Insira uma quantia menor",
     "maxAmountWarning": {
       "title": "Enviando a quantia máxima",
@@ -2139,6 +2217,27 @@
     "prepareTransactionError": {
       "title": "Algo deu errado!",
       "description": "Não foi possível preparar uma transação para esse token."
+    },
+    "insufficientBalanceWarning": {
+      "title": "Você precisa de mais {{tokenSymbol}}",
+      "description": "Saldo de {{tokenSymbol}} insuficiente. Insira um valor menor ou escolha um ativo diferente."
+    }
+  },
+  "jumpstartIntro": {
+    "title": "Compartilhe cripto tão fácil quanto enviar mensagens",
+    "description": "Os links ativos são uma forma de enviar cripto na rede Celo para um amigo por meio de um link",
+    "noFundsHint": "Para começar, você precisará de alguns ativos da Celo em sua carteira.",
+    "haveFundsButton": "Envie com um link ativo",
+    "addFundsCelo": {
+      "title": "Obtenha ativos na Celo",
+      "info": "Os links ativos são uma forma de você enviar cripto na rede Celo para um amigo por meio de um link.\nPara começar, você precisará de alguns ativos CELO em sua carteira.",
+      "description": "Depois de adicionar ativos na Celo, você terá que voltar para criar um link ativo.",
+      "cta": "Obtenha ativos na Celo",
+      "actionDescriptions": {
+        "add": "Compre ativos na Celo usando um de nossos fornecedores confiáveis",
+        "swap": "Troque um ativo por outro na Celo",
+        "transfer": "Use qualquer carteira ou exchange compatível com a Celo para depositar ativos na Celo"
+      }
     }
   },
   "jumpstartEnterAmountScreen": {
@@ -2180,6 +2279,9 @@
     "approvalTransactionTitle": "Aprovação",
     "estimatedNetworkFee": "Taxa de rede estimada",
     "networkFee": "Taxa de rede",
+    "appFee": "Taxa do aplicativo",
+    "estimatedCrossChainFee": "Taxa estimada de cadeia cruzada",
+    "crossChainFee": "Taxa de cadeia cruzada",
     "finiteApprovalDescription": "{{approvedAmount}} {{tokenSymbol}} aprovado(s) para negociação",
     "infiniteApprovalDescription": "{{tokenSymbol}} infinito aprovado para negociação",
     "revokeApprovalDescription": "{{tokenSymbol}} revogado para negociação",
@@ -2198,7 +2300,7 @@
     "body": "Compre ou transfira tokens compatíveis para enviar cripto e explorar a web3!",
     "titleV1_86": "Adicione fundos à sua carteira",
     "exploreTokens": "Explorar todos os tokens",
-    "exploreTokensBody": "Você pode comprar até 10 ou mais tokens na Valora. Confira!"
+    "exploreTokensBody": "Você pode comprar mais de 10 tokens na {{appName}}. Confira!"
   },
   "nftCelebration": {
     "bottomSheet": {
@@ -2286,6 +2388,17 @@
         "swap": {
           "title": "Troca",
           "subtitle": "{{fromToken}} > {{toToken}}"
+        },
+        "createLiveLink": {
+          "title": "Link ativo",
+          "subtitle": {
+            "erc20": "Enviado {{tokenSymbol}}",
+            "erc721": "NFT enviado"
+          }
+        },
+        "depositEarn": {
+          "title": "Depositado",
+          "subtitle": "para o pool da {{network}}"
         }
       },
       "title": "Minha atividade de pontos",
@@ -2320,7 +2433,7 @@
       "retryCta": "Tentar novamente"
     },
     "infoCard": {
-      "title": "Em breve, você terá mais maneiras de ganhar pontos 🚀",
+      "title": "Novas formas de acumular pontos em breve",
       "body": "Estamos trabalhando para adicionar mais maneiras de ganhar pontos usando o aplicativo. Continue verificando as atualizações."
     },
     "activitySection": {
@@ -2333,32 +2446,55 @@
     },
     "activityCards": {
       "createWallet": {
-        "title": "Crie uma carteira {{appName}}"
+        "title": "Criar uma carteira {{appName}}"
       },
       "swap": {
         "title": "Troque ativos",
         "bottomSheet": {
           "title": "Troque ativos",
-          "body": "Ganhe {{pointsValue}} pontos toda vez que você trocar um ativo usando {{appName}}. \n\nToque abaixo para você começar a trocar e ganhar!",
+          "body": "Ganhe {{pointsValue}} pontos toda vez que você trocar um ativo usando a {{appName}}. \n\nToque abaixo para começar a trocar e ganhar!",
           "cta": "Iniciar uma troca"
         }
       },
       "moreComing": {
         "title": "Mais em breve!"
+      },
+      "createLiveLink": {
+        "title": "Envie com um link ativo",
+        "bottomSheet": {
+          "title": "Envie com um link ativo",
+          "body": "Ganhe {{pointsValue}} pontos toda vez que você enviar fundos usando um link ativo na {{appName}}. \n\nToque abaixo para começar a enviar e ganhar!",
+          "cta": "Envie com um link ativo"
+        }
+      },
+      "depositEarn": {
+        "title": "Deposite em um pool de ganhos na {{appName}}",
+        "bottomSheet": {
+          "title": "Deposite em um pool de ganhos",
+          "body": "Ganhe {{pointsValue}} pontos toda vez que você depositar fundos em um pool de ganhos na {{appName}}. \n\nToque abaixo para começar a ganhar rendimentos e pontos!",
+          "cta": "Acesse as pools de ganhos"
+        }
       }
     },
     "discoverCard": {
       "title": "Pontos {{appName}}",
-      "description": "Ganhe pontos facilmente com a {{appName}}. Ao usar o aplicativo, incluindo para trocas, você ganha pontos!"
+      "description": "Ganhe pontos facilmente com a {{appName}}. Ao usar o aplicativo, incluindo para trocas, você ganha pontos!",
+      "balance": "pontos {{pointsBalance}}"
     },
     "intro": {
       "title": "Ganhe pontos sem esforço",
       "description": "Descubra uma nova forma de ganhar! Agora você ganha pontos com suas ações na {{appName}}. Comece a ganhar pontos hoje mesmo e desbloqueie benefícios incríveis.",
       "cta": "Comece sua jornada de pontos"
+    },
+    "disclaimer": {
+      "learnMoreCta": "<0>Saiba mais</0> sobre os {{appName}} Pontos",
+      "title": "Mais sobre os pontos {{appName}}",
+      "body": "Os pontos são o programa de fidelidade da {{appName}}. Eles são concedidos pelo uso do aplicativo. Os pontos não podem ser gastos, trocados ou transferidos.",
+      "dismiss": "Entendi"
     }
   },
   "earnFlow": {
-    "gasSubsidized": "A Valora está cobrindo o gás desta transação!",
+    "gasSubsidized": "As taxas de transação serão cobertas por tempo limitado",
     "addCryptoBottomSheet": {
       "title": "Adicionar {{tokenSymbol}} na {{tokenNetwork}}",
       "description": "Após adicionar tokens, você terá que voltar para terminar de depositar em um pool.",
@@ -2374,26 +2510,34 @@
       }
     },
     "cta": {
-      "title": "Ganhe com suas stablecoins",
+      "title": "Ganhe com suas criptos\n",
       "subtitle": "Deposite hoje e ganhe retornos",
       "description": "Veja quanto você pode ganhar ao fornecer um pool de empréstimos"
     },
     "earnInfo": {
-      "title": "Ganhe com as\nsuas stablecoins",
+      "title": "Ganhe com suas\ncriptos",
       "details": {
         "earn": {
           "titleGasSubsidy": "Maximize seus ganhos sem taxas de gás*",
-          "title": "Maximize seus ganhos",
-          "subtitle": "Ganhe com suas stablecoins e receba recompensas quando fornecer um pool.",
-          "footnoteSubsidy": "*As taxas de gás estão temporariamente cobertas pela Valora"
+          "title": "Explore e compare as pools",
+          "subtitle": "Compare o potencial de ganho e os riscos. Troque, compre ou transfira tokens para participar do melhor pool para você.",
+          "footnoteSubsidy": "*As taxas de gás estão temporariamente cobertas pela {{appName}}"
+        },
+        "work": {
+          "title": "Faça seus ativos trabalharem por você",
+          "subtitle": "Comece a ganhar com suas criptomoedas depositando em um pool de liquidez. "
         },
         "manage": {
-          "title": "Gerenciar diretamente pela Valora",
-          "subtitle": "Cuidaremos da configuração para que você possa gerenciar sua posição diretamente pela Valora."
+          "title": "Gerencie diretamente de {{appName}}",
+          "titleV1_92": "Gerencie diretamente de {{appName}}",
+          "titleV1_94": "Gerencie suas posições",
+          "subtitle": "Conectaremos a sua carteira para você poder gerenciar os pools sem sair da {{appName}}.",
+          "subtitleV1_92": "Conectaremos a sua carteira para você poder gerenciar as pools sem sair da {{appName}}.",
+          "subtitleV1_94": "Escolha um pool de sua preferência, adicione seus tokens e monitore seus ganhos."
         },
         "access": {
           "title": "Acesse seus fundos com facilidade",
-          "subtitle": "Colete seus fundos sem esforço com um único toque. Aproveite o mesmo acesso instantâneo que você teria diretamente por meio dos seus protocolos favoritos."
+          "subtitle": "Receba fundos com um simples toque quando for conveniente para você."
         }
       },
       "action": {
@@ -2406,51 +2550,104 @@
       "subtitle": "Comprar {{symbol}}",
       "description": "Ganhe cerca de {{apy}}% por ano ao adicionar {{symbol}} a um pool"
     },
+    "entrypoint": {
+      "title": "Ganhe com suas criptos",
+      "subtitle": "Deposite e ganhe",
+      "description": "Ganhe emprestando seus ativos cripto em pools de liquidez.",
+      "totalDepositAndEarnings": "Total de depósitos e ganhos"
+    },
     "enterAmount": {
+      "title": "Quanto gostaria de depositar?",
+      "titleWithdraw": "Quanto você gostaria de sacar?",
+      "deposit": "Depósito",
+      "fees": "Taxas",
+      "available": "Disponível",
+      "swap": "Trocar",
+      "estimatedDuration": "Tempo est. da transação",
+      "claimingReward": "Resgatar recompensas",
       "earnUpToLabel": "Você pode ganhar até:",
       "rateLabel": "Taxa (est.)",
       "earnUpTo": "~{{fiatSymbol}}{{amount}}/ano",
+      "earnUpToV1_87": "<0></0>/ano",
       "rate": "{{rate}}% de APY",
       "continue": "Continuar",
       "info": "Este pool é desenvolvido pela Aave",
-      "infoBottomSheet": {
-        "title": "Por que este pool?",
-        "description": "Este pool da Aave tem mais de US$ 150 milhões em TVL e mais de 6.000 contribuintes, o que indica forte liquidez e confiabilidade. Ele também usa USDC como seu token e Abritrum como sua rede, o que reduz a volatilidade e garante que os usuários recebam taxas de gas baratas.\n\nTudo isso faz dele uma opção segura e atrativa com APY competitivo, garantindo uma oportunidade de investimento benéfica para nossos usuários.\n\nVocê pode explorar outros pools da Aave <0>aqui</0>.",
-        "dismiss": "Ignorar"
-      },
+      "infoV1_93": "Desenvolvido por {{providerName}}",
       "notEnoughBalanceForGasWarning": {
         "title": "Você precisa de mais {{feeTokenSymbol}} para continuar",
         "description": "Adicione {{feeTokenSymbol}} na {{network}} para cobrir suas taxas de gas",
         "noGasCta": "Comprar {{feeTokenSymbol}} na {{network}}"
+      },
+      "feeBottomSheet": {
+        "feeDetails": "Detalhes da taxa",
+        "moreInformation": "Mais informações",
+        "estNetworkFee": "Taxa de rede est.",
+        "maxNetworkFee": "Taxa de rede máx.",
+        "estCrossChainFee": "Taxa est. de cadeia cruzada",
+        "maxCrossChainFee": "Taxa máx. de cadeia cruzada",
+        "description_deposit": "A taxa de rede é exigida pela rede para processar a transação de depósito.",
+        "description_withdraw": "A taxa de rede é exigida pela rede para processar a transação de saque.",
+        "description_depositSwapFee": "A taxa de rede é exigida pela rede para processar a transação de depósito. A taxa de {{appFeePercentage}}% da {{appName}} é cobrada pelo uso que você faz do nosso produto.",
+        "description_depositCrossChain": "A taxa de rede é exigida pela rede para processar a transação de depósito. A taxa de cadeia cruzada é cobrada pelo provedor de cadeia cruzada.",
+        "description_depositCrossChainWithSwapFee": "A taxa de rede é exigida pela rede para processar as transações de depósito. A taxa de {{appFeePercentage}}% da {{appName}} é cobrada pelo uso que você faz do nosso produto. A taxa de cadeia cruzada é cobrada pelo provedor de cadeia cruzada.",
+        "appSwapFee": "Taxa da {{appName}}"
+      },
+      "swapBottomSheet": {
+        "swapDetails": "Detalhes da troca",
+        "swapFrom": "Trocar de",
+        "swapTo": "Trocar para",
+        "whySwap": "Por que estou fazendo a troca?",
+        "swapDescription": "Para depositar fundos no pool, seu token está sendo trocado por um token do pool."
+      },
+      "withdrawingAndClaimingCard": {
+        "title": "Saque e resgate",
+        "description": "{{providerName}} exige que você resgate todas as recompensas disponíveis sempre que fizer um saque."
       }
     },
     "activePools": {
-      "title": "Pools ativos",
+      "title": "Pools ativas",
       "totalValue": "Valor Total:",
       "apy": "~{{apy}}% de APY",
-      "exitPool": "Sair do pool",
+      "exitPool": "Sair da pool",
       "depositMore": "Depositar mais",
-      "viewPools": "Ver pools"
+      "viewPools": "Ver pools",
+      "poolsSupplied": "Pools fornecidas",
+      "totalSupplied": "Total fornecido",
+      "depositAndEarnings": "Depósitos e ganhos",
+      "myPools": "Minhas pools",
+      "explore": "Explorar"
     },
     "depositBottomSheet": {
       "title": "Revisar e depositar",
       "description": "Antes de depositar em um pool da Aave, revise os detalhes da transação abaixo",
+      "descriptionV1_93": "Antes de depositar em um pool da {{providerName}}, leia os detalhes da transação abaixo",
       "amount": "Quantia depositada",
       "fee": "Taxas est. de gas",
       "provider": "Provedor de ganhos",
       "network": "Rede",
       "footer": "Ao depositar cripto em um pool da Aave, você aceita os riscos associados ao uso da Aave. <0>Termos e condições</0>",
+      "footerV1_93": "Ao depositar criptomoedas em um pool da {{providerName}}, você aceita os riscos associados ao uso da {{providerName}}. <0>Termos e condições</0>",
+      "noTermsUrlFooter": "Você é responsável por suas ações em {{appName}}. {{appName}} se isenta da responsabilidade por seus ativos ou interações com {{providerName}}. Você pode consultar os documentos do {{providerName}} <0>aqui</0> e nossos Termos e Condições <1>aqui</1>.",
       "primaryCta": "Concluir",
-      "secondaryCta": "Cancelar"
+      "secondaryCta": "Cancelar",
+      "yieldRate": "Taxa de rendimento (est.)",
+      "apy": "{{apy}}%"
     },
     "collect": {
       "title": "Parabéns! Revise e receba seus ganhos",
+      "titleClaim": "Você vai resgatar:",
+      "titleCollect": "Você vai receber:",
+      "titleWithdraw": "Você vai sacar:",
       "total": "TOTAL",
       "plus": "MAIS",
+      "reward": "RECOMPENSA",
       "rate": "Taxa (est.)",
       "apy": "{{apy}}% de APY",
       "fee": "Taxa de gas",
       "cta": "Receber ganhos",
+      "ctaWithdraw": "Sacar",
+      "ctaReward": "Resgatar recompensa",
+      "ctaExit": "Sair do pool",
       "errorTitle": "Algo deu errado",
       "errorDescription": "Não foi possível obter os detalhes do depósito. Tente novamente.",
       "noGasTitle": "Você precisa de mais {{symbol}} para continuar",
@@ -2475,8 +2672,191 @@
       "earnDepositDetails": "Quantia depositada",
       "earnWithdrawTitle": "Sacado",
       "earnWithdrawSubtitle": "{{tokenSymbol}} sacado do pool da {{providerName}}",
-      "earnWithdrawDetails": "Quantia retirada"
+      "earnWithdrawDetails": "Quantia retirada",
+      "swap": "Trocar",
+      "network": "Rede",
+      "fees": "Taxas"
+    },
+    "home": {
+      "title": "Ganhe",
+      "learnMore": "<0>Saiba mais</0> sobre as pools de rendimento.",
+      "learnMoreBottomSheet": {
+        "bottomSheetTitle": "Saiba mais sobre as pools de rendimento",
+        "apySubtitle": "O que é APY?",
+        "apyDescription": "O rendimento percentual anual (APY) é uma métrica usada para calcular o retorno anualizado dos investimentos em cripto. É um indicador importante do potencial de retorno.",
+        "tvlSubtitle": "O que é TVL?",
+        "tvlDescription": "O valor total bloqueado (TVL) é uma métrica usada para medir o valor dos ativos digitais bloqueados em uma rede blockchain. O TVL é calculado pela soma do valor de todos os ativos digitais bloqueados em um protocolo DeFi ou contrato inteligente. Esses ativos podem incluir criptomoedas, stablecoins e outros tokens.",
+        "yieldPoolSubtitle": "O que é uma pool de rendimento?",
+        "yieldPoolDescription": "As pools de rendimento, ou pools de liquidez, são fundos agregados disponibilizados por detentores de tokens, que possibilitam a negociação em exchanges descentralizadas. Ao participar dessas pools, é possível obter juros das pessoas que tomam esses fundos emprestados.",
+        "chooseSubtitle": "Como você deve escolher um pool? ",
+        "chooseDescription": "Qualquer decisão financeira é uma escolha pessoal. Agrupamos algumas pools em diversos protocolos, mas cada uma tem seus benefícios e riscos. Fazemos o nosso melhor para fornecer informações úteis sobre cada pool, mas é sempre recomendável realizar uma pesquisa adicional se tiver dúvidas."
+      },
+      "noPoolsTitle": "Você ainda não entrou em nenhuma pool",
+      "noPoolsDescription": "Descubra as pools disponíveis, escolha uma que corresponda às suas metas e aproveite ao máximo suas criptos.",
+      "errorTitle": "Não foi possível carregar pools",
+      "errorDescription": "Opa, algo deu errado ao tentar carregar as informações do pool. Tente novamente.",
+      "errorButton": "Tentar novamente"
+    },
+    "poolCard": {
+      "onNetwork": "na {{networkName}}",
+      "rate": "Taxa (est.)",
+      "yieldRate": "Taxa de rendimento (est.)",
+      "reward": "Recompensa",
+      "tvl": "TVL",
+      "exitPool": "Sair do pool",
+      "addToPool": "Adicionar ao pool",
+      "apy": "{{apy}}% de APY",
+      "percentage": "{{percentage}}%",
+      "poweredBy": "Desenvolvido por {{providerName}}",
+      "deposited": "Fornecimento",
+      "depositAndEarnings": "Depósitos e ganhos"
+    },
+    "poolFilters": {
+      "allPools": "Todas as pools",
+      "myPools": "Minhas pools"
+    },
+    "poolInfoScreen": {
+      "chainName": "Rede: <0>{{networkName}}</0>",
+      "protocolName": "Protocolo: <0>{{providerName}}</0>",
+      "yieldRate": "Taxa de rendimento",
+      "dailyYieldRate": "Taxa diária",
+      "ratePercent": "{{rate}}%",
+      "rewards": "Prêmios",
+      "noRewards": "Sem recompensas",
+      "safetyScore": "Pontuação de segurança",
+      "tvl": "TVL",
+      "ageOfPool": "Piscina criada:",
+      "learnMoreOnProvider": "Ver pool no {{providerName}}",
+      "deposit": "Depósito",
+      "depositAndEarnings": "Depósitos e ganhos",
+      "withdraw": "Sacar",
+      "withdrawBottomSheet": {
+        "title": "Selecione o tipo de saque",
+        "withdrawAndClaim": "Saque e resgate",
+        "withdrawDescription": "Saque um valor específico de qualquer token que você tenha depositado no pool",
+        "withdrawAndClaimRewardsDescription": "Saque um valor específico de qualquer token que você tenha depositado no pool e resgate suas recompensas automaticamente",
+        "withdrawAndClaimEarningsDescription": "Saque um valor específico de qualquer token que você tenha depositado no pool e resgate seus ganhos automaticamente",
+        "claimRewards": "Resgatar recompensas",
+        "claimRewardsDescription": "Resgate suas recompensas. Você não pode resgatar valores parciais das recompensas",
+        "claimEarnings": "Resgatar ganhos",
+        "claimEarningsDescription": "Resgate os ganhos no seu depósito. Valores parciais não podem ser resgatados",
+        "exit": "Sair",
+        "exitDescription": "Sair irá sacar tudo que você tem no pool",
+        "exitWithRewardsDescription": "Sair irá sacar tudo que você tem no pool, incluindo recompensas",
+        "exitWithEarningsDescription": "Sair irá sacar tudo que você tem no pool, inclusive ganhos"
+      },
+      "totalDepositAndEarnings": "Total de depósitos e ganhos",
+      "titleLocalAmountDisplay": "{{localCurrencySymbol}}{{localCurrencyAmount}}",
+      "lineItemAmountDisplay": "{{localCurrencySymbol}}{{localCurrencyAmount}} ({{cryptoAmount}} {{cryptoSymbol}})",
+      "infoBottomSheet": {
+        "gotIt": "Entendi",
+        "depositDescription": "Este é o detalhamento da quantia depositada, os juros que você ganhou sobre essa quantia e quaisquer recompensas adicionais que você tenha recebido por participar do pool.",
+        "depositNoBreakdownDescription": "Este número combina os tokens fornecidos com os juros e as recompensas que você ganhou.\n\nAlguns protocolos, como o {{providerName}}, não fornecem um detalhamento de seus ganhos — isso é normal. Em vez disso, eles adicionam seus ganhos diretamente à quantia depositada, que continua a render juros com base na quantia crescente. ",
+        "tvlTitle": "Valor total bloqueado (TVL)",
+        "tvlDescription": "O TVL refere-se ao montante total de ativos depositados em um pool de liquidez e pode ser usado para ajudar a indicar a confiança e a utilidade de um pool. Normalmente, um TVL mais alto está relacionado a um risco reduzido, mas nenhum pool está totalmente isento de riscos.",
+        "ageTitle": "Piscina criada:",
+        "ageDescription": "As pools de liquidez mais antigas podem indicar um histórico sólido e um histórico de construção da confiança da comunidade. Por esse motivo, alguns podem considerar essas pools mais seguras.\n\nNão existe uma maneira perfeita de determinar o risco, portanto, use essas informações como parte de sua pesquisa geral para tomar a melhor decisão para você.",
+        "yieldRateTitle": "Taxa de rendimento",
+        "yieldRateDescription": "Embora a maioria das pools ofereça ganhos na forma de um token de pool de liquidez, algumas oferecem tokens adicionais como recompensa ou incentivo adicional.\n\nComo a {{appName}} agrega pools em vários protocolos, combinamos todas as taxas de ganhos e recompensas em uma única taxa de rendimento geral para ajudar você a avaliar facilmente seu potencial de ganhos. Esse número é uma estimativa, pois os valores de ganhos e recompensas flutuam constantemente.\n\nPara obter mais informações sobre a detalhamento dos ganhos, acesse <0>{{providerName}}</0>.",
+        "dailyYieldRateTitle": "Taxa diária",
+        "dailyYieldRateDescription": "A taxa diária exibida é a taxa diária fornecida por {{providerName}}.",
+        "dailyYieldRateLink": "Veja mais detalhes sobre a taxa diária em {{providerName}}",
+        "safetyScoreTitle": "Pontuação de segurança",
+        "safetyScoreDescription": "A Pontuação de segurança detalha a segurança do ativo base do cofre em vários fatores-chave. Ele tem como objetivo chamar sua atenção para os riscos a serem considerados antes de investir e fornecer informações sobre detalhes técnicos que você talvez não consiga avaliar por conta própria.\nEmbora a posição completa seja sempre mais complexa, a Pontuação de segurança é disponibilizada para simplificar as principais considerações de risco e segurança e estimular sua própria análise criteriosa. Nossa equipe avalia cuidadosamente cada fator antes que um cofre seja implementado e mantém uma vigilância atenta sobre cada ativo, rede e protocolo que {{providerName}} integrou.",
+        "safetyScoreRateLink": "Veja mais detalhes sobre a pontuação de segurança em {{providerName}}"
+      },
+      "viewMoreDetails": "Ver mais detalhes",
+      "viewLessDetails": "Ver menos detalhes"
+    },
+    "beforeDepositBottomSheet": {
+      "youNeedTitle": "Você precisa de {{tokenSymbol}} da {{tokenNetwork}} para depositar",
+      "depositTitle": "Deposite no pool",
+      "crossChainAlternativeDescription": "Se não quiser usar seus tokens da {{tokenNetwork}}, escolha uma opção abaixo. Você precisará retornar para concluir o depósito no pool mais tarde.",
+      "alternativeDescription": "Se não quiser usar seus tokens, escolha uma opção abaixo. Você precisará retornar para concluir o depósito no pool mais tarde.",
+      "beforeYouCanDepositTitle": "Antes de poder depositar...",
+      "beforeYouCanDepositDescription": "Você precisará adicionar um dos tokens do pool. Depois de adicionar, você precisará retornar para concluir o depósito no pool.",
+      "beforeYouCanDepositDescriptionV1_101": "Você precisará adicionar {{tokenSymbol}} na {{tokenNetwork}}. Depois de adicionar, você precisará retornar para concluir o depósito no pool.",
+      "action": {
+        "swapAndDeposit": "Trocar e depositar",
+        "swapAndDepositDescription": "Escolha qualquer token da {{tokenNetwork}}. Faremos a troca e o depósito simultaneamente para você.",
+        "swapAndDepositAllTokensDescription": "Escolha qualquer token — faremos a troca e o depósito simultaneamente para você.",
+        "crossChainSwap": "Troca entre cadeias",
+        "crossChainSwapDescription": "Troque um token de outra rede por {{tokenSymbol}}",
+        "swap": "Trocar",
+        "swapDescription": "Troque para {{tokenSymbol}} da {{tokenNetwork}} a partir de outro token em sua carteira",
+        "add": "Comprar",
+        "addDescription": "Compre {{tokenSymbol}} na {{tokenNetwork}} usando um dos nossos provedores confiáveis",
+        "transfer": "Transferir",
+        "transferDescription": "Use qualquer carteira ou exchange compatível com {{tokenNetwork}} para depositar {{tokenSymbol}}",
+        "addMore": "Compre mais {{tokenSymbol}}",
+        "deposit": "Deposite seu {{tokenSymbol}}",
+        "depositDescription": "Você tem {{amount}} {{tokenSymbol}}"
+      }
     }
+  },
+  "addFundsActions": {
+    "add": "Comprar",
+    "transfer": "Transferir",
+    "swap": "Trocar"
+  },
+  "duration_lessThanADay": "Menos de um dia",
+  "duration_day_one": "1 dia",
+  "duration_day_other": "{{count}} dias",
+  "duration_month_one": "1 mês",
+  "duration_month_other": "{{count}} meses",
+  "duration_year_one": "1 ano",
+  "duration_year_other": "{{count}} anos",
+  "duration_yearMonth_one": "1 ano, 1 mês",
+  "duration_yearMonth_other": "{{count}} anos, {{count2}} meses",
+  "tokenEnterAmount": {
+    "availableBalance": "Disponível: <0></0>",
+    "selectToken": "Selecionar token",
+    "fiatPriceUnavailable": "Preço indisponível",
+    "tokenDescription": "{{tokenName}} na {{tokenNetwork}}"
+  },
+  "gasFeeWarning": {
+    "title": "Você precisa de mais {{tokenSymbol}} para taxas de gás",
+    "title_Dapp": "Você tem um saldo insuficiente de tokens de gás",
+    "descriptionMaxAmount_Send": "Adicione {{tokenSymbol}} para taxas de gás ou reduza o valor que você está enviando",
+    "descriptionMaxAmount_Swap": "Adicione {{tokenSymbol}} para taxas de gás ou reduza o valor que você está trocando",
+    "descriptionMaxAmount_Deposit": "Adicione {{tokenSymbol}} para taxas de gás ou reduza o valor que você está depositando",
+    "descriptionMaxAmount_Withdraw": "Adicione {{tokenSymbol}} para taxas de gás ou reduza o valor que você está retirando",
+    "descriptionDapp": "Adicione {{tokenSymbol}} para concluir essa transação",
+    "ctaBuy": "Comprar {{tokenSymbol}}",
+    "ctaAction_Send": "Enviar uma quantia menor",
+    "ctaAction_Swap": "Trocar uma quantia menor",
+    "ctaAction_Deposit": "Depositar um valor menor",
+    "ctaAction_Withdraw": "Retirar uma quantia menor"
+  },
+  "reviewTransaction": {
+    "title": "Revisão Enviar",
+    "totalPlusFees": "Total mais taxas",
+    "multipleTokensWithPlusSign": "≈ {{amount1}} {{symbol1}} + {{amount2}} {{symbol2}}"
+  },
+  "tokenAmount": "{{tokenAmount}} {{tokenSymbol}}",
+  "localAmount": "{{localCurrencySymbol}}{{localAmount}}",
+  "localAmount_noFiatPrice": "Preço indisponível",
+  "tokenAndLocalAmount": "{{tokenAmount}} {{tokenSymbol}} <0>({{localCurrencySymbol}}{{localAmount}})</0>",
+  "tokenAmountApprox": "≈ {{tokenAmount}} {{tokenSymbol}}",
+  "localAmountApprox": "≈ {{localCurrencySymbol}}{{localAmount}}",
+  "tokenAndLocalAmountApprox": "≈ {{tokenAmount}} {{tokenSymbol}} <0>({{localCurrencySymbol}}{{localAmount}})</0>",
+  "demoMode": {
+    "confirmEnter": {
+      "title": "Modo de demonstração",
+      "info": "Você está prestes a entrar no modo de demonstração. Você está livre para explorar os recursos do aplicativo sem concluir nenhuma transação",
+      "cta": "Entrar na demonstração"
+    },
+    "confirmExit": {
+      "title": "No modo de demonstração",
+      "info": "No momento, você está visualizando o aplicativo no modo de demonstração",
+      "cta": "Sair da demonstração"
+    },
+    "restrictedAccess": {
+      "title": "No modo de demonstração",
+      "info": "Não é possível concluir essa ação porque você está visualizando o aplicativo no modo de demonstração",
+      "cta": "Sair da demonstração"
+    },
+    "inAppIndicatorLabel": "Modo de demonstração"
   },
   "celoDollarAmount": "<0></0> Celo Dollar",
   "celoDollarAmount_plural": "<0></0> Celo Dollars"

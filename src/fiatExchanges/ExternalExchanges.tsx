@@ -3,7 +3,7 @@ import React from 'react'
 import { useTranslation } from 'react-i18next'
 import { SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native'
 import { FiatExchangeEvents } from 'src/analytics/Events'
-import ValoraAnalytics from 'src/analytics/ValoraAnalytics'
+import AppAnalytics from 'src/analytics/AppAnalytics'
 import BackButton from 'src/components/BackButton'
 import ListItem from 'src/components/ListItem'
 import SendBar from 'src/home/SendBar'
@@ -12,7 +12,7 @@ import LinkArrow from 'src/icons/LinkArrow'
 import { emptyHeader } from 'src/navigator/Headers'
 import { Screens } from 'src/navigator/Screens'
 import { StackParamList } from 'src/navigator/types'
-import fontStyles from 'src/styles/fonts'
+import { typeScale } from 'src/styles/fonts'
 import variables from 'src/styles/variables'
 import { useTokenInfo } from 'src/tokens/hooks'
 import { Currency } from 'src/utils/currencies'
@@ -45,7 +45,7 @@ function ExternalExchanges({ route }: Props) {
   const goToExchange = (provider: ExternalExchangeProvider) => {
     const { name, link } = provider
     return () => {
-      ValoraAnalytics.track(FiatExchangeEvents.external_exchange_link, {
+      AppAnalytics.track(FiatExchangeEvents.external_exchange_link, {
         name,
         link,
         isCashIn: false,
@@ -62,7 +62,7 @@ function ExternalExchanges({ route }: Props) {
         })}
       </Text>
 
-      <ScrollView style={styles.exchangesContainer}>
+      <ScrollView>
         {providers?.map((provider, index) => {
           return (
             <ListItem testID="provider" key={provider.name} onPress={goToExchange(provider)}>
@@ -85,7 +85,7 @@ const styles = StyleSheet.create({
     paddingBottom: variables.contentPadding,
   },
   pleaseSelectExchange: {
-    ...fontStyles.regular,
+    ...typeScale.bodyMedium,
     paddingHorizontal: variables.contentPadding,
     paddingBottom: variables.contentPadding,
   },
@@ -95,12 +95,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flex: 4,
   },
-  exchangesContainer: {
-    paddingRight: variables.contentPadding,
-  },
   optionTitle: {
     flex: 3,
-    ...fontStyles.regular,
+    ...typeScale.bodyMedium,
   },
 })
 

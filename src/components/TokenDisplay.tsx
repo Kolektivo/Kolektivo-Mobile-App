@@ -1,6 +1,7 @@
 import BigNumber from 'bignumber.js'
 import * as React from 'react'
 import { StyleProp, Text, TextStyle } from 'react-native'
+import { APPROX_SYMBOL } from 'src/components/TokenEnterAmount'
 import { LocalCurrencyCode, LocalCurrencySymbol } from 'src/localCurrency/consts'
 import { getLocalCurrencySymbol, usdToLocalCurrencyRateSelector } from 'src/localCurrency/selectors'
 import { useSelector } from 'src/redux/hooks'
@@ -73,6 +74,7 @@ function TokenDisplay({
   const amountToShow = showLocalAmount ? amountInLocalCurrency : new BigNumber(amount)
 
   const sign = hideSign ? '' : amountToShow.isNegative() ? '-' : showExplicitPositiveSign ? '+' : ''
+  const amountFallback = '--'
 
   return (
     <Text style={style} testID={testID}>
@@ -80,10 +82,12 @@ function TokenDisplay({
         errorFallback
       ) : (
         <>
-          {showApprox && '~'}
+          {showApprox && `${APPROX_SYMBOL} `}
           {sign}
           {showLocalAmount && fiatSymbol}
-          {formatValueToDisplay(amountToShow.absoluteValue())}
+          {amountToShow.isNaN()
+            ? amountFallback
+            : formatValueToDisplay(amountToShow.absoluteValue())}
           {!showLocalAmount && showSymbol && ` ${tokenInfo?.symbol ?? ''}`}
         </>
       )}

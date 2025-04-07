@@ -5,17 +5,14 @@ import { FirebaseDatabaseTypes } from '@react-native-firebase/database'
 import '@react-native-firebase/messaging'
 // We can't combine the 2 imports otherwise it only imports the type and fails at runtime
 import { FirebaseMessagingTypes } from '@react-native-firebase/messaging'
-import remoteConfig, { FirebaseRemoteConfigTypes } from '@react-native-firebase/remote-config'
-import CleverTap from 'clevertap-react-native'
 import { PermissionsAndroid, PermissionStatus, Platform } from 'react-native'
 import DeviceInfo from 'react-native-device-info'
 import { eventChannel } from 'redux-saga'
 import { handleUpdateAccountRegistration } from 'src/account/saga'
 import { updateAccountRegistration } from 'src/account/updateAccountRegistration'
+import AppAnalytics from 'src/analytics/AppAnalytics'
 import { AppEvents } from 'src/analytics/Events'
-import ValoraAnalytics from 'src/analytics/ValoraAnalytics'
 import { pushNotificationsPermissionChanged } from 'src/app/actions'
-import { RemoteConfigValues } from 'src/app/saga'
 import {
   pushNotificationRequestedUnixTimeSelector,
   pushNotificationsEnabledSelector,
@@ -23,7 +20,6 @@ import {
 import { DEFAULT_PERSONA_TEMPLATE_ID, FETCH_TIMEOUT_DURATION, FIREBASE_ENABLED } from 'src/config'
 import { Actions } from 'src/firebase/actions'
 import { handleNotification } from 'src/firebase/notifications'
-import { REMOTE_CONFIG_VALUES_DEFAULTS } from 'src/firebase/remoteConfigValuesDefaults'
 import { Actions as HomeActions } from 'src/home/actions'
 import { NotificationReceiveState } from 'src/notifications/types'
 import { retrieveSignedMessage } from 'src/pincode/authentication'
@@ -181,7 +177,7 @@ export function* initializeCloudMessaging(app: ReactNativeFirebase.Module, addre
         permissionGranted = permissionStatus === firebase.messaging.AuthorizationStatus.AUTHORIZED
       }
 
-      ValoraAnalytics.track(AppEvents.push_notifications_permission_changed, {
+      AppAnalytics.track(AppEvents.push_notifications_permission_changed, {
         enabled: permissionGranted,
       })
       yield* put(pushNotificationsPermissionChanged(permissionGranted, true))
@@ -198,7 +194,7 @@ export function* initializeCloudMessaging(app: ReactNativeFirebase.Module, addre
     const pushNotificationsEnabled = authStatus !== firebase.messaging.AuthorizationStatus.DENIED
 
     if (lastKnownEnabledState !== pushNotificationsEnabled) {
-      ValoraAnalytics.track(AppEvents.push_notifications_permission_changed, {
+      AppAnalytics.track(AppEvents.push_notifications_permission_changed, {
         enabled: pushNotificationsEnabled,
       })
       yield* put(pushNotificationsPermissionChanged(pushNotificationsEnabled, false))
@@ -208,19 +204,11 @@ export function* initializeCloudMessaging(app: ReactNativeFirebase.Module, addre
   const isEmulator = yield* call([DeviceInfo, 'isEmulator'])
   // Emulators can't handle fcm tokens and calling getToken on them will throw an error
   if (!isEmulator) {
-    yield* call([CleverTap, 'registerForPush'])
     fcmToken = yield* call([app.messaging(), 'getToken'])
   }
   if (fcmToken) {
     yield* call(handleUpdateAccountRegistration)
-
-    if (Platform.OS === 'android') {
-      // @ts-ignore FCM constant missing from types
-      yield* call([CleverTap, 'setPushToken'], fcmToken, CleverTap.FCM)
-    }
   }
-
-  CleverTap.createNotificationChannel('CleverTapChannelId', 'CleverTap', 'default channel', 5, true)
 
   app.messaging().onTokenRefresh(async (fcmToken) => {
     Logger.info(TAG, 'Cloud Messaging token refreshed')
@@ -237,117 +225,10 @@ export function* initializeCloudMessaging(app: ReactNativeFirebase.Module, addre
         error
       )
     }
-
-    if (Platform.OS === 'android') {
-      // @ts-ignore FCM constant missing from types
-      CleverTap.setPushToken(fcmToken, CleverTap.FCM)
-    }
   })
 }
 
 const VALUE_CHANGE_HOOK = 'value'
-
-/*
-Get the Version deprecation information.
-Firebase DB Format:
-  (New) Add minVersion child to versions category with a string of the mininum version as string
-*/
-export function appVersionDeprecationChannel() {
-  if (!FIREBASE_ENABLED) {
-    return null
-  }
-
-  const errorCallback = (error: Error) => {
-    Logger.warn(TAG, error.toString())
-  }
-
-  return eventChannel<string>((emit: any) => {
-    const emitter = (snapshot: FirebaseDatabaseTypes.DataSnapshot) => {
-      const minVersion = snapshot.val().minVersion
-      emit(minVersion)
-    }
-
-    const onValueChange = firebase
-      .database()
-      .ref('versions')
-      .on(VALUE_CHANGE_HOOK, emitter, errorCallback)
-
-    const cancel = () => {
-      firebase.database().ref('versions').off(VALUE_CHANGE_HOOK, onValueChange)
-    }
-
-    return cancel
-  })
-}
-
-/*
-We use firebase remote config to manage feature flags.
-https://firebase.google.com/docs/remote-config
-
-This also allows us to run AB tests.
-https://firebase.google.com/docs/ab-testing/abtest-config
-*/
-export async function fetchRemoteConfigValues(): Promise<RemoteConfigValues | null> {
-  if (!FIREBASE_ENABLED) {
-    return null
-  }
-
-  await remoteConfig().setDefaults(REMOTE_CONFIG_VALUES_DEFAULTS)
-  // Don't cache values so we fetch the latest every time. https://rnfirebase.io/remote-config/usage
-  await remoteConfig().setConfigSettings({ minimumFetchIntervalMillis: 0 })
-  await remoteConfig().fetchAndActivate()
-
-  const flags: FirebaseRemoteConfigTypes.ConfigValues = remoteConfig().getAll()
-  Logger.debug(TAG, `Updated remote config values:`, flags)
-
-  // When adding a new remote config value there are 2 places that need updating:
-  // the RemoteConfigValues interface as well as the REMOTE_CONFIG_VALUES_DEFAULTS map
-  // REMOTE_CONFIG_VALUES_DEFAULTS is in remoteConfigValuesDefaults.ts
-  // RemoteConfigValues is in app/saga.ts
-
-  const superchargeConfigByTokenString = flags.superchargeTokenConfigByToken?.asString()
-  const fiatAccountSchemaCountryOverrides = flags.fiatAccountSchemaCountryOverrides?.asString()
-  const celoNewsString = flags.celoNews?.asString()
-
-  return {
-    // these next 2 flags are a bit weird because their default is undefined or null
-    // and the default map cannot have a value of undefined or null
-    // that is why we still need to check for it before calling a method
-    // in the future it would be great to avoid using these as default values
-    celoEducationUri: flags.celoEducationUri?.asString() ?? null,
-    dappListApiUrl: flags.dappListApiUrl?.asString() ?? null,
-    inviteRewardsVersion: flags.inviteRewardsVersion.asString(),
-    walletConnectV2Enabled: flags.walletConnectV2Enabled.asBoolean(),
-    superchargeApy: flags.superchargeApy.asNumber(),
-    superchargeTokenConfigByToken: superchargeConfigByTokenString
-      ? JSON.parse(superchargeConfigByTokenString)
-      : {},
-    pincodeUseExpandedBlocklist: flags.pincodeUseExpandedBlocklist.asBoolean(),
-    logPhoneNumberTypeEnabled: flags.logPhoneNumberTypeEnabled.asBoolean(),
-    allowOtaTranslations: flags.allowOtaTranslations.asBoolean(),
-    sentryTracesSampleRate: flags.sentryTracesSampleRate.asNumber(),
-    sentryNetworkErrors: flags.sentryNetworkErrors.asString().split(','),
-    maxNumRecentDapps: flags.maxNumRecentDapps.asNumber(),
-    dappsWebViewEnabled: flags.dappsWebViewEnabled.asBoolean(),
-    fiatConnectCashInEnabled: flags.fiatConnectCashInEnabled.asBoolean(),
-    fiatConnectCashOutEnabled: flags.fiatConnectCashOutEnabled.asBoolean(),
-    fiatAccountSchemaCountryOverrides: fiatAccountSchemaCountryOverrides
-      ? JSON.parse(fiatAccountSchemaCountryOverrides)
-      : {},
-    coinbasePayEnabled: flags.coinbasePayEnabled.asBoolean(),
-    showSwapMenuInDrawerMenu: flags.showSwapMenuInDrawerMenu.asBoolean(),
-    maxSwapSlippagePercentage: flags.maxSwapSlippagePercentage.asNumber(),
-    networkTimeoutSeconds: flags.networkTimeoutSeconds.asNumber(),
-    celoNews: celoNewsString ? JSON.parse(celoNewsString) : {},
-    // Convert to percentage, so we're consistent with the price impact value returned by our swap API
-    priceImpactWarningThreshold: flags.priceImpactWarningThreshold.asNumber() * 100,
-    superchargeRewardContractAddress: flags.superchargeRewardContractAddress.asString(),
-  }
-}
-
-export async function knownAddressesChannel() {
-  return simpleReadChannel('addressesExtraInfo')
-}
 
 export async function notificationsChannel() {
   return simpleReadChannel('notificationsV2')
@@ -414,6 +295,11 @@ export function simpleReadChannel(key: string) {
 }
 
 export async function readOnceFromFirebase(path: string) {
+  if (!FIREBASE_ENABLED) {
+    Logger.info(`${TAG}/readOnceFromFirebase`, 'Firebase disabled')
+    return null
+  }
+
   const timeout = new Promise<void>((_, reject) =>
     setTimeout(
       () => reject(Error(`Reading from Firebase @ ${path} timed out.`)),

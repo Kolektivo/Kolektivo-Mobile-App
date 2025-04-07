@@ -13,10 +13,10 @@ exports[`PhoneNumberInput renders and behaves correctly 1`] = `
     style={
       [
         {
-          "color": "#A49B80",
+          "color": "#757575",
           "fontFamily": "Inter-SemiBold",
-          "fontSize": 13,
-          "lineHeight": 16,
+          "fontSize": 14,
+          "lineHeight": 20,
         },
         {
           "marginBottom": 8,
@@ -29,7 +29,7 @@ exports[`PhoneNumberInput renders and behaves correctly 1`] = `
   <View
     style={
       {
-        "alignItems": "stretch",
+        "alignItems": "center",
         "flexDirection": "row",
       }
     }
@@ -74,6 +74,7 @@ exports[`PhoneNumberInput renders and behaves correctly 1`] = `
             "alignItems": "stretch",
             "backgroundColor": "#FFFFFF",
             "borderRadius": 8,
+            "height": 48,
             "paddingHorizontal": 12,
             "width": 80,
           },
@@ -96,7 +97,6 @@ exports[`PhoneNumberInput renders and behaves correctly 1`] = `
               {
                 "alignItems": "center",
                 "flexDirection": "row",
-                "flexWrap": "wrap",
               },
               {
                 "justifyContent": "center",
@@ -128,15 +128,16 @@ exports[`PhoneNumberInput renders and behaves correctly 1`] = `
           >
             <svg
               fill="none"
-              height={16}
+              height={38}
               strokeWidth={1}
               style={{}}
               testID="downArrowIcon"
-              viewBox="0 0 16 16"
-              width={16}
+              viewBox="0 0 24 24"
+              width={38}
             >
               <path
-                d="M3 6l5 5 5-5"
+                d="m16.59 8.707.703.703L12 14.703 6.707 9.41l.703-.703 4.237 4.227.353.352.353-.352 4.237-4.227Z"
+                fill="#757575"
                 stroke="#757575"
               />
             </svg>
@@ -146,65 +147,54 @@ exports[`PhoneNumberInput renders and behaves correctly 1`] = `
     </View>
     <View
       style={
-        {
-          "flex": 1,
-          "marginLeft": 7,
-        }
+        [
+          {
+            "alignItems": "center",
+            "backgroundColor": "#FFFFFF",
+            "flex": 1,
+            "flexDirection": "row",
+            "gap": 8,
+            "justifyContent": "center",
+          },
+          {
+            "backgroundColor": "#FFFFFF",
+            "borderBottomWidth": 1,
+            "borderColor": "#E6E6E6",
+            "marginLeft": 16,
+          },
+        ]
       }
     >
-      <View
+      <TextInput
+        countryCallingCode="+33"
+        editable={true}
+        keyboardType="phone-pad"
+        onBlur={[Function]}
+        onChangeText={[Function]}
+        onFocus={[Function]}
+        placeholder="00 00 00 00 00"
+        placeholderTextColor="#757575"
+        selectionColor="#757575"
         style={
           [
             {
-              "alignItems": "center",
+              "color": "#2E3338",
               "flex": 1,
-              "flexDirection": "row",
-              "gap": 8,
-              "justifyContent": "center",
+              "fontFamily": "Inter-Regular",
+              "fontSize": 16,
+              "lineHeight": 22,
+              "paddingHorizontal": 0,
+              "paddingVertical": 12,
             },
+            undefined,
             undefined,
           ]
         }
-      >
-        <TextInput
-          countryCallingCode="+33"
-          editable={true}
-          keyboardType="phone-pad"
-          onBlur={[Function]}
-          onChangeText={[Function]}
-          onFocus={[Function]}
-          placeholder="00 00 00 00 00"
-          placeholderTextColor="#757575"
-          style={
-            [
-              {
-                "color": "#2E3338",
-                "flex": 1,
-                "fontFamily": "Inter-Regular",
-                "fontSize": 16,
-                "lineHeight": 22,
-                "paddingHorizontal": 0,
-                "paddingVertical": 12,
-              },
-              undefined,
-              undefined,
-            ]
-          }
-          testID="PhoneNumberField"
-          textContentType="telephoneNumber"
-          underlineColorAndroid="transparent"
-          validator="phone"
-          value=""
-        />
-      </View>
-      <View
-        style={
-          {
-            "backgroundColor": "#A49B80",
-            "height": 1,
-            "opacity": 0.2,
-          }
-        }
+        testID="PhoneNumberField"
+        textContentType="telephoneNumber"
+        underlineColorAndroid="transparent"
+        validator="phone"
+        value=""
       />
     </View>
   </View>

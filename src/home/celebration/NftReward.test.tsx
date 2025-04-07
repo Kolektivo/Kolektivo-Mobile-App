@@ -2,8 +2,8 @@ import { fireEvent, render } from '@testing-library/react-native'
 import React from 'react'
 import { StyleSheet } from 'react-native'
 import { Provider } from 'react-redux'
+import AppAnalytics from 'src/analytics/AppAnalytics'
 import { HomeEvents } from 'src/analytics/Events'
-import ValoraAnalytics from 'src/analytics/ValoraAnalytics'
 import { openDeepLink } from 'src/app/actions'
 import { nftRewardDisplayed } from 'src/home/actions'
 import { getFeatureGate } from 'src/statsig/index'
@@ -12,7 +12,7 @@ import { createMockStore } from 'test/utils'
 import { mockNftAllFields, mockStoreReminderReady, mockStoreRewardReady } from 'test/values'
 import NftReward from './NftReward'
 
-jest.mock('src/analytics/ValoraAnalytics')
+jest.mock('src/analytics/AppAnalytics')
 jest.mock('src/statsig')
 
 describe('NftReward', () => {
@@ -45,7 +45,7 @@ describe('NftReward', () => {
 
     expect(store.dispatch).toHaveBeenCalledWith(nftRewardDisplayed())
 
-    expect(ValoraAnalytics.track).toHaveBeenCalledWith(HomeEvents.nft_reward_accept, {
+    expect(AppAnalytics.track).toHaveBeenCalledWith(HomeEvents.nft_reward_accept, {
       networkId: mockNftAllFields.networkId,
       contractAddress: mockNftAllFields.contractAddress,
       remainingDays: 30,
@@ -65,10 +65,10 @@ describe('NftReward', () => {
     expect(pillLabel).toHaveTextContent(
       'nftCelebration.rewardBottomSheet.expirationLabel, {"expirationLabelText":"in about 100 years"}'
     )
-    expect(StyleSheet.flatten(pillLabel.props.style)).toHaveProperty('color', Colors.black)
+    expect(StyleSheet.flatten(pillLabel.props.style)).toHaveProperty('color', Colors.contentPrimary)
     expect(StyleSheet.flatten(getByTestId('NftReward/Pill').props.style)).toHaveProperty(
       'backgroundColor',
-      Colors.gray1
+      Colors.info
     )
   })
 
@@ -85,10 +85,10 @@ describe('NftReward', () => {
     expect(pillLabel).toHaveTextContent(
       'nftCelebration.rewardReminderBottomSheet.expirationLabel, {"expirationLabelText":"in about 1 month"}'
     )
-    expect(StyleSheet.flatten(pillLabel.props.style)).toHaveProperty('color', Colors.warningDark)
+    expect(StyleSheet.flatten(pillLabel.props.style)).toHaveProperty('color', Colors.warningPrimary)
     expect(StyleSheet.flatten(getByTestId('NftReward/Pill').props.style)).toHaveProperty(
       'backgroundColor',
-      Colors.warningLight
+      Colors.warningSecondary
     )
   })
 })

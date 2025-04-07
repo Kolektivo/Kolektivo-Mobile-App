@@ -32,7 +32,7 @@ exports[`SmartTopAlert renders correctly 1`] = `
       [
         {
           "alignItems": "center",
-          "backgroundColor": "#0768AE",
+          "backgroundColor": "#9C6E00",
           "flexDirection": "row",
           "justifyContent": "center",
           "paddingBottom": 10,
@@ -59,11 +59,11 @@ exports[`SmartTopAlert renders correctly 1`] = `
             "color": "#2E3338",
             "fontFamily": "Inter-Regular",
             "fontSize": 14,
-            "lineHeight": 18,
+            "lineHeight": 20,
           },
           false,
           {
-            "color": "white",
+            "color": "#FFFFFF",
             "lineHeight": undefined,
             "textAlign": "center",
           },
@@ -77,10 +77,10 @@ exports[`SmartTopAlert renders correctly 1`] = `
               "color": "#2E3338",
               "fontFamily": "Inter-Medium",
               "fontSize": 14,
-              "lineHeight": 18,
+              "lineHeight": 20,
             },
             {
-              "color": "white",
+              "color": "#FFFFFF",
               "lineHeight": undefined,
               "textAlign": "center",
             },

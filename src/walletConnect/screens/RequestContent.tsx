@@ -1,4 +1,3 @@
-import { IClientMeta } from '@walletconnect/legacy-types'
 import { CoreTypes } from '@walletconnect/types'
 import React, { ReactElement, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -6,7 +5,7 @@ import { StyleSheet, Text, View } from 'react-native'
 import Button, { BtnSizes, BtnTypes } from 'src/components/Button'
 import { activeDappSelector } from 'src/dapps/selectors'
 import { useSelector } from 'src/redux/hooks'
-import { Colors } from 'src/styles/colors'
+import Colors from 'src/styles/colors'
 import { typeScale } from 'src/styles/fonts'
 import { Spacing } from 'src/styles/styles'
 import Logos from 'src/walletConnect/screens/Logos'
@@ -26,6 +25,7 @@ interface BaseProps {
   testId: string
   children?: React.ReactNode
   buttonText?: string | null
+  buttonLoading?: boolean
 }
 
 interface ConfirmProps extends BaseProps {
@@ -41,7 +41,7 @@ interface DismissProps extends BaseProps {
 
 type Props = ConfirmProps | DismissProps
 
-export const useDappMetadata = (metadata?: IClientMeta | CoreTypes.Metadata | null) => {
+export const useDappMetadata = (metadata?: CoreTypes.Metadata | null) => {
   const activeDapp = useSelector(activeDappSelector)
 
   if (!metadata) {
@@ -91,10 +91,13 @@ function RequestContent(props: Props) {
     testId,
     children,
     buttonText,
+    buttonLoading,
   } = props
   const { t } = useTranslation()
   const [isPressed, setIsPressed] = useState(false)
   const isPressedRef = useRef(false)
+
+  const showButtonLoading = buttonLoading || isPressed
 
   const onPress = () => {
     setIsPressed(true)
@@ -175,8 +178,8 @@ function RequestContent(props: Props) {
           type={BtnTypes.PRIMARY}
           size={BtnSizes.FULL}
           text={buttonText ?? t('allow')}
-          showLoading={isPressed}
-          disabled={isPressed}
+          showLoading={showButtonLoading}
+          disabled={showButtonLoading}
           onPress={onPress}
           testID={`${testId}/Allow`}
         />
@@ -186,8 +189,8 @@ function RequestContent(props: Props) {
           type={BtnTypes.SECONDARY}
           size={BtnSizes.FULL}
           text={buttonText ?? t('dismiss')}
-          showLoading={isPressed}
-          disabled={isPressed}
+          showLoading={showButtonLoading}
+          disabled={showButtonLoading}
           onPress={onPress}
           testID={`${testId}/Dismiss`}
         />
@@ -202,22 +205,19 @@ const styles = StyleSheet.create({
   },
   header: {
     ...typeScale.titleSmall,
-    color: Colors.black,
     paddingVertical: Spacing.Regular16,
   },
   description: {
     ...typeScale.bodySmall,
-    color: Colors.black,
     marginBottom: Spacing.Thick24,
   },
   requestDetailLabel: {
     ...typeScale.labelXSmall,
-    color: Colors.gray4,
+    color: Colors.contentSecondary,
     marginBottom: 4,
   },
   requestDetailValue: {
     ...typeScale.labelSemiBoldSmall,
-    color: Colors.black,
   },
 })
 

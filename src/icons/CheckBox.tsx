@@ -1,19 +1,19 @@
 import * as React from 'react'
 import Svg, { Path } from 'react-native-svg'
-import Colors from 'src/styles/colors'
+import Colors, { ColorValue } from 'src/styles/colors'
 
 type Props = {
   checked: boolean
   testID?: string
-  checkedColor?: Colors
-  uncheckedColor?: Colors
+  checkedColor?: ColorValue
+  uncheckedColor?: ColorValue
 }
 
 const CheckBox = ({
   checked,
   testID,
-  checkedColor = Colors.primary,
-  uncheckedColor = Colors.gray3,
+  checkedColor = Colors.contentPrimary,
+  uncheckedColor = Colors.inactive,
 }: Props) => {
   if (checked)
     return (

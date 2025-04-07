@@ -1,11 +1,10 @@
 import React, { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Platform } from 'react-native'
 import Education, { EducationTopic } from 'src/account/Education'
 import { setGoldEducationCompleted } from 'src/account/actions'
 import { celoEducationCompletedSelector } from 'src/account/selectors'
+import AppAnalytics from 'src/analytics/AppAnalytics'
 import { OnboardingEvents } from 'src/analytics/Events'
-import ValoraAnalytics from 'src/analytics/ValoraAnalytics'
 import { BtnTypes } from 'src/components/Button'
 import { celoEducation1, celoEducation2, celoEducation3, celoEducation4 } from 'src/images/Images'
 import { noHeader } from 'src/navigator/Headers'
@@ -20,7 +19,7 @@ export default function GoldEducation() {
   const isCeloEducationComplete = useSelector(celoEducationCompletedSelector)
 
   const onFinish = () => {
-    ValoraAnalytics.track(OnboardingEvents.celo_education_complete)
+    AppAnalytics.track(OnboardingEvents.celo_education_complete)
 
     if (isCeloEducationComplete) {
       navigateBack()
@@ -33,7 +32,7 @@ export default function GoldEducation() {
   const stepInfo = useStep()
 
   useEffect(() => {
-    ValoraAnalytics.track(OnboardingEvents.celo_education_start)
+    AppAnalytics.track(OnboardingEvents.celo_education_start)
   }, [])
 
   return (
@@ -49,9 +48,6 @@ export default function GoldEducation() {
 
 GoldEducation.navigationOptions = {
   ...noHeader,
-  ...Platform.select({
-    ios: { animation: 'slide_from_bottom' },
-  }),
 }
 
 function useStep() {

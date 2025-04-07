@@ -2,8 +2,8 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack'
 import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ActivityIndicator, SafeAreaView, StyleSheet, Text, View } from 'react-native'
+import AppAnalytics from 'src/analytics/AppAnalytics'
 import { FiatExchangeEvents } from 'src/analytics/Events'
-import ValoraAnalytics from 'src/analytics/ValoraAnalytics'
 import BackButton from 'src/components/BackButton'
 import Button, { BtnSizes, BtnTypes } from 'src/components/Button'
 import TextButton from 'src/components/TextButton'
@@ -11,10 +11,10 @@ import Touchable from 'src/components/Touchable'
 import FiatConnectQuote from 'src/fiatExchanges/quotes/FiatConnectQuote'
 import { SettlementEstimation, SettlementTime } from 'src/fiatExchanges/quotes/constants'
 import { getSettlementTimeString } from 'src/fiatExchanges/quotes/utils'
-import { CICOFlow } from 'src/fiatExchanges/utils'
+import { CICOFlow } from 'src/fiatExchanges/types'
 import { fiatConnectTransferSelector } from 'src/fiatconnect/selectors'
 import { FiatAccount, SendingTransferStatus } from 'src/fiatconnect/slice'
-import CheckmarkCircle from 'src/icons/CheckmarkCircle'
+import Checkmark from 'src/icons/Checkmark'
 import CircledIcon from 'src/icons/CircledIcon'
 import ClockIcon from 'src/icons/ClockIcon'
 import OpenLinkIcon from 'src/icons/OpenLinkIcon'
@@ -24,8 +24,8 @@ import { Screens } from 'src/navigator/Screens'
 import { StackParamList } from 'src/navigator/types'
 import { useSelector } from 'src/redux/hooks'
 import appTheme from 'src/styles/appTheme'
-import colors from 'src/styles/colors'
-import fontStyles from 'src/styles/fonts'
+import Colors from 'src/styles/colors'
+import { typeScale } from 'src/styles/fonts'
 import { Spacing } from 'src/styles/styles'
 import variables from 'src/styles/variables'
 import networkConfig, { blockExplorerUrls } from 'src/web3/networkConfig'
@@ -44,7 +44,7 @@ const DESCRIPTION_STRINGS: Record<SettlementTime, string> = {
 type Props = NativeStackScreenProps<StackParamList, Screens.FiatConnectTransferStatus>
 
 function onBack(flow: CICOFlow, normalizedQuote: FiatConnectQuote, fiatAccount: FiatAccount) {
-  ValoraAnalytics.track(FiatExchangeEvents.cico_fc_transfer_error_retry, {
+  AppAnalytics.track(FiatExchangeEvents.cico_fc_transfer_error_retry, {
     flow,
     provider: normalizedQuote.getProviderId(),
   })
@@ -69,7 +69,7 @@ function FailureSection({
   const provider = normalizedQuote.getProviderId()
 
   const onPressSupport = () => {
-    ValoraAnalytics.track(FiatExchangeEvents.cico_fc_transfer_error_contact_support, {
+    AppAnalytics.track(FiatExchangeEvents.cico_fc_transfer_error_contact_support, {
       flow,
       provider,
     })
@@ -146,7 +146,11 @@ function SuccessOrProcessingSection({
   }
 
   if (status === SendingTransferStatus.Completed) {
-    icon = <CheckmarkCircle />
+    icon = (
+      <CircledIcon>
+        <Checkmark color={Colors.contentTertiary} height={22} width={22} />
+      </CircledIcon>
+    )
     title = t('fiatConnectStatusScreen.success.title')
     description = getTransferSettlementTimeString(normalizedQuote.getTimeEstimation())
     continueEvent = FiatExchangeEvents.cico_fc_transfer_success_complete
@@ -154,7 +158,7 @@ function SuccessOrProcessingSection({
   } else {
     icon = (
       <CircledIcon>
-        <ClockIcon color={colors.white} height={22} width={22} />
+        <ClockIcon color={Colors.contentTertiary} height={22} width={22} />
       </CircledIcon>
     )
     title = t('fiatConnectStatusScreen.txProcessing.title')
@@ -164,7 +168,7 @@ function SuccessOrProcessingSection({
   }
 
   const onPressTxDetails = () => {
-    ValoraAnalytics.track(txDetailsEvent, {
+    AppAnalytics.track(txDetailsEvent, {
       flow,
       provider,
       txHash,
@@ -173,7 +177,7 @@ function SuccessOrProcessingSection({
   }
 
   const onPressContinue = () => {
-    ValoraAnalytics.track(continueEvent, {
+    AppAnalytics.track(continueEvent, {
       flow,
       provider,
       txHash,
@@ -192,7 +196,7 @@ function SuccessOrProcessingSection({
             <Text style={styles.txDetails}>
               {t('fiatConnectStatusScreen.success.viewOnCeloScan')}
             </Text>
-            <OpenLinkIcon color={colors.gray4} />
+            <OpenLinkIcon color={Colors.textLink} />
           </View>
         </Touchable>
       )}
@@ -215,7 +219,7 @@ export default function FiatConnectTransferStatusScreen({ route, navigation }: P
   const fiatConnectTransfer = useSelector(fiatConnectTransferSelector)!
 
   const onPressCancel = () => {
-    ValoraAnalytics.track(FiatExchangeEvents.cico_fc_transfer_error_cancel, {
+    AppAnalytics.track(FiatExchangeEvents.cico_fc_transfer_error_cancel, {
       flow,
       provider: normalizedQuote.getProviderId(),
     })
@@ -237,7 +241,11 @@ export default function FiatConnectTransferStatusScreen({ route, navigation }: P
     case SendingTransferStatus.Sending:
       return (
         <View style={styles.activityIndicatorContainer}>
-          <ActivityIndicator testID="loadingTransferStatus" size="large" color={colors.primary} />
+          <ActivityIndicator
+            testID="loadingTransferStatus"
+            size="large"
+            color={Colors.loadingIndicator}
+          />
           <Text
             style={{ ...styles.loadingDescription, color: loadingDescriptionColor }}
             testID="loadingDescription"
@@ -299,7 +307,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
   },
   txDetails: {
-    color: colors.gray4,
+    color: Colors.textLink,
   },
   iconContainer: {
     marginBottom: 24,
@@ -310,17 +318,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   title: {
-    ...fontStyles.h2,
+    ...typeScale.titleSmall,
   },
   description: {
-    ...fontStyles.regular,
+    ...typeScale.bodyMedium,
     textAlign: 'center',
     marginTop: 12,
     paddingHorizontal: 48,
     paddingBottom: 24,
   },
   loadingDescription: {
-    ...fontStyles.large,
+    ...typeScale.bodyLarge,
     textAlign: 'center',
     marginTop: 12,
     paddingHorizontal: 48,
@@ -336,8 +344,8 @@ const styles = StyleSheet.create({
     marginTop: 13,
   },
   cancelBtn: {
-    ...fontStyles.regular,
-    color: colors.gray3,
+    ...typeScale.bodyMedium,
+    color: Colors.navigationTopSecondary,
     paddingHorizontal: Spacing.Thick24,
   },
 })

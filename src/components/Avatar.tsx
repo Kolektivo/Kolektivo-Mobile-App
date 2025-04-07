@@ -2,13 +2,13 @@ import * as React from 'react'
 import { WithTranslation } from 'react-i18next'
 import { StyleSheet, Text, TextStyle, View } from 'react-native'
 import { defaultCountryCodeSelector } from 'src/account/selectors'
+import { formatShortenedAddress } from 'src/account/utils'
 import ContactCircle from 'src/components/ContactCircle'
 import PhoneNumberWithFlag from 'src/components/PhoneNumberWithFlag'
-import { formatShortenedAddress } from 'src/components/ShortenedAddress'
 import { withTranslation } from 'src/i18n'
 import { Recipient, getDisplayName } from 'src/recipients/recipient'
 import { useSelector } from 'src/redux/hooks'
-import fontStyles from 'src/styles/fonts'
+import { typeScale } from 'src/styles/fonts'
 
 const DEFAULT_ICON_SIZE = 40
 
@@ -33,7 +33,7 @@ export function Avatar(props: Props) {
     <View style={styles.container}>
       <ContactCircle recipient={recipient} size={iconSize} />
       <Text
-        style={[displayNameStyle || fontStyles.small500, styles.contactName]}
+        style={[displayNameStyle || typeScale.labelSmall, styles.contactName]}
         numberOfLines={1}
         ellipsizeMode="tail"
       >
@@ -46,7 +46,7 @@ export function Avatar(props: Props) {
         />
       )}
       {!e164NumberToShow && !!address && !!recipient.name && (
-        <Text style={[fontStyles.small, styles.contactName]} numberOfLines={1} ellipsizeMode="tail">
+        <Text style={styles.contactName} numberOfLines={1} ellipsizeMode="tail">
           {formatShortenedAddress(address)}
         </Text>
       )}
@@ -62,6 +62,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   contactName: {
+    ...typeScale.bodyXSmall,
     paddingTop: 6,
     marginHorizontal: 20,
     textAlign: 'center',

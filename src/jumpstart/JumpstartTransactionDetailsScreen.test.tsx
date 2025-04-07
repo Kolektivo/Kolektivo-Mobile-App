@@ -28,7 +28,7 @@ import {
 } from 'test/values'
 import { encodeFunctionData } from 'viem'
 
-jest.mock('src/analytics/ValoraAnalytics')
+jest.mock('src/analytics/AppAnalytics')
 jest.mock('src/statsig')
 jest.mock('src/jumpstart/fetchClaimStatus')
 jest.mock('src/viem/prepareTransactions')
@@ -109,7 +109,7 @@ describe('JumpstartTransactionDetailsScreen', () => {
     fees = [],
     status = TransactionStatus.Complete,
   }: {
-    type: TokenTransactionTypeV2
+    type: TokenTransactionTypeV2.Sent | TokenTransactionTypeV2.Received
     address?: string
     amount?: TokenAmount
     metadata?: TokenTransferMetadata
@@ -117,7 +117,6 @@ describe('JumpstartTransactionDetailsScreen', () => {
     status?: TransactionStatus
   }): TokenTransfer {
     return {
-      __typename: 'TokenTransferV3',
       networkId: NetworkId['celo-alfajores'],
       type,
       transactionHash: mockTransactionHash,
@@ -267,6 +266,7 @@ describe('JumpstartTransactionDetailsScreen', () => {
     expect(prepareTransactions).toHaveBeenCalledWith({
       baseTransactions: [expect.objectContaining({ to: mockRetiredContractAddress })],
       feeCurrencies: expect.any(Array),
+      origin: 'jumpstart-claim',
     })
   })
 

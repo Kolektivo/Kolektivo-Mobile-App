@@ -2,7 +2,6 @@ import React from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, Text, View } from 'react-native'
 import { HomeEvents } from 'src/analytics/Events'
-import ValoraAnalytics from 'src/analytics/ValoraAnalytics'
 import Card from 'src/components/Card'
 import Touchable from 'src/components/Touchable'
 import { HomeActionName } from 'src/home/types'
@@ -16,20 +15,23 @@ import Colors from 'src/styles/colors'
 import { typeScale } from 'src/styles/fonts'
 import { Spacing } from 'src/styles/styles'
 
+type Actions = Record<
+  HomeActionName,
+  { title: string; icon: React.ReactNode; onPress: () => void; hidden?: boolean }
+>
+
 function ActionsCarousel() {
   const { t } = useTranslation()
 
-  const actions = [
-    {
-      name: HomeActionName.Send,
+  const actions: Actions = {
+    [HomeActionName.Send]: {
       title: t('homeActions.send'),
       icon: <Send color={Colors.primaryDark} />,
       onPress: () => {
         navigate(Screens.SendSelectRecipient)
       },
     },
-    {
-      name: HomeActionName.Receive,
+    [HomeActionName.Receive]: {
       title: t('homeActions.receive'),
       icon: <Receive color={Colors.primaryDark} />,
       onPress: () => {
@@ -48,7 +50,11 @@ function ActionsCarousel() {
         })
       },
     },
-  ]
+  }
+
+  if (!ENABLED_QUICK_ACTIONS.length) {
+    return null
+  }
 
   return (
     <View

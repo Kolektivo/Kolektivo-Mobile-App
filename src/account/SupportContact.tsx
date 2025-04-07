@@ -1,4 +1,3 @@
-import { anonymizedPhone } from '@celo/base/lib/phoneNumbers'
 import { NativeStackScreenProps } from '@react-navigation/native-stack'
 import React, { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -7,17 +6,12 @@ import DeviceInfo from 'react-native-device-info'
 import { e164NumberSelector, nameSelector } from 'src/account/selectors'
 import { sendSupportRequest } from 'src/account/zendesk'
 import { showMessage } from 'src/alert/actions'
-import {
-  multichainBetaStatusSelector,
-  phoneNumberVerifiedSelector,
-  sessionIdSelector,
-} from 'src/app/selectors'
-import { APP_NAME } from 'src/brandingConfig'
+import { phoneNumberVerifiedSelector, sessionIdSelector } from 'src/app/selectors'
 import Button, { BtnTypes } from 'src/components/Button'
 import KeyboardSpacer from 'src/components/KeyboardSpacer'
 import Switch from 'src/components/Switch'
 import TextInput from 'src/components/TextInput'
-import { DEFAULT_TESTNET } from 'src/config'
+import { APP_NAME, DEFAULT_TESTNET } from 'src/config'
 import { navigateBack } from 'src/navigator/NavigationService'
 import { Screens } from 'src/navigator/Screens'
 import { StackParamList } from 'src/navigator/types'
@@ -25,8 +19,9 @@ import { userLocationDataSelector } from 'src/networkInfo/selectors'
 import { hooksPreviewApiUrlSelector } from 'src/positions/selectors'
 import { useDispatch, useSelector } from 'src/redux/hooks'
 import colors from 'src/styles/colors'
-import fontStyles from 'src/styles/fonts'
+import { typeScale } from 'src/styles/fonts'
 import Logger from 'src/utils/Logger'
+import { anonymizedPhone } from 'src/utils/phoneNumbers'
 import { currentAccountSelector } from 'src/web3/selectors'
 type Props = NativeStackScreenProps<StackParamList, Screens.SupportContact>
 
@@ -70,7 +65,6 @@ function SupportContact({ route }: Props) {
   const currentAccount = useSelector(currentAccountSelector)
   const sessionId = useSelector(sessionIdSelector)
   const numberVerifiedCentralized = useSelector(phoneNumberVerifiedSelector)
-  const multichainBetaStatus = useSelector(multichainBetaStatusSelector)
   const { countryCodeAlpha2: country, region } = useSelector(userLocationDataSelector)
   const hooksPreviewApiUrl = useSelector(hooksPreviewApiUrlSelector)
   const dispatch = useDispatch()
@@ -89,7 +83,8 @@ function SupportContact({ route }: Props) {
 
   const onPressSendEmail = useCallback(async () => {
     setInProgress(true)
-    const deviceInfo = {
+    const userProperties = {
+      appName: APP_NAME,
       version: DeviceInfo.getVersion(),
       systemVersion: DeviceInfo.getSystemVersion(),
       buildNumber: DeviceInfo.getBuildNumber(),
@@ -103,7 +98,6 @@ function SupportContact({ route }: Props) {
       address: currentAccount,
       sessionId,
       numberVerifiedCentralized,
-      multichainBetaStatus,
       hooksPreviewEnabled: !!hooksPreviewApiUrl,
       network: DEFAULT_TESTNET,
     }
@@ -112,7 +106,7 @@ function SupportContact({ route }: Props) {
     try {
       await sendSupportRequest({
         message,
-        deviceInfo,
+        userProperties,
         logFiles: attachments,
         userEmail: email,
         userName: name,
@@ -139,7 +133,7 @@ function SupportContact({ route }: Props) {
           value={message}
           multiline={true}
           style={styles.messageTextInput}
-          placeholderTextColor={colors.gray4}
+          placeholderTextColor={colors.inactive}
           underlineColorAndroid="transparent"
           numberOfLines={10}
           placeholder={t('contactMessagePlaceholder') ?? undefined}
@@ -164,24 +158,24 @@ function SupportContact({ route }: Props) {
           multiline={false}
           value={email}
           style={styles.singleLineTextInput}
-          placeholderTextColor={colors.gray4}
+          placeholderTextColor={colors.inactive}
           placeholder={t('Email') ?? undefined}
           showClearButton={false}
           testID={'EmailEntry'}
         />
 
         <View style={styles.attachLogs}>
+          <Text style={typeScale.labelSemiBoldMedium}>{t('attachLogs')}</Text>
           <Switch
             testID="SwitchLogs"
             style={styles.logsSwitch}
             value={attachLogs}
             onValueChange={setAttachLogs}
           />
-          <Text style={fontStyles.regular}>{t('attachLogs')}</Text>
         </View>
         {inProgress && (
           <View style={styles.loadingSpinnerContainer} testID="ImportWalletLoadingCircle">
-            <ActivityIndicator size="large" color={colors.primary} />
+            <ActivityIndicator size="large" color={colors.loadingIndicator} />
           </View>
         )}
 
@@ -208,15 +202,15 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   disclaimerText: {
-    ...fontStyles.small,
-    color: colors.gray4,
+    ...typeScale.bodyMedium,
+    color: colors.contentSecondary,
   },
   container: {
     flex: 1,
   },
   innerContainer: {
     flexGrow: 1,
-    padding: 16,
+    paddingHorizontal: 16,
   },
   attachLogs: {
     flexShrink: 0,
@@ -224,45 +218,46 @@ const styles = StyleSheet.create({
     height: 40,
     alignItems: 'center',
     marginTop: 4,
+    gap: 12,
   },
   logsSwitch: {
     marginBottom: 3,
     marginRight: 10,
   },
   messageTextInput: {
-    ...fontStyles.regular,
+    ...typeScale.bodyMedium,
     paddingHorizontal: 12,
     paddingVertical: 4,
     marginTop: 8,
     alignItems: 'flex-start',
-    borderColor: colors.gray2,
-    borderRadius: 4,
-    borderWidth: 1.5,
+    borderColor: colors.borderPrimary,
+    borderRadius: 8,
+    borderWidth: 1,
     marginBottom: 16,
-    color: colors.black,
+    color: colors.contentPrimary,
     height: 80,
     maxHeight: 150,
   },
   singleLineTextInput: {
-    ...fontStyles.regular,
+    ...typeScale.bodyMedium,
     paddingHorizontal: 12,
     marginTop: 8,
     alignItems: 'flex-start',
-    borderColor: colors.gray2,
-    borderRadius: 4,
-    borderWidth: 1.5,
+    borderColor: colors.borderPrimary,
+    borderRadius: 8,
+    borderWidth: 1,
     marginBottom: 16,
-    color: colors.black,
+    color: colors.contentPrimary,
     maxHeight: 50,
   },
   headerText: {
-    ...fontStyles.small600,
+    ...typeScale.labelSemiBoldSmall,
   },
   loadingSpinnerContainer: {
     marginVertical: 20,
   },
   title: {
-    ...fontStyles.h1,
+    ...typeScale.titleMedium,
     marginVertical: 16,
   },
 })

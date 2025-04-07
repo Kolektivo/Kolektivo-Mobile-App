@@ -15,12 +15,11 @@ import {
 } from 'react-native'
 import Persona from 'src/account/Persona'
 import { KycStatus } from 'src/account/reducer'
+import AppAnalytics from 'src/analytics/AppAnalytics'
 import { CICOEvents, FiatExchangeEvents } from 'src/analytics/Events'
-import ValoraAnalytics from 'src/analytics/ValoraAnalytics'
-import { PRIVACY_LINK } from 'src/brandingConfig'
 import BackButton from 'src/components/BackButton'
 import FiatConnectQuote from 'src/fiatExchanges/quotes/FiatConnectQuote'
-import { CICOFlow } from 'src/fiatExchanges/utils'
+import { CICOFlow } from 'src/fiatExchanges/types'
 import { LinkAccountSection, getTranslationStrings } from 'src/fiatconnect/LinkAccountScreen'
 import { personaInProgressSelector } from 'src/fiatconnect/selectors'
 import { personaFinished, personaStarted, postKyc } from 'src/fiatconnect/slice'
@@ -31,8 +30,11 @@ import { emptyHeader } from 'src/navigator/Headers'
 import { Screens } from 'src/navigator/Screens'
 import { StackParamList } from 'src/navigator/types'
 import { useDispatch, useSelector } from 'src/redux/hooks'
+import { getDynamicConfigParams } from 'src/statsig'
+import { DynamicConfigs } from 'src/statsig/constants'
+import { StatsigDynamicConfigs } from 'src/statsig/types'
 import Colors from 'src/styles/colors'
-import fontStyles from 'src/styles/fonts'
+import { typeScale } from 'src/styles/fonts'
 import variables from 'src/styles/variables'
 import { navigateToURI } from 'src/utils/linking'
 
@@ -52,7 +54,11 @@ export default function KycLanding(
   if (personaInProgress) {
     return (
       <View style={styles.activityIndicatorContainer}>
-        <ActivityIndicator testID="personaInProgress" size="large" color={Colors.primary} />
+        <ActivityIndicator
+          testID="personaInProgress"
+          size="large"
+          color={Colors.loadingIndicator}
+        />
       </View>
     )
   }
@@ -142,9 +148,10 @@ function KycAgreement(props: {
   const dispatch = useDispatch()
   const { personaKycStatus, quote, disabled } = props
   const [agreementChecked, toggleAgreementChecked] = useState(false)
+  const { links } = getDynamicConfigParams(DynamicConfigs[StatsigDynamicConfigs.APP_CONFIG])
 
   const onPressPrivacyPolicy = () => {
-    navigateToURI(PRIVACY_LINK)
+    navigateToURI(links.privacy)
   }
 
   return (
@@ -159,7 +166,11 @@ function KycAgreement(props: {
           style={styles.checkBoxContainer}
         >
           {/* If disabled, the user is in step 2 and this should be completed already*/}
-          <CheckBox testID="checkbox" checked={disabled || agreementChecked} />
+          <CheckBox
+            testID="checkbox"
+            checked={disabled || agreementChecked}
+            checkedColor={Colors.accent}
+          />
         </TouchableOpacity>
         <Text style={styles.disclaimer}>
           <Trans i18nKey={'fiatConnectKycLandingScreen.disclaimer'}>
@@ -179,7 +190,7 @@ function KycAgreement(props: {
           setTimeout(() => {
             dispatch(personaStarted())
           }, 500) // delay to avoid screen flash
-          ValoraAnalytics.track(CICOEvents.persona_kyc_start)
+          AppAnalytics.track(CICOEvents.persona_kyc_start)
         }}
         onSuccess={() => {
           dispatch(postKyc({ quote }))
@@ -200,14 +211,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 48,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.gray2,
+    borderBottomColor: Colors.borderPrimary,
   },
   stepTwo: {
     alignItems: 'center',
     paddingVertical: 48,
   },
   stepText: {
-    ...fontStyles.notificationHeadline,
+    ...typeScale.labelSemiBoldMedium,
     textAlign: 'center',
     marginBottom: 12,
   },
@@ -218,17 +229,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   title: {
-    ...fontStyles.h2,
+    ...typeScale.titleSmall,
     marginHorizontal: 16,
   },
   description: {
-    ...fontStyles.regular,
+    ...typeScale.bodyMedium,
     textAlign: 'center',
     marginVertical: 12,
     marginHorizontal: 24,
   },
   disclaimer: {
-    color: Colors.gray5,
+    color: Colors.contentSecondary,
     textAlign: 'left',
     marginLeft: 11,
     fontSize: 13,

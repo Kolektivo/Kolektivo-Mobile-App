@@ -1,4 +1,4 @@
-import GorhomBottomSheet, { BottomSheetProps } from '@gorhom/bottom-sheet'
+import { BottomSheetModal, BottomSheetProps } from '@gorhom/bottom-sheet'
 import React, { Dispatch, SetStateAction, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, Text, View } from 'react-native'
@@ -13,12 +13,12 @@ import { typeScale } from 'src/styles/fonts'
 import { Spacing } from 'src/styles/styles'
 
 const OPTION_HEIGHT = 60
-const MAX_OPTIONS_IN_VIEW = 5
+const MAX_OPTIONS_IN_VIEW = 10.5
 
 export interface MultiSelectBottomSheetProps<T extends string> {
-  forwardedRef: React.RefObject<GorhomBottomSheet>
+  forwardedRef: React.RefObject<BottomSheetModal>
   onChange?: BottomSheetProps['onChange']
-  onClose?: () => void
+  onSelect?: (ids: T[]) => void
   onOpen?: () => void
   handleComponent?: BottomSheetProps['handleComponent']
   options: Option<T>[]
@@ -37,7 +37,7 @@ interface Option<T extends string> {
 
 function MultiSelectBottomSheet<T extends string>({
   forwardedRef,
-  onClose,
+  onSelect,
   onOpen,
   options,
   setSelectedOptions,
@@ -52,32 +52,48 @@ function MultiSelectBottomSheet<T extends string>({
   const isEveryOptionSelected = options.length === selectedOptions.length
 
   const handleClose = () => {
-    onClose?.()
+    forwardedRef.current?.close()
+  }
+
+  const handleSelection = (newOptions: T[]) => {
+    setSelectedOptions(newOptions)
+    onSelect?.(newOptions)
+  }
+
+  const handleSelectAll = () => {
+    handleSelection(options.map((option) => option.id))
+
+    if (mode === 'select-all-or-one') {
+      handleClose()
+    }
   }
 
   const toggleOption = (option: Option<T>) => {
-    setSelectedOptions((prevSelectedOptions) => {
-      if (mode === 'select-all-or-one' || options.length === prevSelectedOptions.length) {
-        return [option.id]
-      } else if (prevSelectedOptions.includes(option.id)) {
-        return prevSelectedOptions.filter((selectedOption) => selectedOption !== option.id)
-      } else {
-        return [...prevSelectedOptions, option.id]
-      }
-    })
+    if (mode === 'select-all-or-one') {
+      // automatically close the bottom sheet after state update if only one option can be selected
+      handleSelection([option.id])
+      handleClose()
+    } else {
+      const isOptionPreviouslySelected = selectedOptions.includes(option.id)
+      const updatedSelectedOptions = isEveryOptionSelected
+        ? [option.id]
+        : isOptionPreviouslySelected
+          ? selectedOptions.filter((selectedOption) => selectedOption !== option.id)
+          : [...selectedOptions, option.id]
+      handleSelection(updatedSelectedOptions)
+    }
   }
 
   return (
     <BottomSheetBase
       forwardedRef={forwardedRef}
-      onClose={handleClose}
       onOpen={onOpen}
       backgroundStyle={{ backgroundColor: 'transparent' }}
       handleIndicatorStyle={{ width: 0 }}
     >
       <BottomSheetScrollView
         forwardedRef={scrollViewRef}
-        testId={'MultiSelectBottomSheet'}
+        testId="MultiSelectBottomSheet"
         containerStyle={styles.bottomSheetScrollView}
       >
         <View style={[styles.option, styles.borderRadiusTop]}>
@@ -88,10 +104,11 @@ function MultiSelectBottomSheet<T extends string>({
             <OptionLineItem
               text={selectAllText}
               isSelected={isEveryOptionSelected}
-              onPress={() => setSelectedOptions(options.map((option) => option.id))}
+              onPress={handleSelectAll}
             />
             {options.map((option) => (
               <OptionLineItem
+                key={option.id}
                 text={option.text}
                 iconUrl={option.iconUrl}
                 isSelected={!!selectedOptions.includes(option.id) && !isEveryOptionSelected}
@@ -138,7 +155,7 @@ function OptionLineItem({ onPress, text, iconUrl, isSelected }: OptionLineItemPr
               {isSelected && (
                 <Checkmark
                   testID={`${text}-checkmark`}
-                  color={Colors.black}
+                  color={Colors.contentPrimary}
                   height={Spacing.Thick24}
                   width={Spacing.Thick24}
                 />
@@ -154,7 +171,7 @@ function OptionLineItem({ onPress, text, iconUrl, isSelected }: OptionLineItemPr
 const styles = StyleSheet.create({
   doneButton: {
     borderRadius: Spacing.Regular16,
-    backgroundColor: Colors.white,
+    backgroundColor: Colors.backgroundPrimary,
     height: 56,
     flexGrow: 1,
     alignItems: 'center',
@@ -199,7 +216,7 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
     paddingHorizontal: Spacing.Thick24,
     borderTopWidth: 1,
-    borderColor: Colors.gray2,
+    borderColor: Colors.borderPrimary,
   },
   optionRow: {
     flexDirection: 'row',
@@ -208,12 +225,12 @@ const styles = StyleSheet.create({
   borderRadiusTop: {
     borderTopLeftRadius: Spacing.Regular16,
     borderTopRightRadius: Spacing.Regular16,
-    backgroundColor: Colors.white,
+    backgroundColor: Colors.backgroundPrimary,
   },
   optionsContainer: {
     flexDirection: 'column',
     marginBottom: Spacing.Smallest8,
-    backgroundColor: Colors.white,
+    backgroundColor: Colors.backgroundPrimary,
     borderBottomLeftRadius: Spacing.Regular16,
     borderBottomRightRadius: Spacing.Regular16,
   },

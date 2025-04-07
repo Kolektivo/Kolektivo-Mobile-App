@@ -3,7 +3,7 @@ import { StyleProp, StyleSheet, Text, View, ViewStyle } from 'react-native'
 import { ScrollView } from 'react-native-gesture-handler'
 import Touchable from 'src/components/Touchable'
 import DownArrowIcon from 'src/icons/DownArrowIcon'
-import colors from 'src/styles/colors'
+import Colors from 'src/styles/colors'
 import { typeScale } from 'src/styles/fonts'
 import { Spacing } from 'src/styles/styles'
 import { NetworkId } from 'src/transactions/types'
@@ -32,9 +32,8 @@ export type FilterChip<T> = BooleanFilterChip<T> | NetworkFilterChip<T>
 interface Props<T> {
   chips: FilterChip<T>[]
   onSelectChip(chip: FilterChip<T>): void
-  primaryColor: colors
-  secondaryColor: colors
   style?: StyleProp<ViewStyle>
+  contentContainerStyle?: StyleProp<ViewStyle>
   forwardedRef?: React.RefObject<ScrollView>
   scrollEnabled?: boolean
 }
@@ -42,9 +41,8 @@ interface Props<T> {
 function FilterChipsCarousel<T>({
   chips,
   onSelectChip,
-  primaryColor,
-  secondaryColor,
   style,
+  contentContainerStyle,
   forwardedRef,
   scrollEnabled = true,
 }: Props<T>) {
@@ -54,7 +52,11 @@ function FilterChipsCarousel<T>({
       scrollEnabled={scrollEnabled}
       showsHorizontalScrollIndicator={false}
       style={[styles.container, style]}
-      contentContainerStyle={[styles.contentContainer, { width: scrollEnabled ? 'auto' : '100%' }]}
+      contentContainerStyle={[
+        styles.contentContainer,
+        { flexWrap: scrollEnabled ? 'nowrap' : 'wrap', width: scrollEnabled ? 'auto' : '100%' },
+        contentContainerStyle,
+      ]}
       ref={forwardedRef}
       testID="FilterChipsCarousel"
     >
@@ -65,8 +67,14 @@ function FilterChipsCarousel<T>({
             style={[
               styles.filterChipBackground,
               chip.isSelected
-                ? { backgroundColor: primaryColor }
-                : { backgroundColor: secondaryColor },
+                ? {
+                    backgroundColor: Colors.buttonPrimaryBackground,
+                    borderColor: Colors.buttonPrimaryBorder,
+                  }
+                : {
+                    backgroundColor: Colors.buttonSecondaryBackground,
+                    borderColor: Colors.buttonSecondaryBorder,
+                  },
             ]}
           >
             <Touchable
@@ -79,14 +87,18 @@ function FilterChipsCarousel<T>({
                 <Text
                   style={[
                     styles.filterChipText,
-                    chip.isSelected ? { color: secondaryColor } : { color: primaryColor },
+                    chip.isSelected
+                      ? { color: Colors.buttonPrimaryContent }
+                      : { color: Colors.buttonSecondaryContent },
                   ]}
                 >
                   {chip.name}
                 </Text>
                 {isNetworkChip(chip) && (
                   <DownArrowIcon
-                    color={chip.isSelected ? secondaryColor : primaryColor}
+                    color={
+                      chip.isSelected ? Colors.buttonPrimaryContent : Colors.buttonSecondaryContent
+                    }
                     strokeWidth={2}
                     height={Spacing.Regular16}
                     style={{ marginBottom: 2, marginLeft: 4 }}
@@ -108,11 +120,11 @@ const styles = StyleSheet.create({
   contentContainer: {
     paddingHorizontal: Spacing.Thick24,
     gap: Spacing.Smallest8,
-    flexWrap: 'wrap',
   },
   filterChipBackground: {
     overflow: 'hidden',
     borderRadius: 94,
+    borderWidth: 1,
   },
   filterChip: {
     minHeight: 32,

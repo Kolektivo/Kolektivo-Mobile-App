@@ -1,8 +1,7 @@
 import * as _ from 'lodash'
 import { LaunchArguments } from 'react-native-launch-arguments'
 import { startOnboardingTimeSelector } from 'src/account/selectors'
-import { multichainBetaStatusSelector } from 'src/app/selectors'
-import { isE2EEnv } from 'src/config'
+import { ExpectedLaunchArgs, STATSIG_ENABLED } from 'src/config'
 import { FeatureGates } from 'src/statsig/constants'
 import {
   StatsigDynamicConfigs,
@@ -16,6 +15,13 @@ import { EvaluationReason } from 'statsig-js'
 import { DynamicConfig, Statsig, StatsigUser } from 'statsig-react-native'
 
 const TAG = 'Statsig'
+
+let gateOverrides: { [key: string]: boolean } = {}
+
+// Only for testing
+export function _getGateOverrides() {
+  return gateOverrides
+}
 
 function getParams<T extends Record<string, StatsigParameter>>({
   config,
@@ -44,8 +50,11 @@ export function getExperimentParams<T extends Record<string, StatsigParameter>>(
   defaultValues: T
 }): T {
   try {
+    if (!STATSIG_ENABLED) {
+      return defaultValues
+    }
     const experiment = Statsig.getExperiment(experimentName)
-    if (!isE2EEnv && experiment.getEvaluationDetails().reason === EvaluationReason.Uninitialized) {
+    if (experiment.getEvaluationDetails().reason === EvaluationReason.Uninitialized) {
       Logger.warn(
         TAG,
         'getExperimentParams: SDK is uninitialized when getting experiment',
@@ -58,7 +67,7 @@ export function getExperimentParams<T extends Record<string, StatsigParameter>>(
   }
 }
 
-export function getDynamicConfigParams<T extends Record<string, StatsigParameter>>({
+function _getDynamicConfigParams<T extends Record<string, StatsigParameter>>({
   configName,
   defaultValues,
 }: {
@@ -66,8 +75,11 @@ export function getDynamicConfigParams<T extends Record<string, StatsigParameter
   defaultValues: T
 }): T {
   try {
+    if (!STATSIG_ENABLED) {
+      return defaultValues
+    }
     const config = Statsig.getConfig(configName)
-    if (!isE2EEnv && config.getEvaluationDetails().reason === EvaluationReason.Uninitialized) {
+    if (config.getEvaluationDetails().reason === EvaluationReason.Uninitialized) {
       Logger.warn(
         TAG,
         'getDynamicConfigParams: SDK is uninitialized when getting experiment',
@@ -80,11 +92,31 @@ export function getDynamicConfigParams<T extends Record<string, StatsigParameter
   }
 }
 
+// Cannot be used to retrieve dynamic config for multichain features
+export function getDynamicConfigParams<T extends Record<string, StatsigParameter>>({
+  configName,
+  defaultValues,
+}: {
+  configName: StatsigDynamicConfigs
+  defaultValues: T
+}): T {
+  return _getDynamicConfigParams({ configName, defaultValues })
+}
+
 export function getFeatureGate(featureGateName: StatsigFeatureGates) {
+  const defaultGateValue = FeatureGates[featureGateName]
   try {
+    if (featureGateName in gateOverrides) {
+      return gateOverrides[featureGateName]
+    }
+
+    if (!STATSIG_ENABLED) {
+      return defaultGateValue
+    }
     return Statsig.checkGate(featureGateName)
   } catch (error) {
-    return FeatureGates[featureGateName]
+    Logger.warn(TAG, `Error getting feature gate: ${featureGateName}`, error)
+    return defaultGateValue
   }
 }
 
@@ -98,7 +130,6 @@ export function getDefaultStatsigUser(): StatsigUser {
     userID: walletAddressSelector(state) ?? undefined,
     custom: {
       startOnboardingTime: startOnboardingTimeSelector(state),
-      multichainBetaStatus: multichainBetaStatusSelector(state),
       loadTime: Date.now(),
     },
   }
@@ -120,6 +151,9 @@ export function getDefaultStatsigUser(): StatsigUser {
  */
 export async function patchUpdateStatsigUser(statsigUser?: StatsigUser) {
   try {
+    if (!STATSIG_ENABLED) {
+      return
+    }
     const defaultUser = getDefaultStatsigUser()
     await Statsig.updateUser(_.merge(defaultUser, statsigUser))
   } catch (error) {
@@ -127,22 +161,19 @@ export async function patchUpdateStatsigUser(statsigUser?: StatsigUser) {
   }
 }
 
-interface ExpectedLaunchArgs {
-  statsigGateOverrides?: string // format: gate_1=true,gate_2=false
-}
-
 export function setupOverridesFromLaunchArgs() {
   try {
     Logger.debug(TAG, 'Cleaning up local overrides')
-    Statsig.removeGateOverride() // remove all gate overrides
+    const newGateOverrides: typeof gateOverrides = {}
     const { statsigGateOverrides } = LaunchArguments.value<ExpectedLaunchArgs>()
     if (statsigGateOverrides) {
       Logger.debug(TAG, 'Setting up gate overrides', statsigGateOverrides)
       statsigGateOverrides.split(',').forEach((gateOverride: string) => {
         const [gate, value] = gateOverride.split('=')
-        Statsig.overrideGate(gate, value === 'true')
+        newGateOverrides[gate] = value === 'true'
       })
     }
+    gateOverrides = newGateOverrides
   } catch (err) {
     Logger.debug(TAG, 'Overrides setup failed', err)
   }

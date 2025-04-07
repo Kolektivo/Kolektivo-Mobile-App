@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react'
 import { Trans, useTranslation } from 'react-i18next'
 import { Image, LayoutAnimation, StyleSheet, Text, View } from 'react-native'
+import AppAnalytics from 'src/analytics/AppAnalytics'
 import { FiatExchangeEvents } from 'src/analytics/Events'
-import ValoraAnalytics from 'src/analytics/ValoraAnalytics'
 import Dialog from 'src/components/Dialog'
 import Expandable from 'src/components/Expandable'
 import Touchable from 'src/components/Touchable'
@@ -10,13 +10,14 @@ import { CryptoAmount, FiatAmount } from 'src/fiatExchanges/amount'
 import NormalizedQuote from 'src/fiatExchanges/quotes/NormalizedQuote'
 import { SettlementEstimation, SettlementTime } from 'src/fiatExchanges/quotes/constants'
 import { getSettlementTimeString } from 'src/fiatExchanges/quotes/utils'
-import { ProviderSelectionAnalyticsData } from 'src/fiatExchanges/types'
-import { CICOFlow, PaymentMethod } from 'src/fiatExchanges/utils'
+import { CICOFlow, PaymentMethod, ProviderSelectionAnalyticsData } from 'src/fiatExchanges/types'
 import InfoIcon from 'src/icons/InfoIcon'
 import { getLocalCurrencyCode, usdToLocalCurrencyRateSelector } from 'src/localCurrency/selectors'
 import { useDispatch, useSelector } from 'src/redux/hooks'
+import { getFeatureGate } from 'src/statsig'
+import { StatsigFeatureGates } from 'src/statsig/types'
 import colors from 'src/styles/colors'
-import fontStyles from 'src/styles/fonts'
+import { typeScale } from 'src/styles/fonts'
 import { useTokenInfo } from 'src/tokens/hooks'
 
 const SETTLEMENT_TIME_STRINGS: Record<SettlementTime, string> = {
@@ -61,9 +62,11 @@ export function PaymentMethodSection({
   const [expanded, setExpanded] = useState(isExpandable)
   const [newDialogVisible, setNewDialogVisible] = useState(false)
 
+  const showUKCompliantVariant = getFeatureGate(StatsigFeatureGates.SHOW_UK_COMPLIANT_VARIANT)
+
   useEffect(() => {
     if (sectionQuotes.length) {
-      ValoraAnalytics.track(FiatExchangeEvents.cico_providers_section_impression, {
+      AppAnalytics.track(FiatExchangeEvents.cico_providers_section_impression, {
         flow,
         paymentMethod,
         quoteCount: sectionQuotes.length,
@@ -74,12 +77,12 @@ export function PaymentMethodSection({
 
   const toggleExpanded = () => {
     if (expanded) {
-      ValoraAnalytics.track(FiatExchangeEvents.cico_providers_section_collapse, {
+      AppAnalytics.track(FiatExchangeEvents.cico_providers_section_collapse, {
         flow,
         paymentMethod,
       })
     } else {
-      ValoraAnalytics.track(FiatExchangeEvents.cico_providers_section_expand, {
+      AppAnalytics.track(FiatExchangeEvents.cico_providers_section_expand, {
         flow,
         paymentMethod,
       })
@@ -136,7 +139,7 @@ export function PaymentMethodSection({
           testID={`newLabel-${quote.getProviderName()}`}
           style={styles.newLabelContainer}
           onPress={() => {
-            ValoraAnalytics.track(FiatExchangeEvents.cico_providers_new_info_opened, {
+            AppAnalytics.track(FiatExchangeEvents.cico_providers_new_info_opened, {
               flow,
               provider: quote.getProviderId(),
               paymentMethod,
@@ -146,7 +149,7 @@ export function PaymentMethodSection({
         >
           <>
             <Text style={styles.newLabelText}>{t('selectProviderScreen.newLabel')}</Text>
-            <InfoIcon size={16} color={colors.white} />
+            <InfoIcon size={16} color={colors.contentTertiary} />
           </>
         </Touchable>
       )}
@@ -225,7 +228,7 @@ export function PaymentMethodSection({
       >
         <View>
           <Expandable
-            arrowColor={colors.primary}
+            arrowColor={colors.accent}
             containerStyle={{
               ...styles.expandableContainer,
               paddingVertical: isExpandable ? (expanded ? 22 : 27) : 16,
@@ -258,7 +261,8 @@ export function PaymentMethodSection({
                   <Text style={styles.expandedInfo}>{renderInfoText(normalizedQuote)}</Text>
                   {index === 0 &&
                     !!tokenInfo &&
-                    normalizedQuote.getFeeInCrypto(usdToLocalRate, tokenInfo) && (
+                    normalizedQuote.getFeeInCrypto(usdToLocalRate, tokenInfo) &&
+                    !showUKCompliantVariant && (
                       <Text testID={`${paymentMethod}/bestRate`} style={styles.expandedTag}>
                         {t('selectProviderScreen.bestRate')}
                       </Text>
@@ -290,7 +294,7 @@ export function PaymentMethodSection({
 const styles = StyleSheet.create({
   container: {
     borderBottomWidth: 1,
-    borderBottomColor: colors.gray2,
+    borderBottomColor: colors.borderPrimary,
   },
   expandableContainer: {
     paddingHorizontal: 16,
@@ -307,10 +311,10 @@ const styles = StyleSheet.create({
   },
   expandedContainer: {
     borderTopWidth: 1,
-    borderTopColor: colors.gray2,
+    borderTopColor: colors.borderSecondary,
     paddingVertical: 16,
     paddingHorizontal: 16,
-    backgroundColor: '#F1FDF1',
+    backgroundColor: colors.backgroundSecondary,
     justifyContent: 'space-between',
     alignItems: 'center',
     flexDirection: 'row',
@@ -327,7 +331,7 @@ const styles = StyleSheet.create({
     marginLeft: 'auto',
   },
   newLabelContainer: {
-    backgroundColor: colors.gray3,
+    backgroundColor: colors.textLink,
     borderRadius: 100,
     paddingVertical: 4,
     paddingHorizontal: 8,
@@ -337,37 +341,37 @@ const styles = StyleSheet.create({
     width: 'auto',
   },
   newLabelText: {
-    ...fontStyles.label,
-    color: colors.white,
+    ...typeScale.labelSemiBoldSmall,
+    color: colors.contentTertiary,
     marginRight: 5,
   },
   category: {
-    ...fontStyles.small,
+    ...typeScale.bodySmall,
   },
   fee: {
-    ...fontStyles.small600,
+    ...typeScale.labelSemiBoldSmall,
     marginTop: 4,
   },
   providerDropdown: {
-    ...fontStyles.small500,
-    color: colors.gray3,
+    ...typeScale.labelSmall,
+    color: colors.contentSecondary,
   },
   expandedInfo: {
-    ...fontStyles.small,
-    color: colors.gray4,
+    ...typeScale.bodySmall,
+    color: colors.contentSecondary,
     marginTop: 2,
   },
   topInfo: {
-    ...fontStyles.small,
-    color: colors.gray4,
+    ...typeScale.bodySmall,
+    color: colors.contentSecondary,
     marginTop: 4,
   },
   expandedFee: {
-    ...fontStyles.small600,
+    ...typeScale.labelSemiBoldSmall,
   },
   expandedTag: {
-    ...fontStyles.label,
-    color: colors.primary,
+    ...typeScale.labelSemiBoldSmall,
+    color: colors.accent,
     fontSize: 12,
     marginTop: 2,
   },

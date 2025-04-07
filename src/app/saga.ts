@@ -1,32 +1,25 @@
-import { compressedPubKey } from '@celo/cryptographic-utils'
-import getPhoneHash from '@celo/phone-utils/lib/getPhoneHash'
-import { hexToBuffer } from '@celo/utils/lib/address'
+import * as Keychain from '@divvi/react-native-keychain'
 import locales from 'locales'
 import { AppState, Platform } from 'react-native'
 import DeviceInfo from 'react-native-device-info'
 import InAppReview from 'react-native-in-app-review'
-import * as Keychain from 'react-native-keychain'
 import { findBestLanguageTag } from 'react-native-localize'
 import { eventChannel } from 'redux-saga'
-import { e164NumberSelector } from 'src/account/selectors'
+import AppAnalytics from 'src/analytics/AppAnalytics'
 import { AppEvents, InviteEvents } from 'src/analytics/Events'
-import ValoraAnalytics from 'src/analytics/ValoraAnalytics'
 import { HooksEnablePreviewOrigin } from 'src/analytics/types'
 import {
   Actions,
-  OpenDeepLink,
-  OpenUrlAction,
-  SetAppState,
   androidMobileServicesAvailabilityChecked,
   appLock,
   inAppReviewRequested,
   inviteLinkConsumed,
-  minAppVersionDetermined,
+  OpenDeepLink,
   openDeepLink,
-  phoneNumberVerificationMigrated,
+  OpenUrlAction,
+  SetAppState,
   setAppState,
   setSupportedBiometryType,
-  updateRemoteConfigValues,
 } from 'src/app/actions'
 import {
   getLastTimeBackgrounded,
@@ -34,31 +27,20 @@ import {
   googleMobileServicesAvailableSelector,
   huaweiMobileServicesAvailableSelector,
   inAppReviewLastInteractionTimestampSelector,
-  inviterAddressSelector,
-  sentryNetworkErrorsSelector,
-  shouldRunVerificationMigrationSelector,
 } from 'src/app/selectors'
-import { CeloNewsConfig } from 'src/celoNews/types'
-import { DEFAULT_APP_LANGUAGE, FETCH_TIMEOUT_DURATION, isE2EEnv } from 'src/config'
-import { claimRewardsSuccess } from 'src/consumerIncentives/slice'
-import { SuperchargeTokenConfigByToken } from 'src/consumerIncentives/types'
-import { handleDappkitDeepLink } from 'src/dappkit/dappkit'
-import { FiatExchangeFlow } from 'src/fiatExchanges/utils'
-import { FiatAccountSchemaCountryOverrides } from 'src/fiatconnect/types'
-import { appVersionDeprecationChannel, fetchRemoteConfigValues } from 'src/firebase/firebase'
-import { initI18n } from 'src/i18n'
 import {
-  allowOtaTranslationsSelector,
-  currentLanguageSelector,
-  otaTranslationsAppVersionSelector,
-} from 'src/i18n/selectors'
-import { E164NumberToSaltType } from 'src/identity/reducer'
-import { e164NumberToSaltSelector } from 'src/identity/selectors'
+  DEFAULT_APP_LANGUAGE,
+  DEFAULT_SENTRY_NETWORK_ERRORS,
+  ENABLE_OTA_TRANSLATIONS,
+  isE2EEnv,
+} from 'src/config'
+import { FiatExchangeFlow } from 'src/fiatExchanges/types'
+import { initI18n } from 'src/i18n'
+import { currentLanguageSelector, otaTranslationsAppVersionSelector } from 'src/i18n/selectors'
 import { jumpstartClaim } from 'src/jumpstart/saga'
 import { navigate, navigateHome } from 'src/navigator/NavigationService'
 import { Screens } from 'src/navigator/Screens'
 import { StackParamList } from 'src/navigator/types'
-import { retrieveSignedMessage } from 'src/pincode/authentication'
 import { handleEnableHooksPreviewDeepLink } from 'src/positions/saga'
 import { allowHooksPreviewSelector } from 'src/positions/selectors'
 import { Actions as SendActions } from 'src/send/actions'
@@ -80,19 +62,12 @@ import {
   handleWalletConnectDeepLink,
   isWalletConnectDeepLink,
 } from 'src/walletConnect/walletConnect'
-import networkConfig from 'src/web3/networkConfig'
-import {
-  dataEncryptionKeySelector,
-  mtwAddressSelector,
-  walletAddressSelector,
-} from 'src/web3/selectors'
+import { walletAddressSelector } from 'src/web3/selectors'
 import {
   all,
   call,
   cancelled,
-  delay,
   put,
-  race,
   select,
   spawn,
   take,
@@ -100,6 +75,7 @@ import {
   takeLatest,
 } from 'typed-redux-saga'
 import { parse } from 'url'
+import { Address, Hex } from 'viem'
 
 const TAG = 'app/saga'
 
@@ -116,16 +92,17 @@ const REVIEW_INTERVAL = ONE_DAY_IN_MILLIS * 120 // 120 days
 // Work that's done before other sagas are initalized
 // Be mindful to not put long blocking tasks here
 export function* appInit() {
+  yield* call(initializeSentry)
+
   SentryTransactionHub.startTransaction(SentryTransaction.app_init_saga)
 
-  const allowOtaTranslations = yield* select(allowOtaTranslationsSelector)
   const otaTranslationsAppVersion = yield* select(otaTranslationsAppVersionSelector)
   const language = yield* select(currentLanguageSelector)
   const bestLanguage = findBestLanguageTag(Object.keys(locales))?.languageTag
+  const allowOtaTranslations = ENABLE_OTA_TRANSLATIONS
 
   yield* all([
-    call(initializeSentry),
-    call([ValoraAnalytics, 'init']),
+    call([AppAnalytics, 'init']),
     call(
       initI18n,
       language || bestLanguage || DEFAULT_APP_LANGUAGE,
@@ -134,10 +111,7 @@ export function* appInit() {
     ),
   ])
 
-  // This step is important if the user is offline and unable to fetch remote
-  // config values, we can use the persisted value instead of an empty one
-  const sentryNetworkErrors = yield* select(sentryNetworkErrorsSelector)
-  Logger.setNetworkErrors(sentryNetworkErrors)
+  Logger.setNetworkErrors(DEFAULT_SENTRY_NETWORK_ERRORS)
 
   const supportedBiometryType = yield* call(Keychain.getSupportedBiometryType)
   yield* put(setSupportedBiometryType(supportedBiometryType))
@@ -148,28 +122,6 @@ export function* appInit() {
   }
 
   SentryTransactionHub.finishTransaction(SentryTransaction.app_init_saga)
-}
-
-export function* appVersionSaga() {
-  const appVersionChannel = yield* call(appVersionDeprecationChannel)
-  if (!appVersionChannel) {
-    return
-  }
-  try {
-    while (true) {
-      const minRequiredVersion = yield* take(appVersionChannel)
-      Logger.info(TAG, `Required min version: ${minRequiredVersion}`)
-      // Note: The NavigatorWrapper will read this value from the store and
-      // show the UpdateScreen if necessary.
-      yield* put(minAppVersionDetermined(minRequiredVersion))
-    }
-  } catch (error) {
-    Logger.error(`${TAG}@appVersionSaga`, 'Failed to watch app version', error)
-  } finally {
-    if (yield* cancelled()) {
-      appVersionChannel.close()
-    }
-  }
 }
 
 // Check the availability of Google Mobile Services and Huawei Mobile Services, an alternative to
@@ -206,68 +158,13 @@ export function* checkAndroidMobileServicesSaga() {
     huaweiIsAvailable !== (yield* select(huaweiMobileServicesAvailableSelector))
 
   if (updated) {
-    ValoraAnalytics.track(AppEvents.android_mobile_services_checked, {
+    AppAnalytics.track(AppEvents.android_mobile_services_checked, {
       googleIsAvailable,
       huaweiIsAvailable,
     })
   }
 
   yield* put(androidMobileServicesAvailabilityChecked(googleIsAvailable, huaweiIsAvailable))
-}
-
-export interface RemoteConfigValues {
-  celoEducationUri: string | null
-  dappListApiUrl: string | null
-  inviteRewardsVersion: string
-  walletConnectV2Enabled: boolean
-  logPhoneNumberTypeEnabled: boolean
-  superchargeApy: number
-  superchargeTokenConfigByToken: SuperchargeTokenConfigByToken
-  pincodeUseExpandedBlocklist: boolean
-  allowOtaTranslations: boolean
-  sentryTracesSampleRate: number
-  sentryNetworkErrors: string[]
-  maxNumRecentDapps: number
-  dappsWebViewEnabled: boolean
-  fiatConnectCashInEnabled: boolean
-  fiatConnectCashOutEnabled: boolean
-  fiatAccountSchemaCountryOverrides: FiatAccountSchemaCountryOverrides
-  coinbasePayEnabled: boolean
-  showSwapMenuInDrawerMenu: boolean
-  maxSwapSlippagePercentage: number
-  networkTimeoutSeconds: number
-  celoNews: CeloNewsConfig
-  priceImpactWarningThreshold: number
-  superchargeRewardContractAddress: string
-}
-
-export function* appRemoteFeatureFlagSaga() {
-  // Refresh feature flags on process start
-  // and every hour afterwards when the app becomes active.
-  // If the app keep getting killed and restarted we
-  // will load the flags more often, but that should be pretty rare.
-  // if that ever becomes a problem we can save it somewhere persistent.
-  let lastLoadTime = 0
-  let isAppActive = true
-
-  while (true) {
-    const isRefreshTime = Date.now() - lastLoadTime > 60 * 60 * 1000
-
-    if (isAppActive && isRefreshTime) {
-      const { configValues } = yield* race({
-        configValues: call(fetchRemoteConfigValues),
-        timeout: delay(FETCH_TIMEOUT_DURATION),
-      })
-      if (configValues) {
-        Logger.setNetworkErrors(configValues.sentryNetworkErrors)
-        yield* put(updateRemoteConfigValues(configValues))
-        lastLoadTime = Date.now()
-      }
-    }
-
-    const action = (yield* take(Actions.SET_APP_STATE)) as SetAppState
-    isAppActive = action.state === 'active'
-  }
 }
 
 function parseValue(value: string) {
@@ -294,7 +191,7 @@ function convertQueryToScreenParams(query: string) {
 export function* handleDeepLink(action: OpenDeepLink) {
   const { deepLink } = action
   const { isSecureOrigin } = action
-  Logger.debug(TAG, 'Handling deep link', deepLink)
+  Logger.debug(TAG, `Handling deep link: ${deepLink}, isSecureOrigin: ${isSecureOrigin}`)
 
   const walletAddress = yield* select(walletAddressSelector)
   if (!walletAddress) {
@@ -315,7 +212,6 @@ export function* handleDeepLink(action: OpenDeepLink) {
     // don't accidentally log sensitive information on new deeplinks. 'jumpstart' is specifically excluded
     const pathStartsWithAllowList = [
       'pay',
-      'dappkit',
       'cashIn',
       'bidali',
       'cash-in-success',
@@ -324,15 +220,13 @@ export function* handleDeepLink(action: OpenDeepLink) {
       'share',
       'hooks',
     ]
-    ValoraAnalytics.track(AppEvents.handle_deeplink, {
+    AppAnalytics.track(AppEvents.handle_deeplink, {
       pathStartsWith: pathParts[1].split('?')[0],
       fullPath: pathStartsWithAllowList.includes(pathStartsWith) ? rawParams.pathname : null,
       query: pathStartsWithAllowList.includes(pathStartsWith) ? rawParams.query : null,
     })
     if (rawParams.path.startsWith('/pay')) {
       yield* call(handlePaymentDeeplink, deepLink)
-    } else if (rawParams.path.startsWith('/dappkit')) {
-      yield* call(handleDappkitDeepLink, deepLink)
     } else if (rawParams.path === '/cashIn') {
       navigate(Screens.FiatExchangeCurrencyBottomSheet, { flow: FiatExchangeFlow.CashIn })
     } else if (rawParams.pathname === '/bidali') {
@@ -352,13 +246,13 @@ export function* handleDeepLink(action: OpenDeepLink) {
     } else if (pathParts.length === 3 && pathParts[1] === 'share') {
       const inviterAddress = pathParts[2]
       yield* put(inviteLinkConsumed(inviterAddress))
-      ValoraAnalytics.track(InviteEvents.opened_via_invite_url, {
+      AppAnalytics.track(InviteEvents.opened_via_invite_url, {
         inviterAddress,
       })
     } else if (pathParts.length === 4 && pathParts[1] === 'jumpstart') {
-      const privateKey = pathParts[2]
+      const privateKey = pathParts[2] as Hex
       const networkId = pathParts[3] as NetworkId
-      yield* call(jumpstartClaim, privateKey, networkId, walletAddress)
+      yield* call(jumpstartClaim, privateKey, networkId, walletAddress as Address)
     } else if (
       (yield* select(allowHooksPreviewSelector)) &&
       rawParams.pathname === '/hooks/enablePreview'
@@ -368,8 +262,12 @@ export function* handleDeepLink(action: OpenDeepLink) {
   }
 }
 
-export function* watchDeepLinks() {
-  yield* takeLatest(Actions.OPEN_DEEP_LINK, safely(handleDeepLink))
+function* watchDeepLinks() {
+  // using takeEvery over takeLatest because openScreen deep links could be
+  // fired by multiple handlers (one with isSecureOrigin and one without), and
+  // if takeLatest kills the call to the handler with isSecureOrigin, the deep
+  // link won't work.
+  yield* takeEvery(Actions.OPEN_DEEP_LINK, safely(handleDeepLink))
 }
 
 export function* handleOpenUrl(action: OpenUrlAction) {
@@ -388,7 +286,7 @@ export function* handleOpenUrl(action: OpenUrlAction) {
   }
 }
 
-export function* watchOpenUrl() {
+function* watchOpenUrl() {
   yield* takeEvery(Actions.OPEN_URL, safely(handleOpenUrl))
 }
 
@@ -412,7 +310,7 @@ function* watchAppState() {
       yield* put(setAppState(newState))
     } catch (err) {
       const error = ensureError(err)
-      ValoraAnalytics.track(AppEvents.app_state_error, { error: error.message })
+      AppAnalytics.track(AppEvents.app_state_error, { error: error.message })
       Logger.error(`${TAG}@monitorAppState`, `App state Error`, error)
     } finally {
       if (yield* cancelled()) {
@@ -438,97 +336,6 @@ export function* handleSetAppState(action: SetAppState) {
   }
 }
 
-export function* runCentralPhoneVerificationMigration() {
-  const shouldRunVerificationMigration = yield* select(shouldRunVerificationMigrationSelector)
-  if (!shouldRunVerificationMigration) {
-    return
-  }
-
-  const privateDataEncryptionKey = yield* select(dataEncryptionKeySelector)
-  if (!privateDataEncryptionKey) {
-    Logger.warn(
-      `${TAG}@runCentralPhoneVerificationMigration`,
-      'No data encryption key was found in the store. This should never happen.'
-    )
-    return
-  }
-
-  const address = yield* select(walletAddressSelector)
-  const mtwAddress = yield* select(mtwAddressSelector)
-  const phoneNumber = yield* select(e164NumberSelector)
-  const publicDataEncryptionKey = compressedPubKey(hexToBuffer(privateDataEncryptionKey))
-
-  try {
-    const signedMessage = yield* call(retrieveSignedMessage)
-    if (!signedMessage) {
-      Logger.warn(
-        `${TAG}@runCentralPhoneVerificationMigration`,
-        'No signed message was found for this user. Skipping CPV migration.'
-      )
-      return
-    }
-    if (!phoneNumber) {
-      Logger.warn(
-        `${TAG}@runCentralPhoneVerificationMigration`,
-        'No phone number was found for this user. Skipping CPV migration.'
-      )
-      return
-    }
-
-    const saltCache: E164NumberToSaltType = yield* select(e164NumberToSaltSelector)
-    const cachedSalt = saltCache[phoneNumber]
-    if (!cachedSalt) {
-      Logger.warn(
-        `${TAG}@runCentralPhoneVerificationMigration`,
-        'No salt was cached for phone number. Skipping CPV migration.'
-      )
-      return
-    }
-
-    Logger.debug(
-      `${TAG}@runCentralPhoneVerificationMigration`,
-      'Starting to run central phone verification migration'
-    )
-
-    const phoneHash = yield* call(getPhoneHash, phoneNumber, cachedSalt)
-    const inviterAddress = yield* select(inviterAddressSelector)
-
-    const response = yield* call(fetch, networkConfig.migratePhoneVerificationUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        authorization: `Valora ${address}:${signedMessage}`,
-      },
-      body: JSON.stringify({
-        clientPlatform: Platform.OS,
-        clientVersion: DeviceInfo.getVersion(),
-        publicDataEncryptionKey,
-        phoneNumber,
-        pepper: cachedSalt,
-        phoneHash,
-        mtwAddress: mtwAddress ?? undefined,
-        inviterAddress: inviterAddress ?? undefined,
-      }),
-    })
-
-    if (response.status === 200) {
-      yield* put(phoneNumberVerificationMigrated())
-      Logger.debug(
-        `${TAG}@runCentralPhoneVerificationMigration`,
-        'Central phone verification migration completed successfully'
-      )
-    } else {
-      throw new Error(yield* call([response, 'text']))
-    }
-  } catch (error) {
-    Logger.warn(
-      `${TAG}@runCentralPhoneVerificationMigration`,
-      'Could not complete central phone verification migration',
-      error
-    )
-  }
-}
-
 export function* requestInAppReview() {
   const walletAddress = yield* select(walletAddressSelector)
   // Quick return if no wallet address or the device does not support in app review
@@ -549,28 +356,24 @@ export function* requestInAppReview() {
       // Update the last interaction timestamp and send analytics
       yield* call(InAppReview.RequestInAppReview)
       yield* put(inAppReviewRequested(now))
-      ValoraAnalytics.track(AppEvents.in_app_review_impression)
+      AppAnalytics.track(AppEvents.in_app_review_impression)
     } catch (err) {
       const error = ensureError(err)
       Logger.error(TAG, `Error while calling InAppReview.RequestInAppReview`, error)
-      ValoraAnalytics.track(AppEvents.in_app_review_error, { error: error.message })
+      AppAnalytics.track(AppEvents.in_app_review_error, { error: error.message })
     }
   }
 }
 
-export function* watchAppReview() {
+function* watchAppReview() {
   // Triggers on successful payment, swap, or rewards claim
-  yield* takeLatest(
-    [SendActions.SEND_PAYMENT_SUCCESS, swapSuccess, claimRewardsSuccess],
-    safely(requestInAppReview)
-  )
+  yield* takeLatest([SendActions.SEND_PAYMENT_SUCCESS, swapSuccess], safely(requestInAppReview))
 }
 
 export function* appSaga() {
   yield* spawn(watchDeepLinks)
   yield* spawn(watchOpenUrl)
   yield* spawn(watchAppState)
-  yield* spawn(runCentralPhoneVerificationMigration)
   yield* takeLatest(Actions.SET_APP_STATE, safely(handleSetAppState))
   yield* spawn(watchAppReview)
 }

@@ -2,6 +2,7 @@ import { Action, Predicate } from '@redux-saga/types'
 import BigNumber from 'bignumber.js'
 import { SendOrigin } from 'src/analytics/types'
 import { ActionTypes as AppActionTypes, Actions as AppActions } from 'src/app/actions'
+import { FIREBASE_ENABLED } from 'src/config'
 import {
   Actions,
   BidaliPaymentRequestedAction,
@@ -18,7 +19,11 @@ import { AddressRecipient, RecipientType, getDisplayName } from 'src/recipients/
 import { Actions as SendActions } from 'src/send/actions'
 import { TransactionDataInput } from 'src/send/types'
 import { CurrencyTokens, tokensByCurrencySelector } from 'src/tokens/selectors'
-import { Actions as TransactionActions, UpdateTransactionsAction } from 'src/transactions/actions'
+import {
+  UpdateTransactionsPayload,
+  updateFeedFirstPage,
+  updateTransactions,
+} from 'src/transactions/slice'
 import { Network, TokenTransactionTypeV2 } from 'src/transactions/types'
 import Logger from 'src/utils/Logger'
 import { resolveCurrency } from 'src/utils/currencies'
@@ -72,10 +77,9 @@ function* bidaliPaymentRequest({
     amountIsInLocalCurrency: false,
     tokenAddress,
     tokenAmount: new BigNumber(amount),
-    comment: `${description} (${chargeId})`,
   }
 
-  navigate(Screens.SendConfirmationModal, {
+  navigate(Screens.SendConfirmationFromExternal, {
     transactionData,
     origin: SendOrigin.Bidali,
     isFromScan: false,
@@ -130,7 +134,8 @@ export function* fetchTxHashesToProviderMapping() {
   return txHashesToProvider
 }
 
-export function* tagTxsWithProviderInfo({ transactions, networkId }: UpdateTransactionsAction) {
+export function* tagTxsWithProviderInfo(action: UpdateTransactionsPayload) {
+  const { transactions, networkId } = action.payload
   try {
     if (!transactions || !transactions.length || networkIdToNetwork[networkId] !== Network.Celo) {
       return
@@ -142,7 +147,7 @@ export function* tagTxsWithProviderInfo({ transactions, networkId }: UpdateTrans
     const txHashesToProvider = yield* call(fetchTxHashesToProviderMapping)
 
     for (const tx of transactions) {
-      if (tx.__typename !== 'TokenTransferV3' || tx.type !== TokenTransactionTypeV2.Received) {
+      if (tx.type !== TokenTransactionTypeV2.Received) {
         continue
       }
 
@@ -163,6 +168,11 @@ export function* tagTxsWithProviderInfo({ transactions, networkId }: UpdateTrans
 }
 
 export function* importProviderLogos() {
+  if (!FIREBASE_ENABLED) {
+    Logger.info(`${TAG}/importProviderLogos`, 'Firebase disabled')
+    return
+  }
+
   const providerLogos: ProviderLogos = yield readOnceFromFirebase('providerLogos')
   yield* put(setProviderLogos(providerLogos))
 }
@@ -172,7 +182,10 @@ export function* watchBidaliPaymentRequests() {
 }
 
 function* watchNewFeedTransactions() {
-  yield* takeEvery(TransactionActions.UPDATE_TRANSACTIONS, safely(tagTxsWithProviderInfo))
+  yield* takeEvery(
+    [updateTransactions.type, updateFeedFirstPage.type],
+    safely(tagTxsWithProviderInfo)
+  )
 }
 
 export function* fiatExchangesSaga() {

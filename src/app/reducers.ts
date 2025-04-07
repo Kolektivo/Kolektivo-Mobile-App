@@ -1,55 +1,42 @@
+import { BIOMETRY_TYPE } from '@divvi/react-native-keychain'
 import { Platform } from 'react-native'
-import { BIOMETRY_TYPE } from 'react-native-keychain'
-import { Actions, ActionTypes, AppState, MultichainBetaStatus } from 'src/app/actions'
-import { CeloNewsConfig } from 'src/celoNews/types'
-import { SuperchargeTokenConfigByToken } from 'src/consumerIncentives/types'
-import { REMOTE_CONFIG_VALUES_DEFAULTS } from 'src/firebase/remoteConfigValuesDefaults'
+import { Actions, ActionTypes, AppState } from 'src/app/actions'
+import { DEEP_LINK_URL_SCHEME } from 'src/config'
+import { SupportedProtocolId } from 'src/divviProtocol/constants'
 import { Screens } from 'src/navigator/Screens'
 import { getRehydratePayload, REHYDRATE, RehydrateAction } from 'src/redux/persist-helper'
+import { NetworkId } from 'src/transactions/types'
 
-const PERSISTED_DEEP_LINKS = ['https://valoraapp.com/share', 'celo://wallet/jumpstart']
+const PERSISTED_DEEP_LINKS = [
+  'https://valoraapp.com/share',
+  `${DEEP_LINK_URL_SCHEME}://wallet/jumpstart`,
+]
 
 interface State {
-  loggedIn: boolean
-  numberVerified: boolean // decentrally verified
-  phoneNumberVerified: boolean // centrally verified
+  phoneNumberVerified: boolean
   analyticsEnabled: boolean
   requirePinOnAppOpen: boolean
   appState: AppState
   locked: boolean
   lastTimeBackgrounded: number
   sessionId: string
-  minVersion: string | null
-  celoEducationUri: string | null
   activeScreen: Screens
-  walletConnectV2Enabled: boolean
-  superchargeApy: number
-  superchargeTokenConfigByToken: SuperchargeTokenConfigByToken
   // In 1.13 we had a critical error which requires a migration to fix. See |verificationMigration.ts|
   // for the migration code. We can remove all the code associated with this after some time has passed.
-  logPhoneNumberTypeEnabled: boolean
   googleMobileServicesAvailable?: boolean
   huaweiMobileServicesAvailable?: boolean
-  pincodeUseExpandedBlocklist: boolean
-  sentryTracesSampleRate: number
-  sentryNetworkErrors: string[]
   supportedBiometryType: BIOMETRY_TYPE | null
-  fiatConnectCashInEnabled: boolean
-  fiatConnectCashOutEnabled: boolean
-  coinbasePayEnabled: boolean
-  showSwapMenuInDrawerMenu: boolean
-  maxSwapSlippagePercentage: number
   inviterAddress: string | null
-  networkTimeoutSeconds: number
-  celoNews: CeloNewsConfig
   hapticFeedbackEnabled: boolean
   pushNotificationRequestedUnixTime: number | null
   pushNotificationsEnabled: boolean
   inAppReviewLastInteractionTimestamp: number | null
   showNotificationSpotlight: boolean
   hideBalances: boolean
-  multichainBetaStatus: MultichainBetaStatus
   pendingDeepLinks: PendingDeepLink[]
+  divviRegistrations: {
+    [networkId in NetworkId]?: SupportedProtocolId[]
+  }
 }
 
 interface PendingDeepLink {
@@ -58,8 +45,6 @@ interface PendingDeepLink {
 }
 
 const initialState = {
-  loggedIn: false,
-  numberVerified: false,
   phoneNumberVerified: false,
   analyticsEnabled: true,
   requirePinOnAppOpen: false,
@@ -67,37 +52,19 @@ const initialState = {
   locked: false,
   lastTimeBackgrounded: 0,
   sessionId: '',
-  minVersion: null,
-  celoEducationUri: null,
   activeScreen: Screens.Main,
-  walletConnectV2Enabled: REMOTE_CONFIG_VALUES_DEFAULTS.walletConnectV2Enabled,
-  superchargeApy: REMOTE_CONFIG_VALUES_DEFAULTS.superchargeApy,
-  superchargeTokenConfigByToken: JSON.parse(
-    REMOTE_CONFIG_VALUES_DEFAULTS.superchargeTokenConfigByToken
-  ),
-  logPhoneNumberTypeEnabled: REMOTE_CONFIG_VALUES_DEFAULTS.logPhoneNumberTypeEnabled,
   googleMobileServicesAvailable: undefined,
   huaweiMobileServicesAvailable: undefined,
-  pincodeUseExpandedBlocklist: REMOTE_CONFIG_VALUES_DEFAULTS.pincodeUseExpandedBlocklist,
-  sentryTracesSampleRate: REMOTE_CONFIG_VALUES_DEFAULTS.sentryTracesSampleRate,
-  sentryNetworkErrors: REMOTE_CONFIG_VALUES_DEFAULTS.sentryNetworkErrors.split(','),
   supportedBiometryType: null,
-  fiatConnectCashInEnabled: REMOTE_CONFIG_VALUES_DEFAULTS.fiatConnectCashInEnabled,
-  fiatConnectCashOutEnabled: REMOTE_CONFIG_VALUES_DEFAULTS.fiatConnectCashOutEnabled,
-  coinbasePayEnabled: REMOTE_CONFIG_VALUES_DEFAULTS.coinbasePayEnabled,
-  showSwapMenuInDrawerMenu: REMOTE_CONFIG_VALUES_DEFAULTS.showSwapMenuInDrawerMenu,
-  maxSwapSlippagePercentage: REMOTE_CONFIG_VALUES_DEFAULTS.maxSwapSlippagePercentage,
   inviterAddress: null,
-  networkTimeoutSeconds: REMOTE_CONFIG_VALUES_DEFAULTS.networkTimeoutSeconds,
-  celoNews: JSON.parse(REMOTE_CONFIG_VALUES_DEFAULTS.celoNews),
   hapticFeedbackEnabled: true,
   pushNotificationRequestedUnixTime: null,
   pushNotificationsEnabled: false,
   inAppReviewLastInteractionTimestamp: null,
   showNotificationSpotlight: false,
   hideBalances: false,
-  multichainBetaStatus: MultichainBetaStatus.NotSeen,
   pendingDeepLinks: [],
+  divviRegistrations: {},
 }
 
 function getPersistedDeepLinks(deepLinks: PendingDeepLink[]) {
@@ -145,22 +112,6 @@ export const appReducer = (
         appState,
         lastTimeBackgrounded,
       }
-    case Actions.SET_LOGGED_IN:
-      return {
-        ...state,
-        loggedIn: action.loggedIn,
-      }
-    case Actions.SET_NUMBER_VERIFIED:
-      return {
-        ...state,
-        numberVerified: action.numberVerified,
-      }
-    case Actions.RESET_APP_OPENED_STATE:
-      return {
-        ...state,
-        loggedIn: false,
-        numberVerified: false,
-      }
     case Actions.SET_ANALYTICS_ENABLED:
       return {
         ...state,
@@ -186,30 +137,6 @@ export const appReducer = (
         ...state,
         sessionId: action.sessionId,
       }
-    case Actions.MIN_APP_VERSION_DETERMINED:
-      return {
-        ...state,
-        minVersion: action.minVersion,
-      }
-    case Actions.UPDATE_REMOTE_CONFIG_VALUES:
-      return {
-        ...state,
-        celoEducationUri: action.configValues.celoEducationUri,
-        walletConnectV2Enabled: action.configValues.walletConnectV2Enabled,
-        superchargeApy: action.configValues.superchargeApy,
-        superchargeTokenConfigByToken: action.configValues.superchargeTokenConfigByToken,
-        logPhoneNumberTypeEnabled: action.configValues.logPhoneNumberTypeEnabled,
-        pincodeUseExpandedBlocklist: action.configValues.pincodeUseExpandedBlocklist,
-        sentryTracesSampleRate: action.configValues.sentryTracesSampleRate,
-        sentryNetworkErrors: action.configValues.sentryNetworkErrors,
-        fiatConnectCashInEnabled: action.configValues.fiatConnectCashInEnabled,
-        fiatConnectCashOutEnabled: action.configValues.fiatConnectCashOutEnabled,
-        coinbasePayEnabled: action.configValues.coinbasePayEnabled,
-        showSwapMenuInDrawerMenu: action.configValues.showSwapMenuInDrawerMenu,
-        maxSwapSlippagePercentage: action.configValues.maxSwapSlippagePercentage,
-        networkTimeoutSeconds: action.configValues.networkTimeoutSeconds,
-        celoNews: action.configValues.celoNews,
-      }
     case Actions.ACTIVE_SCREEN_CHANGED:
       return {
         ...state,
@@ -226,7 +153,6 @@ export const appReducer = (
         ...state,
         supportedBiometryType: action.supportedBiometryType,
       }
-    case Actions.PHONE_NUMBER_VERIFICATION_MIGRATED:
     case Actions.PHONE_NUMBER_VERIFICATION_COMPLETED:
       return {
         ...state,
@@ -270,13 +196,6 @@ export const appReducer = (
         ...state,
         hideBalances: !state.hideBalances,
       }
-    case Actions.OPT_MULTICHAIN_BETA:
-      return {
-        ...state,
-        multichainBetaStatus: action.optedIn
-          ? MultichainBetaStatus.OptedIn
-          : MultichainBetaStatus.OptedOut,
-      }
     case Actions.DEEP_LINK_DEFERRED:
       return {
         ...state,
@@ -291,6 +210,17 @@ export const appReducer = (
         pendingDeepLinks: state.pendingDeepLinks.filter(
           (pendingDeepLink) => pendingDeepLink.url !== action.deepLink
         ),
+      }
+    case Actions.DIVVI_REGISTRATION_COMPLETED:
+      return {
+        ...state,
+        divviRegistrations: {
+          ...state.divviRegistrations,
+          [action.networkId]: [
+            ...(state.divviRegistrations[action.networkId] ?? []),
+            ...action.protocolIds,
+          ],
+        },
       }
     default:
       return state

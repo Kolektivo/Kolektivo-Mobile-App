@@ -2,7 +2,7 @@ import { fireEvent, render, within } from '@testing-library/react-native'
 import React from 'react'
 import { Provider } from 'react-redux'
 import FiatExchangeCurrencyBottomSheet from 'src/fiatExchanges/FiatExchangeCurrencyBottomSheet'
-import { FiatExchangeFlow } from 'src/fiatExchanges/utils'
+import { FiatExchangeFlow } from 'src/fiatExchanges/types'
 import { getDynamicConfigParams, getFeatureGate } from 'src/statsig'
 import { StatsigDynamicConfigs, StatsigFeatureGates } from 'src/statsig/types'
 import MockedNavigator from 'test/MockedNavigator'
@@ -49,11 +49,6 @@ describe(FiatExchangeCurrencyBottomSheet, () => {
     jest.mocked(getFeatureGate).mockReturnValue(false)
     jest.mocked(getDynamicConfigParams).mockImplementation(({ configName, defaultValues }) => {
       switch (configName) {
-        case StatsigDynamicConfigs.MULTI_CHAIN_FEATURES:
-          return {
-            ...defaultValues,
-            showCico: ['celo-alfajores', 'ethereum-sepolia'],
-          }
         case StatsigDynamicConfigs.CICO_TOKEN_INFO:
           return {
             tokenInfo: {
@@ -118,11 +113,6 @@ describe(FiatExchangeCurrencyBottomSheet, () => {
   it('shows the correct order when cicoOrder missing/same value', () => {
     jest.mocked(getDynamicConfigParams).mockImplementation(({ configName, defaultValues }) => {
       switch (configName) {
-        case StatsigDynamicConfigs.MULTI_CHAIN_FEATURES:
-          return {
-            ...defaultValues,
-            showCico: ['celo-alfajores', 'ethereum-sepolia'],
-          }
         case StatsigDynamicConfigs.CICO_TOKEN_INFO:
           return {
             tokenInfo: {
@@ -148,28 +138,19 @@ describe(FiatExchangeCurrencyBottomSheet, () => {
     })
   })
 
-  it.each([
-    { flow: FiatExchangeFlow.CashIn, gate: false },
-    { flow: FiatExchangeFlow.CashOut, gate: true },
-    { flow: FiatExchangeFlow.Spend, gate: true },
-  ])(`does not show filters for $flow when gate is $gate`, ({ flow, gate }) => {
-    jest
-      .mocked(getFeatureGate)
-      .mockImplementation(
-        (feature) => feature === StatsigFeatureGates.SHOW_CASH_IN_TOKEN_FILTERS && gate
+  it.each([{ flow: FiatExchangeFlow.CashOut }, { flow: FiatExchangeFlow.Spend }])(
+    `does not show filters for $flow`,
+    ({ flow }) => {
+      const { queryByTestId } = render(
+        <Provider store={mockStore}>
+          <MockedNavigator component={FiatExchangeCurrencyBottomSheet} params={{ flow }} />
+        </Provider>
       )
-    const { queryByTestId } = render(
-      <Provider store={mockStore}>
-        <MockedNavigator component={FiatExchangeCurrencyBottomSheet} params={{ flow }} />
-      </Provider>
-    )
-    expect(queryByTestId('FilterChipsCarousel')).toBeFalsy()
-  })
+      expect(queryByTestId('FilterChipsCarousel')).toBeFalsy()
+    }
+  )
 
-  it('shows filters for cash in when gate is true', () => {
-    jest
-      .mocked(getFeatureGate)
-      .mockImplementation((feature) => feature === StatsigFeatureGates.SHOW_CASH_IN_TOKEN_FILTERS)
+  it('shows filters for cash in', () => {
     const { getByTestId, getByText } = render(
       <Provider store={mockStore}>
         <MockedNavigator
@@ -185,10 +166,26 @@ describe(FiatExchangeCurrencyBottomSheet, () => {
     expect(getByText('tokenBottomSheet.filters.selectNetwork')).toBeTruthy()
   })
 
-  it('popular filter filters correctly', () => {
+  it('hides the popular filter for UK compliance', () => {
     jest
       .mocked(getFeatureGate)
-      .mockImplementation((feature) => feature === StatsigFeatureGates.SHOW_CASH_IN_TOKEN_FILTERS)
+      .mockImplementation((feature) => feature === StatsigFeatureGates.SHOW_UK_COMPLIANT_VARIANT)
+    const { queryByText, getByText } = render(
+      <Provider store={mockStore}>
+        <MockedNavigator
+          component={FiatExchangeCurrencyBottomSheet}
+          params={{ flow: FiatExchangeFlow.CashIn }}
+        />
+      </Provider>
+    )
+
+    expect(queryByText('tokenBottomSheet.filters.popular')).toBeFalsy()
+    expect(getByText('tokenBottomSheet.filters.stablecoins')).toBeTruthy()
+    expect(getByText('tokenBottomSheet.filters.gasTokens')).toBeTruthy()
+    expect(getByText('tokenBottomSheet.filters.selectNetwork')).toBeTruthy()
+  })
+
+  it('popular filter filters correctly', () => {
     const { getAllByTestId, getByText } = render(
       <Provider store={mockStore}>
         <MockedNavigator
@@ -207,9 +204,6 @@ describe(FiatExchangeCurrencyBottomSheet, () => {
   })
 
   it('stablecoin filter filters correctly', () => {
-    jest
-      .mocked(getFeatureGate)
-      .mockImplementation((feature) => feature === StatsigFeatureGates.SHOW_CASH_IN_TOKEN_FILTERS)
     const { getAllByTestId, getByText } = render(
       <Provider store={mockStore}>
         <MockedNavigator
@@ -228,9 +222,6 @@ describe(FiatExchangeCurrencyBottomSheet, () => {
   })
 
   it('gas tokens filter filters correctly', () => {
-    jest
-      .mocked(getFeatureGate)
-      .mockImplementation((feature) => feature === StatsigFeatureGates.SHOW_CASH_IN_TOKEN_FILTERS)
     const { getAllByTestId, getByText } = render(
       <Provider store={mockStore}>
         <MockedNavigator
@@ -249,9 +240,6 @@ describe(FiatExchangeCurrencyBottomSheet, () => {
   })
 
   it('network filter filters correctly', () => {
-    jest
-      .mocked(getFeatureGate)
-      .mockImplementation((feature) => feature === StatsigFeatureGates.SHOW_CASH_IN_TOKEN_FILTERS)
     const { getAllByTestId, getByText } = render(
       <Provider store={mockStore}>
         <MockedNavigator
@@ -279,5 +267,26 @@ describe(FiatExchangeCurrencyBottomSheet, () => {
     ;['ETH', 'USDC'].forEach((token, index) => {
       expect(getAllByTestId('TokenBalanceItem')[index]).toHaveTextContent(token)
     })
+  })
+
+  it('allows a network to be pre-selected', () => {
+    const { getAllByTestId } = render(
+      <Provider store={mockStore}>
+        <MockedNavigator
+          component={FiatExchangeCurrencyBottomSheet}
+          params={{ flow: FiatExchangeFlow.CashIn, networkId: 'celo-alfajores' }}
+        />
+      </Provider>
+    )
+
+    expect(getAllByTestId('TokenBalanceItem')).toHaveLength(4)
+    ;['CELO', 'cUSD', 'cEUR', 'cREAL'].forEach((token, index) => {
+      expect(getAllByTestId('TokenBalanceItem')[index]).toHaveTextContent(token)
+    })
+
+    // unselect filter, to prove that the pre-selection yielded different results
+    const networkMultiSelect = getAllByTestId('MultiSelectBottomSheet')[0]
+    fireEvent.press(within(networkMultiSelect).getByTestId('multiSelect.allNetworks-icon'))
+    expect(getAllByTestId('TokenBalanceItem')).toHaveLength(6)
   })
 })

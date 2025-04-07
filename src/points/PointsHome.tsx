@@ -1,35 +1,36 @@
 import { NativeStackScreenProps } from '@react-navigation/native-stack'
 import React, { useEffect, useRef, useState } from 'react'
-import { useTranslation } from 'react-i18next'
+import { Trans, useTranslation } from 'react-i18next'
 import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
+import AppAnalytics from 'src/analytics/AppAnalytics'
 import { PointsEvents } from 'src/analytics/Events'
-import ValoraAnalytics from 'src/analytics/ValoraAnalytics'
 import BackButton from 'src/components/BackButton'
 import BeatingHeartLoader from 'src/components/BeatingHeartLoader'
-import BottomSheet, { BottomSheetRefType } from 'src/components/BottomSheet'
+import BottomSheet, { BottomSheetModalRefType } from 'src/components/BottomSheet'
 import Button, { BtnSizes, BtnTypes } from 'src/components/Button'
 import InLineNotification, { NotificationVariant } from 'src/components/InLineNotification'
 import NumberTicker from 'src/components/NumberTicker'
 import Toast from 'src/components/Toast'
+import Touchable from 'src/components/Touchable'
 import CustomHeader from 'src/components/header/CustomHeader'
 import AttentionIcon from 'src/icons/Attention'
-import LogoHeart from 'src/icons/LogoHeart'
+import LogoHeart from 'src/images/LogoHeart'
 import { Screens } from 'src/navigator/Screens'
 import { StackParamList } from 'src/navigator/types'
 import ActivityCardSection from 'src/points/ActivityCardSection'
 import PointsHistoryBottomSheet from 'src/points/PointsHistoryBottomSheet'
 import {
+  pointsActivitiesSelector,
   pointsBalanceSelector,
   pointsBalanceStatusSelector,
   pointsConfigStatusSelector,
   pointsHistoryStatusSelector,
-  pointsSectionsSelector,
 } from 'src/points/selectors'
-import { getHistoryStarted, getPointsConfigRetry } from 'src/points/slice'
+import { getPointsConfigRetry, pointsDataRefreshStarted } from 'src/points/slice'
 import { BottomSheetParams, PointsActivityId } from 'src/points/types'
 import { useDispatch, useSelector } from 'src/redux/hooks'
-import { Colors } from 'src/styles/colors'
+import Colors from 'src/styles/colors'
 import { typeScale } from 'src/styles/fonts'
 import { Spacing } from 'src/styles/styles'
 
@@ -40,14 +41,15 @@ export default function PointsHome({ route, navigation }: Props) {
 
   const dispatch = useDispatch()
 
-  const pointsSections = useSelector(pointsSectionsSelector)
+  const pointsActivities = useSelector(pointsActivitiesSelector)
   const pointsConfigStatus = useSelector(pointsConfigStatusSelector)
   const pointsBalance = useSelector(pointsBalanceSelector)
   const pointsBalanceStatus = useSelector(pointsBalanceStatusSelector)
   const pointsHistoryStatus = useSelector(pointsHistoryStatusSelector)
 
-  const historyBottomSheetRef = useRef<BottomSheetRefType>(null)
-  const activityCardBottomSheetRef = useRef<BottomSheetRefType>(null)
+  const historyBottomSheetRef = useRef<BottomSheetModalRefType>(null)
+  const activityCardBottomSheetRef = useRef<BottomSheetModalRefType>(null)
+  const disclaimerBottomSheetRef = useRef<BottomSheetModalRefType>(null)
 
   const [bottomSheetParams, setBottomSheetParams] = useState<BottomSheetParams | undefined>(
     undefined
@@ -63,7 +65,7 @@ export default function PointsHome({ route, navigation }: Props) {
   }, [])
 
   const onRefreshHistoryAndBalance = () => {
-    dispatch(getHistoryStarted({ getNextPage: false }))
+    dispatch(pointsDataRefreshStarted())
   }
 
   const onCardPress = (bottomSheetDetails: BottomSheetParams) => {
@@ -72,20 +74,26 @@ export default function PointsHome({ route, navigation }: Props) {
 
   const onCtaPressWrapper = (onPress: () => void, activityId: PointsActivityId) => {
     return () => {
-      ValoraAnalytics.track(PointsEvents.points_screen_card_cta_press, {
+      AppAnalytics.track(PointsEvents.points_screen_card_cta_press, {
         activityId,
       })
+      activityCardBottomSheetRef.current?.close()
       onPress()
     }
   }
 
   const onPressActivity = () => {
-    ValoraAnalytics.track(PointsEvents.points_screen_activity_press)
+    AppAnalytics.track(PointsEvents.points_screen_activity_press)
     historyBottomSheetRef.current?.snapToIndex(0)
   }
 
   const onRetryLoadConfig = () => {
     dispatch(getPointsConfigRetry())
+  }
+
+  const onPressDisclaimer = () => {
+    AppAnalytics.track(PointsEvents.points_screen_disclaimer_press)
+    disclaimerBottomSheetRef.current?.snapToIndex(0)
   }
 
   return (
@@ -99,8 +107,8 @@ export default function PointsHome({ route, navigation }: Props) {
         contentContainerStyle={styles.contentContainer}
         refreshControl={
           <RefreshControl
-            tintColor={Colors.primary}
-            colors={[Colors.primary]}
+            tintColor={Colors.loadingIndicator}
+            colors={[Colors.loadingIndicator]}
             refreshing={pointsBalanceStatus === 'loading'}
             onRefresh={onRefreshHistoryAndBalance}
           />
@@ -116,7 +124,7 @@ export default function PointsHome({ route, navigation }: Props) {
 
         {pointsConfigStatus === 'error' && (
           <View style={styles.loadingStatusContainer}>
-            <AttentionIcon size={48} color={Colors.black} />
+            <AttentionIcon size={48} color={Colors.contentPrimary} />
             <Text style={styles.loadingStatusTitle}>{t('points.error.title')}</Text>
             <Text style={styles.loadingStatusBodyText}>{t('points.error.description')}</Text>
             <Button
@@ -151,13 +159,17 @@ export default function PointsHome({ route, navigation }: Props) {
               <LogoHeart size={28} />
             </View>
 
-            {pointsSections.length > 0 ? (
+            {pointsActivities.length > 0 ? (
               <>
                 <View style={styles.infoCard}>
                   <Text style={styles.infoCardTitle}>{t('points.infoCard.title')}</Text>
                   <Text style={styles.infoCardBody}>{t('points.infoCard.body')}</Text>
                 </View>
-                <ActivityCardSection onCardPress={onCardPress} pointsSections={pointsSections} />
+
+                <ActivityCardSection
+                  pointsActivities={pointsActivities}
+                  onCardPress={onCardPress}
+                />
               </>
             ) : (
               <InLineNotification
@@ -167,6 +179,14 @@ export default function PointsHome({ route, navigation }: Props) {
                 description={t('points.noActivities.body')}
               />
             )}
+
+            <Touchable onPress={onPressDisclaimer}>
+              <Text style={styles.disclaimerText}>
+                <Trans i18nKey="points.disclaimer.learnMoreCta">
+                  <Text style={styles.disclaimerLink} />
+                </Trans>
+              </Text>
+            </Touchable>
           </>
         )}
       </ScrollView>
@@ -183,6 +203,9 @@ export default function PointsHome({ route, navigation }: Props) {
         {bottomSheetParams && (
           <>
             <View style={styles.bottomSheetPointAmountContainer}>
+              <Text style={styles.bottomSheetPreviousPointsAmount}>
+                {bottomSheetParams.previousPointsAmount}
+              </Text>
               <Text style={styles.bottomSheetPointAmount}>{bottomSheetParams.pointsAmount}</Text>
               <LogoHeart size={16} />
             </View>
@@ -202,6 +225,23 @@ export default function PointsHome({ route, navigation }: Props) {
             )}
           </>
         )}
+      </BottomSheet>
+      <BottomSheet
+        title={t('points.disclaimer.title')}
+        titleStyle={typeScale.labelSemiBoldMedium}
+        forwardedRef={disclaimerBottomSheetRef}
+        testId={`DisclaimerBottomSheet`}
+      >
+        <Text style={typeScale.bodySmall}>{t('points.disclaimer.body')}</Text>
+        <Button
+          type={BtnTypes.SECONDARY}
+          size={BtnSizes.FULL}
+          onPress={() => {
+            disclaimerBottomSheetRef.current?.close()
+          }}
+          text={t('points.disclaimer.dismiss')}
+          style={styles.disclaimerCloseButton}
+        />
       </BottomSheet>
     </SafeAreaView>
   )
@@ -245,14 +285,19 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: Spacing.Tiny4,
     alignSelf: 'flex-start',
-    backgroundColor: Colors.successLight,
+    backgroundColor: Colors.successSecondary,
     borderRadius: Spacing.XLarge48,
     paddingVertical: Spacing.Smallest8,
     paddingHorizontal: Spacing.Small12,
   },
   bottomSheetPointAmount: {
     ...typeScale.labelSemiBoldXSmall,
-    color: Colors.successDark,
+    color: Colors.successPrimary,
+  },
+  bottomSheetPreviousPointsAmount: {
+    ...typeScale.labelSemiBoldXSmall,
+    color: Colors.contentSecondary,
+    textDecorationLine: 'line-through',
   },
   bottomSheetTitle: {
     ...typeScale.titleSmall,
@@ -260,7 +305,7 @@ const styles = StyleSheet.create({
   },
   bottomSheetBody: {
     ...typeScale.bodySmall,
-    color: Colors.gray3,
+    color: Colors.contentSecondary,
     marginBottom: Spacing.XLarge48,
   },
   balanceRow: {
@@ -270,7 +315,7 @@ const styles = StyleSheet.create({
     gap: Spacing.Tiny4,
   },
   infoCard: {
-    backgroundColor: Colors.successLight,
+    backgroundColor: Colors.successSecondary,
     padding: Spacing.Regular16,
     marginBottom: Spacing.Thick24,
     borderRadius: 12,
@@ -295,5 +340,18 @@ const styles = StyleSheet.create({
     height: undefined,
     paddingHorizontal: Spacing.Small12,
     paddingVertical: Spacing.Smallest8,
+  },
+  disclaimerText: {
+    ...typeScale.bodySmall,
+    color: Colors.textLink,
+    textAlign: 'center',
+    marginVertical: Spacing.Thick24,
+  },
+  disclaimerLink: {
+    ...typeScale.labelSmall,
+    textDecorationLine: 'underline',
+  },
+  disclaimerCloseButton: {
+    marginTop: Spacing.XLarge48,
   },
 })

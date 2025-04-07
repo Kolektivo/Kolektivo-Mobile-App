@@ -1,7 +1,10 @@
 import { PayloadAction, createSlice } from '@reduxjs/toolkit'
+import { REHYDRATE, RehydrateAction } from 'redux-persist'
+import { getRehydratePayload } from 'src/redux/persist-helper'
 import { TokenBalance } from 'src/tokens/slice'
 import { NetworkId, TokenAmount } from 'src/transactions/types'
 import { SerializableTransactionRequest } from 'src/viem/preparedTransactionSerialization'
+import { Address, Hash } from 'viem'
 
 export interface JumpstarReclaimAction {
   reclaimTx: SerializableTransactionRequest
@@ -13,17 +16,30 @@ export interface JumpstartTransactionStartedAction {
   serializablePreparedTransactions: SerializableTransactionRequest[]
   sendToken: TokenBalance
   sendAmount: string
+  beneficiaryAddress: Address
 }
+
+interface DepositTransactionSucceededAction {
+  liveLinkType: 'erc20'
+  beneficiaryAddress: Address
+  transactionHash: Hash
+  networkId: NetworkId
+  tokenId: string
+  amount: string
+}
+
 interface State {
   claimStatus: 'idle' | 'loading' | 'error' | 'errorAlreadyClaimed'
   depositStatus: 'idle' | 'loading' | 'error' | 'success'
   reclaimStatus: 'idle' | 'loading' | 'error' | 'success'
+  introHasBeenSeen: boolean
 }
 
 const initialState: State = {
   claimStatus: 'idle',
   depositStatus: 'idle',
   reclaimStatus: 'idle',
+  introHasBeenSeen: false,
 }
 
 const slice = createSlice({
@@ -61,7 +77,10 @@ const slice = createSlice({
       ...state,
       depositStatus: 'loading',
     }),
-    depositTransactionSucceeded: (state) => ({
+    depositTransactionSucceeded: (
+      state,
+      _action: PayloadAction<DepositTransactionSucceededAction>
+    ) => ({
       ...state,
       depositStatus: 'success',
     }),
@@ -97,6 +116,19 @@ const slice = createSlice({
       ...state,
       reclaimStatus: 'idle',
     }),
+    jumpstartIntroSeen: (state) => ({
+      ...state,
+      introHasBeenSeen: true,
+    }),
+  },
+  extraReducers: (builder) => {
+    builder.addCase(REHYDRATE, (state, action: RehydrateAction) => ({
+      ...state,
+      ...getRehydratePayload(action, 'jumpstart'),
+      claimStatus: 'idle',
+      depositStatus: 'idle',
+      reclaimStatus: 'idle',
+    }))
   },
 })
 
@@ -117,6 +149,7 @@ export const {
   jumpstartReclaimSucceeded,
   jumpstartReclaimFailed,
   jumpstartReclaimErrorDismissed,
+  jumpstartIntroSeen,
 } = slice.actions
 
 export default slice.reducer

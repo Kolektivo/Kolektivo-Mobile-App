@@ -21,14 +21,13 @@ import { safely } from 'src/utils/safely'
 import { Actions } from 'src/web3/actions'
 import networkConfig from 'src/web3/networkConfig'
 import { walletAddressSelector } from 'src/web3/selectors'
+import { getSupportedNetworkIds } from 'src/web3/utils'
 import { call, put, select, spawn, take, takeLeading } from 'typed-redux-saga'
 
 const TAG = 'NftsSaga'
 
 async function fetchNftsForSupportedNetworks(address: string): Promise<NftWithNetworkId[]> {
-  const supportedNetworkIds = getDynamicConfigParams(
-    DynamicConfigs[StatsigDynamicConfigs.MULTI_CHAIN_FEATURES]
-  ).showNfts
+  const supportedNetworkIds = getSupportedNetworkIds()
   const nfts = await Promise.all(
     supportedNetworkIds.map(async (networkId) => {
       const response = await fetchWithTimeout(

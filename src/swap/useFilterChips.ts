@@ -9,18 +9,24 @@ import { lastSwappedSelector } from 'src/swap/selectors'
 import { Field } from 'src/swap/types'
 import { useTokensWithTokenBalance } from 'src/tokens/hooks'
 import { TokenBalance } from 'src/tokens/slice'
-import { getSupportedNetworkIdsForSwap } from 'src/tokens/utils'
 import { NetworkId } from 'src/transactions/types'
+import { getSupportedNetworkIds } from 'src/web3/utils'
 
-export default function useFilterChip(selectingField: Field | null): FilterChip<TokenBalance>[] {
+export default function useFilterChip(
+  selectingField: Field | null,
+  preselectedNetworkId?: NetworkId
+): FilterChip<TokenBalance>[] {
   const { t } = useTranslation()
+
   const showSwapTokenFilters = getFeatureGate(StatsigFeatureGates.SHOW_SWAP_TOKEN_FILTERS)
-  const recentlySwappedTokens = useSelector(lastSwappedSelector)
-  const tokensWithBalance = useTokensWithTokenBalance()
+  const showUKCompliantVariant = getFeatureGate(StatsigFeatureGates.SHOW_UK_COMPLIANT_VARIANT)
   const popularTokenIds: string[] = getDynamicConfigParams(
     DynamicConfigs[StatsigDynamicConfigs.SWAP_CONFIG]
   ).popularTokenIds
-  const supportedNetworkIds = getSupportedNetworkIdsForSwap()
+
+  const recentlySwappedTokens = useSelector(lastSwappedSelector)
+  const tokensWithBalance = useTokensWithTokenBalance()
+  const supportedNetworkIds = getSupportedNetworkIds()
 
   if (!showSwapTokenFilters) {
     return []
@@ -33,12 +39,16 @@ export default function useFilterChip(selectingField: Field | null): FilterChip<
       filterFn: (token: TokenBalance) => token.balance.gte(TOKEN_MIN_AMOUNT),
       isSelected: selectingField === Field.FROM && tokensWithBalance.length > 0,
     },
-    {
-      id: 'popular',
-      name: t('tokenBottomSheet.filters.popular'),
-      filterFn: (token: TokenBalance) => popularTokenIds.includes(token.tokenId),
-      isSelected: selectingField === Field.TO,
-    },
+    ...(showUKCompliantVariant
+      ? []
+      : [
+          {
+            id: 'popular',
+            name: t('tokenBottomSheet.filters.popular'),
+            filterFn: (token: TokenBalance) => popularTokenIds.includes(token.tokenId),
+            isSelected: false,
+          },
+        ]),
     {
       id: 'recently-swapped',
       name: t('tokenBottomSheet.filters.recentlySwapped'),
@@ -51,9 +61,9 @@ export default function useFilterChip(selectingField: Field | null): FilterChip<
       filterFn: (token: TokenBalance, selected?: NetworkId[]) => {
         return !!selected && selected.includes(token.networkId)
       },
-      isSelected: false,
+      isSelected: !!preselectedNetworkId,
       allNetworkIds: supportedNetworkIds,
-      selectedNetworkIds: supportedNetworkIds,
+      selectedNetworkIds: preselectedNetworkId ? [preselectedNetworkId] : supportedNetworkIds,
     },
   ]
 }

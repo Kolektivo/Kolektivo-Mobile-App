@@ -40,7 +40,10 @@ export type ConfirmedStandbyTransaction = (
   | Omit<TokenTransfer, 'status'>
   | Omit<TokenApproval, 'status'>
   | Omit<NftTransfer, 'status'>
+  | Omit<DepositOrWithdraw, 'status'>
+  | Omit<ClaimReward, 'status'>
   | Omit<EarnDeposit, 'status'>
+  | Omit<EarnSwapDeposit, 'status'>
   | Omit<EarnWithdraw, 'status'>
   | Omit<EarnClaimReward, 'status'>
 ) & {
@@ -50,17 +53,28 @@ export type ConfirmedStandbyTransaction = (
 }
 
 export type StandbyTransaction =
-  | PendingStandbyTransaction<TokenExchange>
+  | PendingStandbyTransaction<PendingTokenExchange>
   | PendingStandbyTransaction<TokenTransfer>
   | PendingStandbyTransaction<TokenApproval>
   | PendingStandbyTransaction<NftTransfer>
+  | PendingStandbyTransaction<DepositOrWithdraw>
+  | PendingStandbyTransaction<ClaimReward>
   | PendingStandbyTransaction<EarnDeposit>
+  | PendingStandbyTransaction<EarnSwapDeposit>
   | PendingStandbyTransaction<EarnWithdraw>
   | PendingStandbyTransaction<EarnClaimReward>
   | ConfirmedStandbyTransaction
 
+type PendingTokenExchange =
+  | (Omit<TokenExchange, 'type'> & { type: TokenTransactionTypeV2.Exchange })
+  | (Omit<TokenExchange, 'type'> & { type: TokenTransactionTypeV2.SwapTransaction })
+  | (Omit<TokenExchange, 'type'> & {
+      type: TokenTransactionTypeV2.CrossChainSwapTransaction
+      isSourceNetworkTxConfirmed?: boolean
+    })
+
 // Context used for logging the transaction execution flow.
-export interface TransactionContext {
+interface TransactionContext {
   // Unique identifier used for tracking a transaction within logging.
   // Note that this is not the transaction hash, which is unknown when creating a new transaction.
   id: string
@@ -98,7 +112,10 @@ export type TokenTransaction =
   | TokenExchange
   | NftTransfer
   | TokenApproval
+  | DepositOrWithdraw
+  | ClaimReward
   | EarnDeposit
+  | EarnSwapDeposit
   | EarnWithdraw
   | EarnClaimReward
 
@@ -115,26 +132,50 @@ export interface LocalAmount {
   exchangeRate: string
 }
 
+// Be sure to also update FEED_V2_INCLUDE_TYPES if you add a new type.
 export enum TokenTransactionTypeV2 {
   Exchange = 'EXCHANGE',
   Received = 'RECEIVED',
   Sent = 'SENT',
-  InviteSent = 'INVITE_SENT',
-  InviteReceived = 'INVITE_RECEIVED',
   NftReceived = 'NFT_RECEIVED',
   NftSent = 'NFT_SENT',
   SwapTransaction = 'SWAP_TRANSACTION',
+  CrossChainSwapTransaction = 'CROSS_CHAIN_SWAP_TRANSACTION',
   Approval = 'APPROVAL',
+  Deposit = 'DEPOSIT',
+  Withdraw = 'WITHDRAW',
+  ClaimReward = 'CLAIM_REWARD',
+  CrossChainDeposit = 'CROSS_CHAIN_DEPOSIT',
+  /** @deprecated Use Deposit instead */
   EarnDeposit = 'EARN_DEPOSIT',
+  /** @deprecated Use Deposit instead */
+  EarnSwapDeposit = 'EARN_SWAP_DEPOSIT',
+  /** @deprecated Use Withdraw instead */
   EarnWithdraw = 'EARN_WITHDRAW',
+  /** @deprecated Use ClaimReward instead */
   EarnClaimReward = 'EARN_CLAIM_REWARD',
 }
 
+// Because the codebase supports both the old and new feed,
+// we need this list. But we can remove it once we delete the old feed.
+export const FEED_V2_INCLUDE_TYPES = [
+  TokenTransactionTypeV2.Received,
+  TokenTransactionTypeV2.Sent,
+  TokenTransactionTypeV2.NftReceived,
+  TokenTransactionTypeV2.NftSent,
+  TokenTransactionTypeV2.SwapTransaction,
+  TokenTransactionTypeV2.CrossChainSwapTransaction,
+  TokenTransactionTypeV2.Approval,
+  TokenTransactionTypeV2.Deposit,
+  TokenTransactionTypeV2.Withdraw,
+  TokenTransactionTypeV2.ClaimReward,
+  TokenTransactionTypeV2.CrossChainDeposit,
+]
+
 // Can we optional the fields `transactionHash` and `block`?
 export interface TokenTransfer {
-  __typename: 'TokenTransferV3'
   networkId: NetworkId
-  type: TokenTransactionTypeV2
+  type: TokenTransactionTypeV2.Sent | TokenTransactionTypeV2.Received
   transactionHash: string
   timestamp: number
   block: string
@@ -149,13 +190,11 @@ export interface TokenTransferMetadata {
   title?: string
   subtitle?: string
   image?: string
-  comment?: string
 }
 
 export interface NftTransfer {
-  __typename: 'NftTransferV3'
   networkId: NetworkId
-  type: TokenTransactionTypeV2
+  type: TokenTransactionTypeV2.NftReceived | TokenTransactionTypeV2.NftSent
   transactionHash: string
   timestamp: number
   block: string
@@ -166,9 +205,11 @@ export interface NftTransfer {
 
 // Can we optional the fields `transactionHash` and `block`?
 export interface TokenExchange {
-  __typename: 'TokenExchangeV3'
   networkId: NetworkId
-  type: TokenTransactionTypeV2
+  type:
+    | TokenTransactionTypeV2.Exchange
+    | TokenTransactionTypeV2.SwapTransaction
+    | TokenTransactionTypeV2.CrossChainSwapTransaction
   transactionHash: string
   timestamp: number
   block: string
@@ -188,6 +229,8 @@ export enum FeeType {
   SecurityFee = 'SECURITY_FEE',
   GatewayFee = 'GATEWAY_FEE',
   EncryptionFee = 'ONE_TIME_ENCRYPTION_FEE',
+  AppFee = 'APP_FEE',
+  CrossChainFee = 'CROSS_CHAIN_FEE',
 }
 
 export interface Fee {
@@ -196,9 +239,8 @@ export interface Fee {
 }
 
 export interface TokenApproval {
-  __typename: 'TokenApproval'
   networkId: NetworkId
-  type: TokenTransactionTypeV2
+  type: TokenTransactionTypeV2.Approval
   timestamp: number
   block: string
   transactionHash: string
@@ -208,10 +250,31 @@ export interface TokenApproval {
   status: TransactionStatus
 }
 
+export interface DepositOrWithdraw {
+  networkId: NetworkId
+  type:
+    | TokenTransactionTypeV2.Deposit
+    | TokenTransactionTypeV2.Withdraw
+    | TokenTransactionTypeV2.CrossChainDeposit
+  transactionHash: string
+  timestamp: number
+  block: string
+  fees: Fee[]
+  appName: string | undefined
+  inAmount: TokenAmount
+  outAmount: TokenAmount
+  // If the deposit/withdraw also includes a swap, it will be provided here.
+  swap?: {
+    inAmount: TokenAmount
+    outAmount: TokenAmount
+  }
+  status: TransactionStatus
+}
+
+/** @deprecated Use DepositOrWithdraw instead */
 export interface EarnDeposit {
-  __typename: 'EarnDeposit'
   networkId: NetworkId
-  type: TokenTransactionTypeV2
+  type: TokenTransactionTypeV2.EarnDeposit
   transactionHash: string
   timestamp: number
   block: string
@@ -222,10 +285,30 @@ export interface EarnDeposit {
   status: TransactionStatus
 }
 
+/** @deprecated Use DepositOrWithdraw instead */
+export interface EarnSwapDeposit {
+  networkId: NetworkId
+  type: TokenTransactionTypeV2.EarnSwapDeposit
+  transactionHash: string
+  timestamp: number
+  block: string
+  fees: Fee[]
+  swap: {
+    inAmount: TokenAmount
+    outAmount: TokenAmount
+  }
+  deposit: {
+    inAmount: TokenAmount
+    outAmount: TokenAmount
+    providerId: string
+  }
+  status: TransactionStatus
+}
+
+/** @deprecated Use DepositOrWithdraw instead */
 export interface EarnWithdraw {
-  __typename: 'EarnWithdraw'
   networkId: NetworkId
-  type: TokenTransactionTypeV2
+  type: TokenTransactionTypeV2.EarnWithdraw
   transactionHash: string
   timestamp: number
   block: string
@@ -236,16 +319,28 @@ export interface EarnWithdraw {
   status: TransactionStatus
 }
 
+/** @deprecated Use ClaimReward instead */
 export interface EarnClaimReward {
-  __typename: 'EarnClaimReward'
   networkId: NetworkId
   amount: TokenAmount
-  type: TokenTransactionTypeV2
+  type: TokenTransactionTypeV2.EarnClaimReward
   transactionHash: string
   timestamp: number
   block: string
   fees: Fee[]
   providerId: string
+  status: TransactionStatus
+}
+
+export interface ClaimReward {
+  networkId: NetworkId
+  amount: TokenAmount
+  type: TokenTransactionTypeV2.ClaimReward
+  transactionHash: string
+  timestamp: number
+  block: string
+  fees: Fee[]
+  appName: string | undefined
   status: TransactionStatus
 }
 

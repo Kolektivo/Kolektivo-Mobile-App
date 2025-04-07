@@ -1,11 +1,11 @@
 import { fireEvent, render } from '@testing-library/react-native'
 import BigNumber from 'bignumber.js'
 import React from 'react'
+import AppAnalytics from 'src/analytics/AppAnalytics'
 import { AssetsEvents } from 'src/analytics/Events'
-import ValoraAnalytics from 'src/analytics/ValoraAnalytics'
+import SwapArrows from 'src/icons/SwapArrows'
 import QuickActionsAdd from 'src/icons/quick-actions/Add'
 import QuickActionsSend from 'src/icons/quick-actions/Send'
-import QuickActionsSwap from 'src/icons/quick-actions/Swap'
 import TokenDetailsMoreActions from 'src/tokens/TokenDetailsMoreActions'
 import { StoredTokenBalance, TokenBalance } from 'src/tokens/slice'
 import { TokenAction, TokenActionName } from 'src/tokens/types'
@@ -52,7 +52,7 @@ const mockActions: TokenAction[] = [
     name: TokenActionName.Swap,
     title: 'tokenDetails.actions.swap',
     details: 'tokenDetails.actions.swapDetails',
-    iconComponent: QuickActionsSwap,
+    iconComponent: SwapArrows,
     onPress: jest.fn(),
     visible: true,
   },
@@ -102,7 +102,7 @@ describe('TokenDetailsMoreActions', () => {
       )
 
       fireEvent.press(getByText(title))
-      expect(ValoraAnalytics.track).toHaveBeenCalledWith(
+      expect(AppAnalytics.track).toHaveBeenCalledWith(
         AssetsEvents.tap_token_details_bottom_sheet_action,
         {
           action: name,

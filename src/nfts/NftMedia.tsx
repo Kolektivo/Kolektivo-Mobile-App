@@ -1,15 +1,13 @@
-import { useHeaderHeight } from '@react-navigation/elements'
 import React, { useEffect, useState } from 'react'
-import { Platform, View } from 'react-native'
+import { View } from 'react-native'
 import FastImage from 'react-native-fast-image'
 import Video, { ResizeMode } from 'react-native-video'
+import AppAnalytics from 'src/analytics/AppAnalytics'
 import { NftEvents } from 'src/analytics/Events'
-import ValoraAnalytics from 'src/analytics/ValoraAnalytics'
 import SkeletonPlaceholder from 'src/components/SkeletonPlaceholder'
 import { nftsLoadingSelector } from 'src/nfts/selectors'
 import { Nft, NftOrigin } from 'src/nfts/types'
 import { useSelector } from 'src/redux/hooks'
-import colors from 'src/styles/colors'
 import variables from 'src/styles/variables'
 import Logger from 'src/utils/Logger'
 import networkConfig from 'src/web3/networkConfig'
@@ -38,12 +36,7 @@ function Placeholder({
   borderRadius = 0,
 }: PlaceHolderProps) {
   return (
-    <SkeletonPlaceholder
-      borderRadius={borderRadius}
-      backgroundColor={colors.gray2}
-      highlightColor={colors.white}
-      testID={testID}
-    >
+    <SkeletonPlaceholder borderRadius={borderRadius} testID={testID}>
       <View
         style={{
           height,
@@ -71,7 +64,6 @@ export default function NftMedia({
   const [status, setStatus] = useState<Status>(!nft.metadata ? 'error' : 'loading')
   const [scaledHeight, setScaledHeight] = useState(DEFAULT_HEIGHT)
   const [reloadAttempt, setReloadAttempt] = useState(0)
-  const headerHeight = useHeaderHeight()
 
   const fetchingNfts = useSelector(nftsLoadingSelector)
 
@@ -97,7 +89,7 @@ export default function NftMedia({
 
   function sendLoadEvent(error?: string) {
     const { contractAddress, tokenId } = nft
-    ValoraAnalytics.track(NftEvents.nft_media_load, {
+    AppAnalytics.track(NftEvents.nft_media_load, {
       tokenId,
       contractAddress,
       url: imageUrl,
@@ -136,14 +128,13 @@ export default function NftMedia({
             source={{
               uri: videoUrl,
               headers: {
-                origin: networkConfig.nftsValoraAppUrl,
+                origin: networkConfig.nftsAppUrl,
               },
             }}
             key={`${nft.contractAddress}-${nft.tokenId}-${reloadAttempt}`}
             style={{
               height: shouldAutoScaleHeight ? scaledHeight : height,
               width: variables.width,
-              marginTop: Platform.OS === 'ios' ? headerHeight / 2 : 0, // Otherwise the fullscreen option is hidden on iOS
               zIndex: 1, // Make sure the video player is in front of the loading skeleton
             }}
             onLoad={({ naturalSize }) => {
@@ -174,7 +165,7 @@ export default function NftMedia({
           source={{
             uri: imageUrl,
             headers: {
-              origin: networkConfig.nftsValoraAppUrl,
+              origin: networkConfig.nftsAppUrl,
             },
           }}
           onLoad={({ nativeEvent: { width, height } }) => {

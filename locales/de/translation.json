@@ -6,7 +6,7 @@
   "licenses": "Lizenzen",
   "removeAccountTitle": "Kolektivo zurücksetzen",
   "removeAccountDetails": "Das Zurücksetzen wird dein Konto von diesem Gerät entfernen. Dein Guthaben bleibt im Konto, wird aber nur mit deiner Wiederherstellungsphrase erreichbar sein",
-  "deleteAccountTitle": "Konto löschen",
+  "deleteAccountTitle": "{{appName}} löschen",
   "deleteAccountDetails": "Wenn du dein Konto löschst, wird es von {{appName}} entfernt. Dein Guthaben bleibt auf dem Konto, ist aber nur noch mit deiner Wiederherstellungsphrase zugänglich",
   "deleteAccountWarning": {
     "title": "Bist Du sicher?",
@@ -16,7 +16,9 @@
   },
   "legal": "Rechtshinweisen",
   "appPreferences": "App-Einstellungen",
+  "preferences": "Präferenzen",
   "security": "Sicherheit",
+  "securityPrivacy": "Sicherheit und Datenschutz",
   "changePin": "PIN ändern",
   "pinChanged": "PIN geändert",
   "pinChangeFailed": "PIN-Änderung fehlgeschlagen",
@@ -29,6 +31,7 @@
   "dataSaver": "Datensparmodus",
   "enableDataSaver": "Datensparmodus aktivieren",
   "dataSaverDetail": "Der Datensparmodus ermöglicht die Kommunikation mit dem Netzwerk über einen vertrauenswürdigen Knoten. Du kannst diesen Modus jederzeit in den App-Einstellungen ändern.",
+  "keylessBackupSetupTitle": "Anmeldung erstellen",
   "keylessBackupSettingsTitle": "Sicherung von E-Mail und Telefonnummer",
   "keylessBackupSettingsDeleteError": "Deine Sicherung konnte nicht gelöscht werden. Bitte warte und versuche es später noch einmal.",
   "setup": "Einrichten",
@@ -72,7 +75,9 @@
   },
   "recoveryPhrase": {
     "title": "Deine Wiederherstellungsphrase",
+    "titleV1_90": "Deine Wiederherstellungsphrase",
     "body": "Schreibe diese 12 Wörter auf und bewahre sie an einem sicheren Ort auf, wo sie nicht gestohlen oder beschädigt werden können.",
+    "bodyV1_90": "Solltest du deine Wiederherstellungsphrase verlieren, dann verlierst du Zugang auf dein gesamtes Guthaben in {{appName}}.",
     "continue": "Ich habe sie gespeichert",
     "copy": "In Zwischenablage kopieren",
     "mnemonicCopied": "Wiederherstellungsphrase in die Zwischenablage kopiert",
@@ -102,9 +107,17 @@
   },
   "signInWithEmail": {
     "title": "Mit der E-Mail-Adresse anmelden",
-    "subtitle": "Melde dich mit deiner E-Mail-Adresse an, um diese als Sicherung einzurichten.\nDu wirst aufgefordert, dich erneut anzumelden, wenn du jemals deine Wallet verlierst.",
+    "subtitle": "Melde dich mit deiner E-Mail an, um sie als Backup einzurichten. Wenn du deine Wallet verlierst, wirst du aufgefordert, dich erneut anzumelden.",
     "subtitleRestore": "Melde dich mit der E-Mail an, mit der du deine Wallet-Sicherung eingerichtet hast.",
-    "google": "Mit Google anmelden"
+    "google": "Mit Google anmelden",
+    "apple": "Mit Apple anmelden",
+    "signInAnotherWay": "Andere Anmeldungsmethode",
+    "bottomSheet": {
+      "title": "Speichere deine Wiederherstellungsphrase bei der Erstellung deiner Wallet",
+      "description": "Wir werden zukünftig auch andere E-Mail-Anbieter unterstützen, aber in der Zwischenzeit musst du deine Wiederherstellungsphrase speichern, damit die Erstellung deiner Wallet abgeschlossen werden kann.",
+      "continue": "Weiter",
+      "skip": "Überspringen (nicht empfohlen)"
+    }
   },
   "keylessBackupPhoneInput": {
     "setup": {
@@ -161,6 +174,8 @@
   "termsOfServiceLink": "Nutzungsbedingungen",
   "privacyPolicy": "Datenschutzrichtlinie",
   "editProfile": "Profil bearbeiten",
+  "profileName": "Profilname",
+  "profile": "Profil",
   "confirmNumber": "Telefonnummer verbinden",
   "cancel": "Abbrechen",
   "changeProfilePhoto": "Profilbild ändern",
@@ -172,6 +187,7 @@
   "continue": "Weiter",
   "yourName": "Dein Name",
   "version": "Version {{appVersion}}",
+  "appVersion": "Version",
   "addressCopied": "Adresse in die Zwischenablage kopiert",
   "support": "Support",
   "contact": "Kontakt",
@@ -184,6 +200,7 @@
   "supportLegalCheckbox": "Durch das Versenden stimme ich zu, die obigen Informationen und alle angehängten Anmeldeprotokolldaten mit {{appName}} Support zu teilen.",
   "contactSuccess": "Dein Problem wurde erfolgreich gemeldet! Wir werden in Kürze per E-Mail antworten.",
   "namePictureSaved": "Dein Name und Bild wurden erfolgreich gespeichert.",
+  "nameSaved": "Dein Name wurde erfolgreich gespeichert.",
   "addPhoto": "Foto hinzufügen",
   "chooseFromLibrary": "Aus Bibliothek wählen",
   "takePhoto": "Foto machen",
@@ -369,6 +386,7 @@
   "accountAddressLabel": "Konto-Adresse",
   "celoAmountLabel": "Betrag (CELO)",
   "maxSymbol": "Max",
+  "percentage": "{{percentage}} %",
   "withdrawCeloReview": "Überprüfen",
   "withdrawCeloTo": "Abheben nach",
   "withdrawCeloAmount": "Betrag (CELO)",
@@ -682,7 +700,7 @@
     "body": "Sobald sie ihre Nummer verknüpfen und Guthaben zu {{appName}} hinzufügen, erhaltet ihr beide 0,50 cUSD."
   },
   "inviteWithUrl": {
-    "title": "Lade deine Freunde ein",
+    "title": "Einen Freund einladen",
     "body": "Verbinde und teile Wert mit deinen Freunden und Familie auf {{appName}}.",
     "button": "Einladung senden",
     "error": "Es gab ein Problem beim Erstellen eines teilbaren Links",
@@ -804,6 +822,7 @@
     "spend": "Verwende Krypto, um deine Lieblingsmarken zu kaufen"
   },
   "enableBiometry": {
+    "title": "Sichere dein Wallet",
     "description": "{{biometryType}} sichert dein Wallet und erleichtert die Verwendung von {{appName}}",
     "cta": "{{biometryType}} einschalten",
     "guideTitle": "Willst du {{biometryType}} einschalten?",
@@ -826,9 +845,9 @@
     "createNewWallet": "Wallet erstellen",
     "restoreWallet": "Wallet wiederherstellen",
     "hasWallet": "Ich habe bereits eine Wallet",
+    "hasWalletV1_88": "Ich habe ein Wallet",
     "header": "Willkommen bei {{appName}}! Lass uns deine Wallet erstellen.",
-    "getStarted": "Erste Schritte",
-    "agreeToTerms": "Wenn du eine Wallet erstellst, stimmst du unseren <0>Allgemeinen Nutzungsbedingungen</0> zu"
+    "getStarted": "Erste Schritte"
   },
   "accessContacts": {
     "disclosure": {
@@ -842,7 +861,7 @@
   "registrationSteps": "Schritt {{step}} von {{totalSteps}}",
   "selectCountryCode": "Ländercode auswählen",
   "pincodeSet": {
-    "createNew": "Neue PIN erstellen",
+    "createNew": "Eine neue PIN erstellen",
     "verify": "Zur Bestätigung erneut PIN eingeben",
     "changePIN": "PIN ändern",
     "pinsDontMatch": "Die PINs stimmen nicht überein",
@@ -894,7 +913,7 @@
     "learnMore": {
       "buttonLabel": "Muss ich verbinden?",
       "title": "Muss ich verbinden?",
-      "body": "Wenn du deine Telefonnummer verbindest, kannst du Guthaben an Freunde in deinem Adressbuch sowie an andere Telefonnummern senden.\n\nWenn du diesen Schritt überspringst, kannst du nicht auf deine Kontakte zugreifen. Du kannst dann nur Guthaben per QR-Code oder über deiner Wallet-Adresse versenden."
+      "body": "Wenn du deine Telefonnummer verbindest, kannst du Geld an Freunde in deinem Adressbuch und andere Telefonnummern senden. \n\nWenn du diesen Schritt überspringst, kannst du nicht auf deine Kontakte zugreifen und nur über den QR-Code oder die Brieftaschenadresse Geld senden."
     },
     "skip": {
       "title": "Bist du sicher?",
@@ -910,9 +929,11 @@
     "codeInputPlaceholder": "123456",
     "helpDialog": {
       "title": "Hilfe",
-      "body": "Wir haben eine SMS an deine Telefonnummer geschickt. Bitte überprüfe deine SMS, um den 6-stelligen Code zu finden.\n\nWenn du Probleme beim Empfang von Nachrichten hast, kannst du diesen Schritt überspringen.",
+      "body": "Wir haben eine SMS an deine Telefonnummer geschickt. Bitte überprüfe deine SMS, um den 6-stelligen Code zu finden. \n\nWenn du Probleme beim Empfang von Nachrichten hast, kannst du diesen Schritt überspringen und es später noch einmal versuchen.",
+      "bodyCloudBackupOnboarding": "Wir haben eine SMS an deine Telefonnummer geschickt. Bitte überprüfe deine Textnachrichten, um den 6-stelligen Code zu finden. \n\nWenn du Probleme mit dem Empfang von Nachrichten hast, empfehlen wir dir, mit einer Wiederherstellungsphrase zu sichern. Du kannst später versuchen, dich mit deiner E-Mail und deinem Telefon anzumelden.",
       "skip": "Überspringen",
-      "dismiss": "Zurück"
+      "dismiss": "Zurück",
+      "useRecoveryPhrase": "Wiederherstellungsphrase verwenden"
     },
     "verificationFailure": "Etwas ist schief gelaufen, bitte versuche es später erneut.",
     "resendButtonNotYetAvailable": "„Erneut senden“ in {{secondsRemaining}} Sekunde(n) verfügbar",
@@ -923,6 +944,7 @@
     "header": "Wallet wiederherstellen",
     "title": "Gib deine Recovery Phrase ein",
     "description": "Verwende die 12- oder 24-Wort-Phrase, die du beim Einrichten deiner Wallet gespeichert hast, um sie wiederherzustellen.",
+    "descriptionV1_90": "Deine Wiederherstellungsphrase ist eine Phrase mit 12 oder 24 Wörtern, die du bei der Einrichtung deiner Wallet aufgeschrieben und gespeichert hast. Bitte gib sie hier ein, um deine Wallet wiederherzustellen.",
     "emptyWalletDialog": {
       "description": "Diese Wallet hat kein Guthaben. Möchtest du es trotzdem verwenden?",
       "action": "Wallet benutzen",
@@ -1342,10 +1364,10 @@
   "transactionHeaderNftSent": "NFT gesendet",
   "feedSectionHeaderRecent": "Zuletzt",
   "cashInBottomSheet": {
-    "title": "Füge Guthaben hinzu, um loszulegen!",
+    "title": "Füge Guthaben hinzu, um mit {{appName}} loslegen zu können!",
     "subtitle": "Dein Konto ist derzeit leer",
     "addFunds": "Guthaben hinzufügen",
-    "titleRamp": "Füge {{currency}} hinzu, um loszulegen",
+    "titleRamp": "Füge {{currency}} hinzu, um mit {{appName}} loslegen zu können",
     "subtitleRamp": "Füge Guthaben mit niedrigen Gebühren durch einen unserer externen Anbieter hinzu."
   },
   "balances": "Vermögen",
@@ -1403,7 +1425,7 @@
       "disabledDescription": "Bankkonto-Unterstützung ist bald verfügbar! Wir informieren dich, sobald du dein Bankkonto mit Kolektivo verbinden kannst.",
       "disabledCta": "Demnächst verfügbar",
       "title": "Bankdaten eingeben",
-      "description": "Du bist fast fertig! Bankdaten eingeben ein, um dein Konto zu verknüpfen.",
+      "description": "Du bist fast fertig! Gib deine Bankdaten ein, um dein Konto mit {{appName}} zu verknüpfen.",
       "cta": "Bankkonto verknüpfen",
       "error": {
         "title": "Dein Konto konnte nicht verknüpfen werden.",
@@ -1435,11 +1457,15 @@
   "dappsScreen": {
     "title": "Dapps",
     "titleDiscover": "Entdecke",
+    "exploreDapps": "Dapps",
+    "exploreAll": "Alle anzeigen",
     "message": "Finde heraus, wie du dein Vermögen nutzen kannst",
     "errorMessage": "Beim Laden Dapps ist ein Fehler aufgetreten",
     "featuredDapp": "Empfohlen",
     "allDapps": "Alle",
     "favoriteDapps": "Lieblings-Dapps",
+    "mostPopularDapps": "Am beliebtesten",
+    "mostPopularDapps_UK": "Andere Dapps",
     "favoriteDappsAndAll": "Meine Favoriten & Alle",
     "searchPlaceHolder": "Dapps suchen",
     "noFavorites": {
@@ -1455,7 +1481,8 @@
       "message": "<0>{{filter}}</0> Filter angewendet",
       "removeFilter": "Filter entfernen",
       "searchMessage": "Keine passenden Ergebnisse für <0>\"{{searchTerm}}\"</0> gefunden"
-    }
+    },
+    "disclaimer_UK": "Dies ist eine Liste von Drittanbieter-Dapps. Die Beschreibung der einzelnen Dapps ist rein informativ und stellt keine Aufforderung dar, sie zu nutzen."
   },
   "dappRankings": {
     "title": "Dapp-Ranglisten",
@@ -1508,6 +1535,7 @@
     "somePaymentsUnavailable": "Die Einkäufe werden über unsere Partneranbieter abgewickelt. Die Gebühren können variieren. Einige Zahlungsarten sind in deiner Region nicht verfügbar.",
     "disclaimerWithSomePaymentsUnavailable": "Zahlungen werden von Netzwerk-Partnern unterstützt. Gebühren können sich im Laufe der Zeit ändern. Einige Zahlungsarten sind in deiner Region nicht verfügbar. <0>Mehr Infos.</0>",
     "disclaimer": "Zahlungen werden von Netzwerk-Partnern unterstützt. Die Gebühren können sich im Laufe der Zeit ändern. <0>Mehr Infos.</0>",
+    "disclaimerUK": "Dies ist keine Einladung zum Kauf von Krypto-Vermögen. Wir stellen nur eine Liste von Anbietern zur Verfügung, die Krypto-Vermögen mit Preisinformationen und einem Link zu ihrer Website verkaufen.",
     "learnMore": "Mehr Infos.",
     "whyMissingPayments": "Warum kann nicht keine weiteren Zahlungsmethoden sehen?",
     "dismiss": "Verwerfen",
@@ -1669,6 +1697,7 @@
       "selectCurrencyTitle": "Guthaben hinzufügen",
       "exchangeAmountTitle": "{{currency}} hinzufügen",
       "selectProviderHeader": "Zahlungsmethode auswählen",
+      "selectProviderHeader_UK": "Anbieterdetails",
       "depositExchangeTitle": "Krypto einzahlen"
     },
     "cashOut": {
@@ -1759,11 +1788,13 @@
     "title": "Tauschen",
     "review": "Überprüfen",
     "confirmSwap": "Tausch bestätigen",
+    "confirmSwap_UK": "Ich möchte tauschen",
     "swapFrom": "VON",
     "swapTo": "ZU",
     "insufficientFunds": "Unzureichendes {{token}}-Guthaben. Versuche es mit einem kleineren Betrag oder wähle ein anderes Vermögen.",
     "fetchSwapQuoteFailed": "Entschuldige die Verzögerung! Es dauert länger als üblich, um den besten Wechselkurs zu ermitteln. Bitte versuche es in ein paar Minuten erneut.",
     "disclaimer": "Bester Kurs von dezentralen Quellen. <0>Mehr erfahren</0>",
+    "disclaimer_UK": "Dies ist keine Einladung zum Kauf oder Verkauf von Krypto-Vermögen. Wenn du auf „Ich möchte tauschen“ klickst, beauftragst du einen dritten Tausch-Router, um deine Tausch-Transaktion zum besten Kurs durchzuführen. Der beste Kurs wird von den Netzwerkpartnern bereitgestellt. <0>Mehr Infos</0>",
     "swapFromTokenSelection": "TAUSCH VON",
     "swapToTokenSelection": "TAUSCH ZU",
     "tokenUsdValueUnknown": "-",
@@ -1771,6 +1802,24 @@
     "selectTokenLabel": "Token auswählen",
     "tokenBottomSheetTitle": "Token auswählen",
     "onNetwork": "auf {{networkName}}",
+    "crossChainNotification": "Token zwischen verschiedenen Netzwerken austauschen",
+    "crossChainFeeWarning": {
+      "title": "Du benötigst mehr {{tokenSymbol}}",
+      "body": "Du benötigst mehr {{tokenSymbol}} auf {{networkName}}, um die Cross-Chain-Tausch-Gebühren zu bezahlen. Füge {{tokenAmount}} {{tokenSymbol}} hinzu, um fortzufahren."
+    },
+    "insufficientBalanceWarning": {
+      "title": "Du benötigst mehr {{tokenSymbol}}",
+      "body": "Unzureichendes {{tokenSymbol}}-Guthaben. Versuche es mit einem kleineren Betrag oder wähle ein anderes Vermögen."
+    },
+    "unsupportedTokensWarning": {
+      "title": "Inkompatible Auswahl",
+      "body": "Die ausgewählten Tokens können nicht untereinander getauscht werden. Wähle einen anderen Token aus, der mit deiner Auswahl kompatibel ist."
+    },
+    "decreaseSwapAmountForGasWarning": {
+      "title": "Du benötigst mehr {{feeTokenSymbol}} für Gas.",
+      "body": "Füge {{feeTokenSymbol}} hinzu, um deine Gasgebühren zu begleichen, oder passe den Betrag an, den du tauschen möchtest",
+      "cta": "Kleineren Betrag tauschen"
+    },
     "switchedToNetworkWarning": {
       "title": "Du bist zum Netzwerk {{networkName}} gewechselt",
       "body_swapFrom": "Wähle einen Token aus, den du im {{networkName}} Netzwerk tauschen möchtest, um fortzufahren.",
@@ -1832,12 +1881,30 @@
       "networkFeeInfo": "Du tauschst über das {{networkName}}-Netzwerk.\n\nUm eine Transaktion über das {{networkName}}-Netzwerk durchzuführen, musst du diese geschätzte Netzwerkgebühr bezahlen. Diese Gebühr sichert deine Transaktion und trägt dazu bei, das Netzwerk aufrechtzuerhalten.",
       "networkFeeInfoV1_76": "Du tauschst über das {{networkName}} Netzwerk.\n\nUm eine Transaktion über das {{networkName}} Netzwerk durchzuführen, ist eine Netzwerkgebühr erforderlich. Diese Gebühr sichert deine Transaktion ab und wird an die Netzwerk-Validierer gezahlt.\n\nDa der genaue Betrag von den Netzwerkbedingungen abhängt, ist die angegebene Gebühr der erwartete Betrag. Die Gebühr wird den maximalen Betrag nicht überschreiten.",
       "slippageToleranceInfo": "Slippage-Toleranz\n\nDein Tausch wird innerhalb der Slippage-Toleranz in Prozent ausgeführt. Wenn sich der Preis stärker als die Slippage-Toleranz verändert, schützt dich {{appName}}, indem die Ausführung des Handels verhindert wird.",
+      "slippageToleranceInfoV1_90": "Dein Tausch wird innerhalb der Slippage-Toleranz in Prozent ausgeführt. Wenn sich der Preis stärker als die Slippage-Toleranz verändert, schützt dich {{appName}}, indem die Ausführung des Handels verhindert wird.",
       "networkFeeInfoDismissButton": "Verstanden",
       "exchangeRate": "Umtauschkurs",
       "exchangeRateInfo": "Umtauschkurs\n\nWir haben den besten Umtauschkurs für dich gefunden. Dein Trade wird zu einem Preis abgeschlossen, der innerhalb von {{slippagePercentage}} % der Prognose liegt, oder die Transaktion wird storniert und das Geld wird in deine Wallet zurückgebucht.",
+      "exchangeRateInfoV1_90": "Wir haben den besten Umtauschkurs für dich gefunden. Dein Trade wird zu einem Preis abgeschlossen, der innerhalb von {{slippagePercentage}} % der Prognose liegt, oder die Transaktion wird storniert und das Geld wird in deine Wallet zurückgebucht.",
       "exchangeRateInfo_withAppFee": "Umtauschkurs\n\nWir haben den besten Umtauschkurs für dich gefunden. Dein Trade wird zu einem Preis abgeschlossen, der innerhalb von {{slippagePercentage}} % der Prognose liegt, oder die Transaktion wird storniert und das Geld wird in deine Wallet zurückgebucht.\n\nDer geschätzte Kurs enthält eine {{appName}} Gebühr in Höhe von {{appFeePercentage}} %.",
       "exchangeRateInfoDismissButton": "Verstanden",
-      "estimatedValue": "Geschätzter Wert"
+      "estimatedValue": "Geschätzter Wert",
+      "estimatedTransactionTime": "Voraussichtliche Transaktionsdauer",
+      "estimatedTransactionTimeInMinutes": "≈ {{minutes}} Min.",
+      "estimatedTransactionTimeInfo": "Die Zeit bis zum Abschluss der Transaktion wird vom Anbieter bestimmt.\n\nWenn du einen Tausch zwischen verschiedenen Chains vornimmst, kann es etwas länger dauern, bis die Transaktion abgeschlossen ist.",
+      "infoDismissButton": "Verstanden",
+      "fees": "Gebühren",
+      "feesCalculationError": "Gebühren können nicht berechnet werden",
+      "estimatedCrossChainFee": "Geschätzte Chain-übergreifende Gebühren",
+      "maxCrossChainFee": "Maximale Chain-übergreifende Gebühren",
+      "feesBreakdown": "Zusammenfassung",
+      "feeAmount": "≈ {{localCurrencySymbol}}{{feeAmountInLocalCurrency}} ({{tokenAmount}} {{tokenSymbol}})",
+      "feeAmount_noFiatPrice": "{{tokenAmount}} {{tokenSymbol}}",
+      "feesMoreInfoLabel": "Weitere Informationen",
+      "feesInfo_sameChain": "Das Netzwerk verlangt eine Netzwerkgebühr, damit es die Transaktion verarbeiten kann.",
+      "feesInfo_crossChain": "Das Netzwerk verlangt eine Netzwerkgebühr, damit es die Transaktion verarbeiten kann. Die Cross-Chain-Gebühr wird vom Cross-Chain-Anbieter erhoben.",
+      "feesInfo_sameChainWithAppFee": "Das Netzwerk verlangt eine Netzwerkgebühr, damit es die Transaktion verarbeiten kann. Die {{appName}}-Gebühr von {{appFeePercentage}} % wird für deine Nutzung unseres Produkts erhoben.",
+      "feesInfo_crossChainWithAppFee": "Das Netzwerk verlangt eine Netzwerkgebühr, damit es die Transaktion verarbeiten kann. Die Cross-Chain-Gebühr wird vom Cross-Chain-Anbieter erhoben. Die {{appName}}-Gebühr von {{appFeePercentage}} % wird für deine Nutzung unseres Produkts erhoben."
     },
     "fundYourWalletBottomSheet": {
       "title": "Deine Wallet aufladen",
@@ -1849,6 +1916,8 @@
     "swapFrom": "Tausch von",
     "swapTo": "Tausch zu",
     "rate": "Kurs",
+    "network": "Netzwerk",
+    "networkValue": "{{fromNetwork}} → {{toNetwork}}",
     "estimatedFee": "Geschätzte Netzwerkgebühr",
     "networkFee": "Netzwerkgebühr",
     "viewOnExplorer": "Auf CeloExplorer anzeigen"
@@ -1930,10 +1999,12 @@
     "subtitle": "Was möchtest du zuerst tun?",
     "later": "Ich sehe mich später um",
     "options": {
-      "add": "Guthaben hinzufügen",
+      "add": "Füge Guthaben zu deinem Wallet hinzu",
       "dapp": "Wege finden, Krypto zu nutzen",
-      "profile": "Mein Profil erstellen",
-      "learn": "Mehr über Celo erfahren"
+      "earn": "Entdecke Verdienstmöglichkeiten",
+      "profile": "Erstelle dein Profil",
+      "learn": "Mehr über Celo erfahren",
+      "learnPoints": "Erfahre mehr zu {{appName}}-Punkten"
     }
   },
   "reverifyUsingCPVHomecard": {
@@ -1958,7 +2029,8 @@
       "network": "{{networkName}} Netzwerk",
       "selectNetwork": "Netzwerk",
       "stablecoins": "Stablecoins",
-      "gasTokens": "Gasgebühr-Token"
+      "gasTokens": "Gasgebühr-Token",
+      "tokens": "Token"
     }
   },
   "homeActions": {
@@ -2052,9 +2124,13 @@
   },
   "sendSelectRecipient": {
     "searchText": "Suche nach Name, Telefon, Wallet ...",
+    "searchInputLabel": "Zu",
+    "searchInputPlaceholder": "Wallet-Adresse oder Telefonnummer",
     "paste": "Aus Zwischenablage einfügen",
     "title": "Einen Empfänger auswählen",
     "contactsTitle": "Kontakt wählen",
+    "header": "Senden",
+    "contactsHeader": "An Kontakte senden",
     "recents": "Zuletzt",
     "results": "Ergebnisse",
     "qr": {
@@ -2062,8 +2138,8 @@
       "subtitle": "Finde Adressen schnell auf Kolektivo."
     },
     "invite": {
-      "title": "Sende Krypto an deine Freunde.",
-      "subtitle": "Sende Guthaben oder eine Einladung an deine Kontakte"
+      "title": "An einen Kontakt senden",
+      "subtitle": "Guthaben an deine Kontakte senden"
     },
     "jumpstart": {
       "title": "Mit einem Live-Link senden",
@@ -2123,10 +2199,12 @@
   "viewOnOPSepoliaExplorer": "Auf OP Sepolia Explorer ansehen",
   "viewOnPolygonPoSScan": "Auf PolygonScan anzeigen",
   "viewOnBaseScan": "Auf BaseScan anzeigen",
+  "viewOnAxelarScan": "Auf AxelarScan anzeigen",
   "sendEnterAmountScreen": {
     "title": "Betrag eingeben",
     "selectToken": "Token auswählen",
     "networkFee": "Netzwerkgebühr für {{networkName}}",
+    "networkFeeV1_97": "Netzwerkgebühr",
     "lowerAmount": "Gib einen niedrigeren Betrag ein.",
     "maxAmountWarning": {
       "title": "Der Höchstbetrag wird gesendet.",
@@ -2139,6 +2217,27 @@
     "prepareTransactionError": {
       "title": "Etwas ist schief gelaufen!",
       "description": "Es war nicht möglich, eine Transaktion für dieses Token vorzubereiten."
+    },
+    "insufficientBalanceWarning": {
+      "title": "Du benötigst mehr {{tokenSymbol}}",
+      "description": "Unzureichendes {{tokenSymbol}}-Guthaben. Versuche es mit einem kleineren Betrag oder wähle ein anderes Vermögen."
+    }
+  },
+  "jumpstartIntro": {
+    "title": "Teile Krypto wie eine Textnachricht",
+    "description": "Live Links sind eine Möglichkeit, Krypto im Celo-Netzwerk an einen Freund mit einem Link zu senden",
+    "noFundsHint": "Um loszulegen, benötigst du Vermögen auf Celo in deiner Wallet.",
+    "haveFundsButton": "Mit einem Live-Link senden",
+    "addFundsCelo": {
+      "title": "Erhalte Vermögen in Celo",
+      "info": "Mit Live-Links kannst du Krypto über das Celo-Netzwerk mit einem Link an einen Freund senden.\nUm loszulegen, benötigst du CELO-Vermögen in deinem Wallet.",
+      "description": "Sobald du Vermögen in Celo hinzugefügt hast, musst du zurückkehren, um einen Live-Link zu erstellen.",
+      "cta": "Erhalte Vermögen in Celo",
+      "actionDescriptions": {
+        "add": "Kaufe Vermögen auf Celo mit einem unserer vertrauenswürdigen Anbieter",
+        "swap": "Wechsle von einem anderen Vermögen zu einem Vermögen in Celo",
+        "transfer": "Nutze ein beliebiges Celo-kompatibles Wallet oder eine beliebige Celo-kompatible Börse, um Vermögen in Celo einzuzahlen"
+      }
     }
   },
   "jumpstartEnterAmountScreen": {
@@ -2180,6 +2279,9 @@
     "approvalTransactionTitle": "Genehmigt",
     "estimatedNetworkFee": "Geschätzte Netzwerkgebühr",
     "networkFee": "Netzwerkgebühr",
+    "appFee": "App-Gebühr",
+    "estimatedCrossChainFee": "Geschätzte Cross-Chain-Gebühr",
+    "crossChainFee": "Cross-Chain-Gebühr",
     "finiteApprovalDescription": "{{approvedAmount}} {{tokenSymbol}} für Handel genehmigt",
     "infiniteApprovalDescription": "Unendliche {{tokenSymbol}} für Handel genehmigt",
     "revokeApprovalDescription": "{{tokenSymbol}} für Handel widerrufen",
@@ -2286,6 +2388,17 @@
         "swap": {
           "title": "Tauschen",
           "subtitle": "{{fromToken}} zu {{toToken}}"
+        },
+        "createLiveLink": {
+          "title": "Live-Link",
+          "subtitle": {
+            "erc20": "{{tokenSymbol}} gesendet",
+            "erc721": "Gesendetes NFT"
+          }
+        },
+        "depositEarn": {
+          "title": "Eingezahlt",
+          "subtitle": "in {{network}} Pool"
         }
       },
       "title": "Meine Punkteaktivität",
@@ -2320,7 +2433,7 @@
       "retryCta": "Erneut versuchen"
     },
     "infoCard": {
-      "title": "Bald hast du noch mehr Möglichkeiten, Punkte zu verdienen 🚀",
+      "title": "Schon bald gibt es mehr Möglichkeiten, Punkte zu verdienen",
       "body": "Wir arbeiten daran, weitere Möglichkeiten zum Verdienen von Punkten mit der App hinzuzufügen. Wir halten dich auf dem Laufenden!"
     },
     "activitySection": {
@@ -2339,22 +2452,45 @@
         "title": "Vermögen tauschen",
         "bottomSheet": {
           "title": "Vermögen tauschen",
-          "body": "Verdiene {{pointsValue}} Punkte, wenn du einen Vermögenswert mit {{appName}}tauschst. \n\nTippe unten, um mit dem Tauschen und Sammeln zu beginnen!",
+          "body": "Verdiene {{pointsValue}} Punkte, wenn du einen Vermögenswert mit {{appName}} tauschst.\n\nTippe unten, um mit dem Tauschen und Verdienen zu beginnen!",
           "cta": "Einen Tausch starten"
         }
       },
       "moreComing": {
         "title": "Mehr dazu demnächst!"
+      },
+      "createLiveLink": {
+        "title": "Mit einem Live-Link senden",
+        "bottomSheet": {
+          "title": "Mit einem Live-Link senden",
+          "body": "Verdiene jedes Mal {{pointsValue}} Punkte, wenn du über einen Live Link auf {{appName}} Geld versendest. \n\nTippe unten, um mit dem Senden und Sammeln zu beginnen!",
+          "cta": "Mit einem Live-Link senden"
+        }
+      },
+      "depositEarn": {
+        "title": "Einzahlung in einen Ertragspool auf {{appName}}",
+        "bottomSheet": {
+          "title": "Einzahlung in einen Ertragspool",
+          "body": "Verdiene jedes Mal {{pointsValue}} Punkte, wenn du Geld in einen Ertragspool auf {{appName}} einzahlst. \n\nTippe unten, um Rendite und Punkte zu sammeln!",
+          "cta": "Zum Ertragspool gehen"
+        }
       }
     },
     "discoverCard": {
       "title": "{{appName}} Punkte",
-      "description": "Sammle ganz einfach Punkte mit {{appName}}. Mit der Nutzung der App, einschließlich des Tauschens, erhältst du Punkte!"
+      "description": "Sammle ganz einfach Punkte mit {{appName}}. Mit der Nutzung der App, einschließlich des Tauschens, erhältst du Punkte!",
+      "balance": "{{pointsBalance}} punkte"
     },
     "intro": {
       "title": "Verdiene mühelos Punkte",
       "description": "Entdecke neue Möglichkeiten! Für deine {{appName}} Aktionen gibt es jetzt Punkte. Fange noch heute an und schalte tolle Vorteile frei.",
       "cta": "Starte deine Punkte-Reise"
+    },
+    "disclaimer": {
+      "learnMoreCta": "<0>Mehr Infos</0> zu {{appName}}-Punkten",
+      "title": "Mehr zu {{appName}}-Punkten",
+      "body": "Punkte sind das Treueprogramm von {{appName}}. Diese erhältst du für die Nutzung der App. Punkte können weder ausgegeben, noch gehandelt oder überwiesen werden.",
+      "dismiss": "Verstanden"
     }
   },
   "earnFlow": {
@@ -2374,12 +2510,12 @@
       }
     },
     "cta": {
-      "title": "Verdiene an deinen Stablecoins",
+      "title": "Verdiene mit deiner Krypto",
       "subtitle": "Zahle heute ein und verdiene Rendite",
       "description": "Erfahre, wie viel du an der Bereitstellung eines Kreditpools verdienen kannst"
     },
     "earnInfo": {
-      "title": "Verdiene mit deinen\nStablecoins",
+      "title": "Verdiene mit deiner\nKrypto",
       "details": {
         "earn": {
           "titleGasSubsidy": "Maximiere Verdienste ohne Gasgebühren*",
@@ -2393,7 +2529,7 @@
         },
         "access": {
           "title": "Einfacher Zugriff auf dein Guthaben",
-          "subtitle": "Erhalte dein Guthaben mühelos mit einem einzigen Tippen. Genieße den gleichen sofortigen Zugang wie direkt über deine Lieblingsprotokolle."
+          "subtitle": "Erhalte Guthaben mit einem einzigen Fingertipp, wenn du dazu bereit bist."
         }
       },
       "action": {
@@ -2406,22 +2542,58 @@
       "subtitle": "Kaufe {{symbol}}",
       "description": "Verdiene etwa {{apy}}% pro Jahr, wenn du {{symbol}} zu einem Pool hinzufügst"
     },
+    "entrypoint": {
+      "title": "Verdiene mit deiner Krypto",
+      "subtitle": "Einzahlen und verdienen",
+      "description": "Verdiene, indem du dein Krypto-Vermögen über Liquiditätspools anderen leihst.",
+      "totalDepositAndEarnings": "Gesamteinlage und -Verdienst"
+    },
     "enterAmount": {
+      "title": "Wie viel möchtest du einzahlen?",
+      "titleWithdraw": "Wie viel möchtest du abheben?",
+      "deposit": "Einzahlung",
+      "fees": "Gebühren",
+      "available": "Verfügbar",
+      "swap": "Tauschen",
+      "estimatedDuration": "Vsl. Transaktionsdauer",
+      "claimingReward": "Reward wird beansprucht",
       "earnUpToLabel": "Verdienst von bis zu:",
       "rateLabel": "Rate (geschätzt)",
       "earnUpTo": "~{{fiatSymbol}}{{amount}} / Jahr",
+      "earnUpToV1_87": "<0></0>/Jahr",
       "rate": "{{rate}} % jährliche prozentuale Rendite",
       "continue": "Weiter",
       "info": "Dieser Pool wird von Aave unterstützt",
-      "infoBottomSheet": {
-        "title": "Warum dieser Pool?",
-        "description": "Dieser Aave-Pool hat über 150 Millionen Dollar TVL und mehr als 6.000 Beitragszahler, was für eine hohe Liquidität und Vertrauenswürdigkeit spricht. Außerdem verwendet er USDC als Token und Abritrum als Netzwerk, was die Volatilität reduziert und sicherstellt, dass die Nutzer günstige Gasgebühren erhalten.\n\nDas alles macht den Aave-Pool zu einer sicheren und attraktiven Option mit wettbewerbsfähiger jährlicher prozentualer Rendite, die eine vorteilhafte Investitionsmöglichkeit für unsere Nutzer darstellt.\n\nWeitere Aave-Pools findest du <0>hier</0>.",
-        "dismiss": "Verwerfen"
-      },
+      "infoV1_93": "Unterstützt von {{providerName}}",
       "notEnoughBalanceForGasWarning": {
         "title": "Du benötigst mehr {{feeTokenSymbol}} zum Fortfahren",
         "description": "Füge {{feeTokenSymbol}} auf {{network}} hinzu, um deine Gasgebühren zu decken",
         "noGasCta": "Kaufe {{feeTokenSymbol}} auf {{network}}"
+      },
+      "feeBottomSheet": {
+        "feeDetails": "Gebührendetails",
+        "moreInformation": "Weitere Informationen",
+        "estNetworkFee": "Geschätzte Netzwerkgebühr",
+        "maxNetworkFee": "Maximale Netzwerkgebühr",
+        "estCrossChainFee": "Vsl. Cross-Chain-Gebühr",
+        "maxCrossChainFee": "Max. Cross-Chain-Gebühr",
+        "description_deposit": "Das Netzwerk verlangt eine Netzwerkgebühr, damit es die Einzahlungstransaktion verarbeiten kann.",
+        "description_withdraw": "Die Netzwerkgebühr wird von dem Netzwerk verlangt, um die Abhebungstransaktion zu bearbeiten.",
+        "description_depositSwapFee": "Das Netzwerk verlangt eine Netzwerkgebühr, damit es die Einzahlungstransaktionen verarbeiten kann. Die {{appName}}-Gebühr von {{appFeePercentage}} % wird für deine Nutzung unseres Produkts erhoben.",
+        "description_depositCrossChain": "Das Netzwerk verlangt eine Netzwerkgebühr, damit es die Einzahlungstransaktion verarbeiten kann. Die Cross-Chain-Gebühr wird vom Cross-Chain-Anbieter erhoben.",
+        "description_depositCrossChainWithSwapFee": "Das Netzwerk verlangt eine Netzwerkgebühr, damit es die Einzahlungstransaktionen verarbeiten kann. Die {{appName}}-Gebühr von {{appFeePercentage}} % wird für deine Nutzung unseres Produkts erhoben. Die Cross-Chain-Gebühr wird vom Cross-Chain-Anbieter erhoben.",
+        "appSwapFee": "{{appName}}-Gebühr"
+      },
+      "swapBottomSheet": {
+        "swapDetails": "Swap-Details",
+        "swapFrom": "Tausch von",
+        "swapTo": "Tausch zu",
+        "whySwap": "Weshalb tausche ich?",
+        "swapDescription": "Um Guthaben in den Pool einzuzahlen, wird dein Token in einen Pool-Token getauscht."
+      },
+      "withdrawingAndClaimingCard": {
+        "title": "Abheben und Beanspruchen",
+        "description": "{{providerName}} verlangt, dass du bei jeder Abhebung alle verfügbaren Rewards beanspruchst."
       }
     },
     "activePools": {
@@ -2430,27 +2602,44 @@
       "apy": "~{{apy}} % jährliche prozentuale Rendite",
       "exitPool": "Pool verlassen",
       "depositMore": "Mehr einzahlen",
-      "viewPools": "Pools anzeigen"
+      "viewPools": "Pools anzeigen",
+      "poolsSupplied": "Bereitgestellte Pools",
+      "totalSupplied": "Insgesamt bereitgestellt",
+      "depositAndEarnings": "Einzahlungen und Verdienste",
+      "myPools": "Meine Pools",
+      "explore": "Offen erforschen"
     },
     "depositBottomSheet": {
       "title": "Überprüfen und einzahlen",
       "description": "Bevor du eine Einzahlung in einen Aave-Pool vornimmst, solltest du die folgenden Transaktionsdetails überprüfen",
+      "descriptionV1_93": "Bevor du in einen {{providerName}}-Pool einzahlst, solltest du die folgenden Transaktionsdetails überprüfen.",
       "amount": "Eingezahlter Betrag",
       "fee": "Geschätzte Gasgebühren",
       "provider": "Verdienstanbieter",
       "network": "Netzwerk",
       "footer": "Wenn du Kryptowährungen in einen Aave-Pool einzahlst, akzeptierst du die mit der Nutzung von Aave verbundenen Risiken. <0>Allgemeine Nutzungsbedingungen</0>",
+      "footerV1_93": "Indem du Krypto in einen {{providerName}}-Pool einzahlst, akzeptierst du die Risiken, die mit der Nutzung von {{providerName}} verbunden sind. <0>Allgemeine Nutzungsbedingungen</0>",
+      "noTermsUrlFooter": "Du bist für deine Handlungen in {{appName}} verantwortlich. {{appName}} lehnt jede Verantwortung für dein Vermögen oder deine Interaktionen mit {{providerName}} ab. Du kannst die Dokumente von {{providerName}} <0>hier</0> und unsere allgemeinen Geschäftsbedingungen <1>hier</1> einsehen.",
       "primaryCta": "Abschließen",
-      "secondaryCta": "Abbrechen"
+      "secondaryCta": "Abbrechen",
+      "yieldRate": "Rendite (geschätzt)",
+      "apy": "{{apy}} %"
     },
     "collect": {
       "title": "Herzlichen Glückwunsch! Überprüfe und sammle deinen Verdienst ein",
+      "titleClaim": "Du beanspruchst:",
+      "titleCollect": "Du erhältst:",
+      "titleWithdraw": "Du hebst ab:",
       "total": "GESAMT",
       "plus": "PLUS",
+      "reward": "BELOHNUNG",
       "rate": "Rate (geschätzt)",
       "apy": "{{apy}} % jährliche prozentuale Rendite",
       "fee": "Gasgebühr",
       "cta": "Verdienste einsammeln",
+      "ctaWithdraw": "Abheben",
+      "ctaReward": "Belohnung beanspruchen",
+      "ctaExit": "Pool verlassen",
       "errorTitle": "Etwas ist schief gelaufen",
       "errorDescription": "Einzahlungsdetails konnten nicht abgerufen werden. Bitte versuche es erneut.",
       "noGasTitle": "Du benötigst mehr {{symbol}}, um fortzufahren",
@@ -2475,8 +2664,191 @@
       "earnDepositDetails": "Eingezahlter Betrag",
       "earnWithdrawTitle": "Abgehoben",
       "earnWithdrawSubtitle": "{{tokenSymbol}} aus dem {{providerName}} Pool abgehoben",
-      "earnWithdrawDetails": "Betrag abgehoben"
+      "earnWithdrawDetails": "Betrag abgehoben",
+      "swap": "Tauschen",
+      "network": "Netzwerk",
+      "fees": "Gebühren"
+    },
+    "home": {
+      "title": "Verdienen",
+      "learnMore": "<0>Mehr Infos</0> zu Rendite-Pools.",
+      "learnMoreBottomSheet": {
+        "bottomSheetTitle": "Mehr Infos zu Rendite-Pools",
+        "apySubtitle": "Was ist eine APY?",
+        "apyDescription": "Eine jährliche prozentuale Rendite (APY) ist eine Kennzahl, die zur Berechnung der jährlichen Rendite von Krypto-Investitionen verwendet wird. Sie ist ein wichtiger Indikator für die potenzielle Rendite und Rentabilität einer Kryptowährung.",
+        "tvlSubtitle": "Was ist TVL?",
+        "tvlDescription": "TVL steht für Total Value Locked und ist eine Kennzahl, die in der Kryptobranche verwendet wird, um den Wert von Digitalvermögen zu messen, das in einem Blockchain-Netzwerk gesperrt ist. TVL wird berechnet, indem der Wert des gesamten Digitalvermögens addiert wird, das in einem DeFi-Protokoll oder Smart Contract gesperrt ist. Dieses Vermögen kann Kryptowährungen, Stablecoins und andere Tokens umfassen.",
+        "yieldPoolSubtitle": "Was ist ein Rendite-Pool?",
+        "yieldPoolDescription": "Rendite-Pools oder Liquiditäts-Pools sind zusammengefasstes Guthaben, das von Token-Besitzern zur Verfügung gestellt wird und den Handel an dezentralen Börsen ermöglicht. Wenn du in den Pool einzahlst, kannst du von anderen Personen, die dieses Guthaben leihen, Zinsen erhalten.",
+        "chooseSubtitle": "Wie wählt man einen Pool aus?",
+        "chooseDescription": "Jede finanzielle Entscheidung ist individuell. Wir haben einige Pools aus verschiedenen Protokollen zusammengefasst, jeder Pool hat jedoch seine Vorteile und Risiken. Wir tun unser Bestes, um einige hilfreiche Informationen zu jedem Pool bereitzustellen, aber es ist immer ratsam, zusätzliche Recherchen anzustellen, wenn du unsicher bist."
+      },
+      "noPoolsTitle": "Du bist noch keinen Pools beigetreten",
+      "noPoolsDescription": "Entdecke verfügbare Pools, wähle einen Pool aus, der zu deinen Zielen passt, und hole das Maximum aus deiner Krypto heraus.",
+      "errorTitle": "Pools können nicht geladen werden",
+      "errorDescription": "Ups, beim Laden der Pool-Informationen ist etwas schiefgelaufen. Bitte versuche es erneut.",
+      "errorButton": "Erneut versuchen"
+    },
+    "poolCard": {
+      "onNetwork": "auf {{networkName}}",
+      "rate": "Rate (geschätzt)",
+      "yieldRate": "Rendite (geschätzt)",
+      "reward": "Reward",
+      "tvl": "TVL",
+      "exitPool": "Pool verlassen",
+      "addToPool": "Zum Pool hinzufügen",
+      "apy": "{{apy}} % jährliche prozentuale Rendite",
+      "percentage": "{{percentage}} %",
+      "poweredBy": "Unterstützt von {{providerName}}",
+      "deposited": "Bereitgestellt",
+      "depositAndEarnings": "Einzahlungen und Verdienste"
+    },
+    "poolFilters": {
+      "allPools": "Alle Pools",
+      "myPools": "Meine Pools"
+    },
+    "poolInfoScreen": {
+      "chainName": "Kette: <0>{{networkName}}</0>",
+      "protocolName": "Protokoll: <0>{{providerName}}</0>",
+      "yieldRate": "Rendite",
+      "dailyYieldRate": "Tageskurs",
+      "ratePercent": "{{rate}} %",
+      "rewards": "Rewards",
+      "noRewards": "Keine Rewards",
+      "safetyScore": "Safety Score",
+      "tvl": "TVL",
+      "ageOfPool": "Alter des Pools",
+      "learnMoreOnProvider": "Pool ansehen auf {{providerName}}",
+      "deposit": "Einzahlung",
+      "depositAndEarnings": "Einzahlungen und Verdienste",
+      "withdraw": "Abheben",
+      "withdrawBottomSheet": {
+        "title": "Abhebungsart auswählen",
+        "withdrawAndClaim": "Abheben und Beanspruchen",
+        "withdrawDescription": "Hebe einen bestimmten Betrag eines Tokens ab, den du im Pool hinterlegt hast",
+        "withdrawAndClaimRewardsDescription": "Hebe einen bestimmten Betrag eines Tokens ab, den du im Pool hinterlegt hast, und beanspruche automatisch deine Rewards",
+        "withdrawAndClaimEarningsDescription": "Hebe einen bestimmten Betrag eines Tokens ab, den du im Pool hinterlegt hast, und beanspruche automatisch deinen Verdienst",
+        "claimRewards": "Belohnung beanspruchen",
+        "claimRewardsDescription": "Beanspruche deine Rewards. Der Reward kann nicht teilweise beansprucht werden",
+        "claimEarnings": "Verdienst beanspruchen",
+        "claimEarningsDescription": "Beanspruche den Verdienst auf deine Einzahlung. Es können keine Teilbeträge beansprucht werden",
+        "exit": "Verlassen",
+        "exitDescription": "Beim Verlassen wird alles, was du im Pool hast, abgehoben",
+        "exitWithRewardsDescription": "Beim Verlassen wird alles, was du im Pool hast, abgehoben, einschließlich Rewards",
+        "exitWithEarningsDescription": "Beim Verlassen wird alles, was du im Pool hast, abgehoben, einschließlich Verdienst"
+      },
+      "totalDepositAndEarnings": "Gesamteinlage und -Verdienst",
+      "titleLocalAmountDisplay": "{{localCurrencySymbol}}{{localCurrencyAmount}}",
+      "lineItemAmountDisplay": "{{localCurrencySymbol}}{{localCurrencyAmount}} ({{cryptoAmount}} {{cryptoSymbol}})",
+      "infoBottomSheet": {
+        "gotIt": "Verstanden",
+        "depositDescription": "Dies ist die Zusammenfassung deines eingezahlten Betrags, der mit diesem Betrag verdienten Zinsen und jeglicher zusätzlicher Rewards, die du für die Teilnahme am Pool erhalten hast.",
+        "depositNoBreakdownDescription": "Diese Zahl kombiniert deine bereitgestellten Tokens mit jeglichen Zinsen und Rewards, die du verdient hast.\n\nEinige Protokolle, z. B. {{providerName}}, stellen keine Zusammenfassung deiner Verdienste bereit. Dies ist normal. Stattdessen fügen sie deine Verdienste direkt zu deinem eingezahlten Betrag hinzu, der auf der Grundlage des wachsenden Betrags weiter verzinst wird.",
+        "tvlTitle": "Total Value Locked (TVL)",
+        "tvlDescription": "TVL bezieht sich auf den Gesamtbetrag der in einem Liquiditätspool hinterlegten Vermögenswerte und kann als Indikator für das Vertrauen und den Nutzen eines Pools verwendet werden. In der Regel bedeutet eine höhere TVL ein geringeres Risiko, allerdings ist kein Pool völlig risikofrei.",
+        "ageTitle": "Alter des Pools",
+        "ageDescription": "Ältere Liquiditätspools können auf eine solide Erfolgsbilanz und eine Geschichte des Vertrauens der Community hinweisen. Aus diesem Grund halten manche diese Pools für sicherer.\n\nEs gibt keine perfekte Methode, um das Risiko zu bestimmen, also nutze diese Informationen als Teil deiner allgemeinen Recherche, um die für dich beste Entscheidung zu treffen.",
+        "yieldRateTitle": "Rendite",
+        "yieldRateDescription": "Die meisten Pools bieten Verdienst in Form eines Liquiditätspool-Tokens, aber einige geben zusätzliche Token als Reward oder zusätzlichen Anreiz.\n\nDa {{appName}} Pools über mehrere Protokolle hinweg zusammenfasst, haben wir alle Verdienst- und Reward-Sätze zu einer einzigen Gesamtrendite zusammengefasst, damit du dein Verdienstpotenzial leichter einschätzen kannst. Bei dieser Zahl handelt es sich um eine Schätzung, da die Verdienst- und Reward-Werte ständig schwanken.\n\nWeitere Informationen über die Verdienstaufteilung findest du unter <0>{{providerName}}</0>.",
+        "dailyYieldRateTitle": "Tageskurs",
+        "dailyYieldRateDescription": "Der angezeigte Tageskurs entspricht dem von {{providerName}} angebotenen Tageskurs.",
+        "dailyYieldRateLink": "Weitere Details zum Tageskurs findest du auf {{providerName}}",
+        "safetyScoreTitle": "Safety Score",
+        "safetyScoreDescription": "Der Safety Score schlüsselt die Sicherheit des zugrunde liegenden Tresorvermögens in mehrere Schlüsselfaktoren auf. Er soll dich auf die Risiken aufmerksam machen, die du vor einer Investition berücksichtigen musst, und dich über technische Details informieren, die du vielleicht nicht selbst beurteilen kannst.\nAuch wenn die vollständige Position immer komplizierter ist, soll der Safety Score die wichtigsten Risiko- und Sicherheitsüberlegungen vereinfachen und dir einen Anstoß für deine eigene Sorgfaltspflicht geben. Unser Team wägt jeden Faktor sorgfältig ab, bevor ein Tresor bereitgestellt wird, und hat ein wachsames Auge auf alle Vermögenswerte, Chains und Protokolle, die {{providerName}} integriert hat.",
+        "safetyScoreRateLink": "Mehr Details zum Safety Score auf {{providerName}}"
+      },
+      "viewMoreDetails": "Mehr Details anzeigen",
+      "viewLessDetails": "Weniger Details anzeigen"
+    },
+    "beforeDepositBottomSheet": {
+      "youNeedTitle": "Du brauchst {{tokenSymbol}} auf {{tokenNetwork}} zum Einzahlen",
+      "depositTitle": "In Pool einzahlen",
+      "crossChainAlternativeDescription": "Wenn du deine Token nicht auf {{tokenNetwork}} verwenden möchtest, wähle eine der untenstehenden Optionen. Du musst später zurückkehren, um deine Pool-Einzahlung abzuschließen.",
+      "alternativeDescription": "Wenn du deine Token nicht verwenden möchtest, wähle eine der untenstehenden Optionen. Du musst später zurückkehren, um deine Pool-Einzahlung abzuschließen.",
+      "beforeYouCanDepositTitle": "Bevor du eine Einzahlung vornehmen kannst ...",
+      "beforeYouCanDepositDescription": "Du musst einen der Pool-Token hinzufügen. Sobald du es hinzugefügt hast, musst du zurückkehren, um deine Pool-Einzahlung abzuschließen.",
+      "beforeYouCanDepositDescriptionV1_101": "Du musst {{tokenSymbol}} auf {{tokenNetwork}} hinzufügen. Sobald du es hinzugefügt hast, musst du zurückkehren, um deine Pool-Einzahlung abzuschließen.",
+      "action": {
+        "swapAndDeposit": "Tausch und Einzahlung",
+        "swapAndDepositDescription": "Wähle einen beliebigen Token auf {{tokenNetwork}}. Wir tauschen und hinterlegen ihn gleichzeitig für dich.",
+        "swapAndDepositAllTokensDescription": "Wähle einen beliebigen Token – Wir tauschen und hinterlegen ihn gleichzeitig für dich.",
+        "crossChainSwap": "Cross-Chain-Tausch",
+        "crossChainSwapDescription": "Tausche einen Token in einem anderen Netzwerk gegen {{tokenSymbol}}",
+        "swap": "Tauschen",
+        "swapDescription": "Tausche in {{tokenSymbol}} auf {{tokenNetwork}} von einem anderen Token in deiner Wallet",
+        "add": "Kaufen",
+        "addDescription": "Kaufe {{tokenSymbol}} auf {{tokenNetwork}} über einen unserer vertrauenswürdigen Anbieter",
+        "transfer": "Überweisung",
+        "transferDescription": "Verwende jede {{tokenNetwork}} kompatible Wallet oder Börse, um {{tokenSymbol}} einzuzahlen",
+        "addMore": "Mehr {{tokenSymbol}} kaufen",
+        "deposit": "Deine {{tokenSymbol}} einzahlen",
+        "depositDescription": "Du hast {{amount}} {{tokenSymbol}}"
+      }
     }
+  },
+  "addFundsActions": {
+    "add": "Kaufen",
+    "transfer": "Überweisung",
+    "swap": "Tauschen"
+  },
+  "duration_lessThanADay": "Weniger als ein Tag",
+  "duration_day_one": "1 Tag",
+  "duration_day_other": "{{count}} Tage",
+  "duration_month_one": "1 Monat",
+  "duration_month_other": "{{count}} Monate",
+  "duration_year_one": "1 Jahr",
+  "duration_year_other": "{{count}} Jahre",
+  "duration_yearMonth_one": "1 Jahr, 1 Monat",
+  "duration_yearMonth_other": "{{count}} Jahre, {{count2}} Monate",
+  "tokenEnterAmount": {
+    "availableBalance": "Verfügbar: <0></0>",
+    "selectToken": "Token auswählen",
+    "fiatPriceUnavailable": "Preis nicht verfügbar",
+    "tokenDescription": "{{tokenName}} auf {{tokenNetwork}}"
+  },
+  "gasFeeWarning": {
+    "title": "Du brauchst mehr {{tokenSymbol}} für Gasgebühren",
+    "title_Dapp": "Du hast ein unzureichendes Gas-Token-Guthaben",
+    "descriptionMaxAmount_Send": "Füge {{tokenSymbol}} für Gasgebühren hinzu oder verringere den Betrag, den du sendest",
+    "descriptionMaxAmount_Swap": "Füge {{tokenSymbol}} für Gasgebühren hinzu oder verringere den Betrag, den du tauschst.",
+    "descriptionMaxAmount_Deposit": "Füge {{tokenSymbol}} für Gasgebühren hinzu oder verringere den Betrag, den du einzahlst.",
+    "descriptionMaxAmount_Withdraw": "Füge {{tokenSymbol}} für Gasgebühren hinzu oder verringere den Betrag, den du abhebst",
+    "descriptionDapp": "Füge {{tokenSymbol}} hinzu, um diese Transaktion abzuschließen",
+    "ctaBuy": "Kaufe {{tokenSymbol}}",
+    "ctaAction_Send": "Kleineren Betrag senden",
+    "ctaAction_Swap": "Kleineren Betrag tauschen",
+    "ctaAction_Deposit": "Kleineren Betrag einzahlen",
+    "ctaAction_Withdraw": "Kleineren Betrag abheben"
+  },
+  "reviewTransaction": {
+    "title": "Rückblick Senden",
+    "totalPlusFees": "Gesamt plus Gebühren",
+    "multipleTokensWithPlusSign": "≈ {{amount1}} {{symbol1}} + {{amount2}} {{symbol2}}"
+  },
+  "tokenAmount": "{{tokenAmount}} {{tokenSymbol}}",
+  "localAmount": "{{localCurrencySymbol}}{{localAmount}}",
+  "localAmount_noFiatPrice": "Preis nicht verfügbar",
+  "tokenAndLocalAmount": "{{tokenAmount}} {{tokenSymbol}} <0>({{localCurrencySymbol}}{{localAmount}})</0>",
+  "tokenAmountApprox": "≈ {{tokenAmount}} {{tokenSymbol}}",
+  "localAmountApprox": "≈ {{localCurrencySymbol}}{{localAmount}}",
+  "tokenAndLocalAmountApprox": "≈ {{tokenAmount}} {{tokenSymbol}} <0>({{localCurrencySymbol}}{{localAmount}})</0>",
+  "demoMode": {
+    "confirmEnter": {
+      "title": "Demo-Modus",
+      "info": "Du bist dabei, in den Demo-Modus zu wechseln. Du kannst die Funktionen der App erkunden, ohne eine Transaktion abzuschließen.",
+      "cta": "Demo eingeben"
+    },
+    "confirmExit": {
+      "title": "Im Demo-Modus",
+      "info": "Du siehst die App derzeit im Demo-Modus",
+      "cta": "Demo beenden"
+    },
+    "restrictedAccess": {
+      "title": "Im Demo-Modus",
+      "info": "Du kannst diese Aktion nicht abschließen, weil du die App im Demo-Modus betrachtest",
+      "cta": "Demo beenden"
+    },
+    "inAppIndicatorLabel": "Demo-Modus"
   },
   "celoDollarAmount": "<0></0> Celo Dollar",
   "celoDollarAmount_plural": "<0></0> Celo Dollars"

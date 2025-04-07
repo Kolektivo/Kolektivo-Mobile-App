@@ -7,7 +7,7 @@ import {
   withTranslation as withTranslationI18Next,
 } from 'react-i18next'
 import DeviceInfo from 'react-native-device-info'
-import { APP_NAME, DEFAULT_APP_LANGUAGE, TOS_LINK } from 'src/config'
+import { APP_NAME, DEFAULT_APP_LANGUAGE } from 'src/config'
 import { getOtaTranslations } from 'src/i18n/otaTranslations'
 import locales from '../../locales'
 
@@ -54,7 +54,9 @@ export async function initI18n(
     debug: false,
     interpolation: {
       escapeValue: false,
-      defaultVariables: { appName: APP_NAME, tosLink: TOS_LINK.replace(/^https?:\/\//i, '') },
+      defaultVariables: {
+        appName: APP_NAME,
+      },
     },
   })
 }

@@ -2,8 +2,8 @@ import { fireEvent, render, waitFor } from '@testing-library/react-native'
 import { FetchMock } from 'jest-fetch-mock/types'
 import React from 'react'
 import { Provider } from 'react-redux'
+import AppAnalytics from 'src/analytics/AppAnalytics'
 import { CeloNewsEvents } from 'src/analytics/Events'
-import ValoraAnalytics from 'src/analytics/ValoraAnalytics'
 import CeloNewsFeed from 'src/celoNews/CeloNewsFeed'
 import { CeloNewsArticles } from 'src/celoNews/types'
 import { navigate } from 'src/navigator/NavigationService'
@@ -98,13 +98,10 @@ describe('CeloNewsFeed', () => {
     // Check we cannot see the read more button
     expect(tree.queryByText('celoNews.readMoreButtonText')).toBeFalsy()
     // Check the analytics event is fired
-    expect(ValoraAnalytics.track).toHaveBeenCalledWith(CeloNewsEvents.celo_news_screen_open)
+    expect(AppAnalytics.track).toHaveBeenCalledWith(CeloNewsEvents.celo_news_screen_open)
 
     await waitFor(() => expect(mockFetch).toHaveBeenCalledTimes(1))
-    expect(mockFetch).toHaveBeenCalledWith(
-      `${networkConfig.cloudFunctionsUrl}/getCeloNewsFeed`,
-      expect.any(Object)
-    )
+    expect(mockFetch).toHaveBeenCalledWith(networkConfig.getCeloNewsFeedUrl, expect.any(Object))
 
     // Check we can see a news item
     expect(tree.queryByText('Announcing Kuneco Changes & New Celo Block Party')).toBeTruthy()
@@ -118,12 +115,9 @@ describe('CeloNewsFeed', () => {
     expect(navigate).toHaveBeenCalledWith(Screens.WebViewScreen, {
       uri: 'https://blog.celo.org',
     })
-    expect(ValoraAnalytics.track).toHaveBeenCalledWith(
-      CeloNewsEvents.celo_news_bottom_read_more_tap,
-      {
-        url: 'https://blog.celo.org',
-      }
-    )
+    expect(AppAnalytics.track).toHaveBeenCalledWith(CeloNewsEvents.celo_news_bottom_read_more_tap, {
+      url: 'https://blog.celo.org',
+    })
   })
 
   it('shows an error view with a retry button when the data fails to load', async () => {
@@ -157,7 +151,7 @@ describe('CeloNewsFeed', () => {
 
     // Check we can retry
     fireEvent.press(tree.getByText('celoNews.retryButtonText'))
-    expect(ValoraAnalytics.track).toHaveBeenCalledWith(CeloNewsEvents.celo_news_retry_tap)
+    expect(AppAnalytics.track).toHaveBeenCalledWith(CeloNewsEvents.celo_news_retry_tap)
     await waitFor(() => expect(mockFetch).toHaveBeenCalledTimes(2))
   })
 })

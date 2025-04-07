@@ -1,13 +1,13 @@
 import * as React from 'react'
-import colors from 'src/styles/colors'
+import colors, { ColorValue } from 'src/styles/colors'
 import Svg, { Path } from 'svgs'
 
 interface Props {
   size?: number
-  color?: colors
+  color?: ColorValue
 }
 
-function Activity({ color = colors.successDark, size = 24 }: Props) {
+function Activity({ color = colors.contentPrimary, size = 24 }: Props) {
   return (
     <Svg width={size} height={size} fill="none" viewBox="0 0 24 24">
       <Path

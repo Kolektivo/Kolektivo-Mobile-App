@@ -1,56 +1,34 @@
-import { CeloTransactionObject, CeloTxReceipt, EventLog } from '@celo/connect'
-import { ContractKit } from '@celo/contractkit'
-import { EscrowWrapper } from '@celo/contractkit/lib/wrappers/Escrow'
+import { PayloadAction } from '@reduxjs/toolkit'
 import BigNumber from 'bignumber.js'
-import { showError } from 'src/alert/actions'
-import { ErrorMessages } from 'src/app/ErrorMessages'
-import { Actions as IdentityActions } from 'src/identity/actions'
-import { AddressToE164NumberType } from 'src/identity/reducer'
-import { addressToE164NumberSelector } from 'src/identity/selectors'
+import AppAnalytics from 'src/analytics/AppAnalytics'
+import { EarnEvents, SwapEvents } from 'src/analytics/Events'
 import { trackPointsEvent } from 'src/points/slice'
-import { NumberToRecipient } from 'src/recipients/recipient'
-import { phoneRecipientCacheSelector } from 'src/recipients/reducer'
+import { earnPositionsSelector } from 'src/positions/selectors'
+import { RootState } from 'src/redux/store'
 import { tokensByIdSelector } from 'src/tokens/selectors'
-import { BaseToken, fetchTokenBalances } from 'src/tokens/slice'
-import { getSupportedNetworkIdsForSend, getSupportedNetworkIdsForSwap } from 'src/tokens/utils'
+import { BaseToken } from 'src/tokens/slice'
+import { transactionFeedV2Api, TransactionFeedV2Response } from 'src/transactions/api'
+import { pendingStandbyTransactionsSelector } from 'src/transactions/selectors'
+import { transactionConfirmed, transactionsConfirmedFromFeedApi } from 'src/transactions/slice'
 import {
-  Actions,
-  UpdateTransactionsAction,
-  addHashToStandbyTransaction,
-  removeStandbyTransaction,
-  transactionConfirmed,
-  updateInviteTransactions,
-  updateRecentTxRecipientsCache,
-} from 'src/transactions/actions'
-import { TxPromises } from 'src/transactions/contract-utils'
-import {
-  KnownFeedTransactionsType,
-  inviteTransactionsSelector,
-  knownFeedTransactionsSelector,
-  pendingStandbyTransactionsSelector,
-  standbyTransactionsSelector,
-} from 'src/transactions/reducer'
-import { sendTransactionPromises, wrapSendTransactionWithRetry } from 'src/transactions/send'
-import {
+  DepositOrWithdraw,
   Fee,
+  FeeType,
   Network,
   NetworkId,
   StandbyTransaction,
+  TokenExchange,
   TokenTransactionTypeV2,
-  TransactionContext,
   TransactionStatus,
 } from 'src/transactions/types'
 import Logger from 'src/utils/Logger'
-import { safely } from 'src/utils/safely'
 import { publicClient } from 'src/viem'
-import { getContractKit } from 'src/web3/contracts'
 import networkConfig, { networkIdToNetwork } from 'src/web3/networkConfig'
-import { call, delay, fork, put, select, spawn, takeEvery, takeLatest } from 'typed-redux-saga'
+import { getSupportedNetworkIds } from 'src/web3/utils'
+import { call, delay, fork, put, select, spawn, takeEvery } from 'typed-redux-saga'
 import { Hash, TransactionReceipt } from 'viem'
 
 const TAG = 'transactions/saga'
-
-const RECENT_TX_RECIPIENT_CACHE_LIMIT = 10
 
 // These are in msecs and you want a value that's equal to the average
 // blocktime and no less than MINIMUM_WATCHING_DELAY_MS. (will be ignored if under MINIMUM_WATCHING_DELAY_MS)
@@ -64,199 +42,27 @@ const WATCHING_DELAY_BY_NETWORK: Record<Network, number> = {
 }
 const MIN_WATCHING_DELAY_MS = 2000
 
-// Remove standby txs from redux state when the real ones show up in the feed
-function* cleanupStandbyTransactions({ transactions, networkId }: UpdateTransactionsAction) {
-  const standbyTxs: StandbyTransaction[] = yield* select(standbyTransactionsSelector)
-  const newFeedTxHashes = new Set(transactions.map((tx) => tx?.transactionHash))
-  for (const standbyTx of standbyTxs) {
-    if (
-      standbyTx.transactionHash &&
-      standbyTx.networkId === networkId &&
-      newFeedTxHashes.has(standbyTx.transactionHash)
-    ) {
-      yield* put(removeStandbyTransaction(standbyTx.context.id))
-    }
-  }
-}
-
-function* getInviteTransactionDetails(txHash: string, blockNumber: string) {
-  const kit: ContractKit = yield* call(getContractKit)
-  const escrowWrapper: EscrowWrapper = yield* call([kit.contracts, kit.contracts.getEscrow])
-  const transferEvents: EventLog[] = yield* call(
-    [escrowWrapper, escrowWrapper.getPastEvents],
-    escrowWrapper.eventTypes.Transfer,
-    {
-      fromBlock: blockNumber,
-      toBlock: blockNumber,
-    }
-  )
-  const transactionDetails = transferEvents.find(
-    (transferEvent) => transferEvent.transactionHash === txHash
-  )
-
-  if (!transactionDetails) {
-    Logger.error(
-      `${TAG}@getInviteTransactionDetails`,
-      `No escrow past events found with transaction hash ${txHash} and block number ${blockNumber}`
-    )
-    return {}
-  }
-
-  return {
-    recipientIdentifier: transactionDetails.returnValues.identifier,
-    paymentId: transactionDetails.returnValues.paymentId,
-  }
-}
-
-export function* getInviteTransactionsDetails({ transactions }: UpdateTransactionsAction) {
-  const existingInviteTransactions = yield* select(inviteTransactionsSelector)
-  const newInviteTransactions = transactions.filter(
-    (transaction) =>
-      transaction.type === TokenTransactionTypeV2.InviteSent &&
-      !existingInviteTransactions[transaction.transactionHash]
-  )
-
-  if (newInviteTransactions.length <= 0) {
-    return
-  }
-
-  const inviteTransactions = { ...existingInviteTransactions }
-  for (const newInviteTransaction of newInviteTransactions) {
-    const { recipientIdentifier, paymentId } = yield* call(
-      getInviteTransactionDetails,
-      newInviteTransaction.transactionHash,
-      newInviteTransaction.block
-    )
-    if (recipientIdentifier && paymentId) {
-      inviteTransactions[newInviteTransaction.transactionHash] = {
-        paymentId,
-        recipientIdentifier,
-      }
-    }
-  }
-  yield* put(updateInviteTransactions(inviteTransactions))
-}
-
-export function* sendAndMonitorTransaction<T>(
-  tx: CeloTransactionObject<T>,
-  account: string,
-  context: TransactionContext,
-  feeCurrency?: string | undefined,
-  gas?: number,
-  gasPrice?: BigNumber,
-  nonce?: number
-) {
-  try {
-    Logger.debug(TAG + '@sendAndMonitorTransaction', `Sending transaction with id: ${context.id}`)
-
-    const sendTxMethod = function* () {
-      const { transactionHash, receipt }: TxPromises = yield* call(
-        sendTransactionPromises,
-        tx.txo,
-        account,
-        context,
-        feeCurrency,
-        gas,
-        gasPrice,
-        nonce
-      )
-      const hash: string = yield transactionHash
-      yield* put(addHashToStandbyTransaction(context.id, hash))
-      return (yield receipt) as CeloTxReceipt
-    }
-    // there is a bug with 'race' in typed-redux-saga, so we need to hard cast the result
-    // https://github.com/agiledigital/typed-redux-saga/issues/43#issuecomment-1259706876
-    const txReceipt: CeloTxReceipt = (yield* call(
-      wrapSendTransactionWithRetry,
-      sendTxMethod,
-      context
-    )) as unknown as CeloTxReceipt
-
-    // This won't show fees in the standby tx.
-    // Getting the selected fee currency is hard since it happens inside of `sendTransactionPromises`.
-    // This code will be deprecated when we remove the contract kit dependency, so I think it's fine to leave it as is.
-    yield* call(
-      handleTransactionReceiptReceived,
-      context.id,
-      txReceipt,
-      networkConfig.defaultNetworkId
-    )
-
-    yield* put(fetchTokenBalances({ showLoading: true }))
-    return { receipt: txReceipt }
-  } catch (error) {
-    Logger.error(TAG + '@sendAndMonitorTransaction', `Error sending tx ${context.id}`, error)
-    yield* put(showError(ErrorMessages.TRANSACTION_FAILED))
-    return { error }
-  }
-}
-
-function* refreshRecentTxRecipients() {
-  const addressToE164Number: AddressToE164NumberType = yield* select(addressToE164NumberSelector)
-  const recipientCache: NumberToRecipient = yield* select(phoneRecipientCacheSelector)
-  const knownFeedTransactions: KnownFeedTransactionsType = yield* select(
-    knownFeedTransactionsSelector
-  )
-
-  // No way to match addresses to recipients without caches
-  if (
-    !Object.keys(recipientCache).length ||
-    !Object.keys(addressToE164Number).length ||
-    !Object.keys(knownFeedTransactions).length
-  ) {
-    return
-  }
-
-  const knownFeedAddresses = Object.values(knownFeedTransactions)
-
-  let remainingCacheStorage = RECENT_TX_RECIPIENT_CACHE_LIMIT
-  const recentTxRecipientsCache: NumberToRecipient = {}
-  // Start from back of the array to get the most recent transactions
-  for (let i = knownFeedAddresses.length - 1; i >= 0; i -= 1) {
-    if (remainingCacheStorage <= 0) {
-      break
-    }
-
-    const address = knownFeedAddresses[i]
-    // Address is not a string if transaction was an Exchange
-    if (typeof address !== 'string') {
-      continue
-    }
-
-    const e164PhoneNumber = addressToE164Number[address]
-    if (e164PhoneNumber) {
-      const cachedRecipient = recipientCache[e164PhoneNumber]
-      // Skip if there is no recipient to cache or we've already cached them
-      if (!cachedRecipient || recentTxRecipientsCache[e164PhoneNumber]) {
-        continue
-      }
-
-      recentTxRecipientsCache[e164PhoneNumber] = cachedRecipient
-      remainingCacheStorage -= 1
-    }
-  }
-
-  yield* put(updateRecentTxRecipientsCache(recentTxRecipientsCache))
-}
-
-function* watchNewFeedTransactions() {
-  yield* takeEvery(Actions.UPDATE_TRANSACTIONS, safely(cleanupStandbyTransactions))
-  yield* takeEvery(Actions.UPDATE_TRANSACTIONS, safely(getInviteTransactionsDetails))
-  yield* takeLatest(Actions.UPDATE_TRANSACTIONS, safely(refreshRecentTxRecipients))
-}
-
-function* watchAddressToE164PhoneNumberUpdate() {
-  yield* takeLatest(
-    IdentityActions.UPDATE_E164_PHONE_NUMBER_ADDRESSES,
-    safely(refreshRecentTxRecipients)
-  )
-}
-
 export function* getTransactionReceipt(
   transaction: StandbyTransaction & { transactionHash: string },
   network: Network
 ) {
-  const { feeCurrencyId, transactionHash, __typename } = transaction
+  const { feeCurrencyId, transactionHash, type } = transaction
+  const isCrossChainSwapTransaction = type === TokenTransactionTypeV2.CrossChainSwapTransaction
+  const isSwapTransaction = type === TokenTransactionTypeV2.SwapTransaction
+  const isCrossChainDeposit = type === TokenTransactionTypeV2.CrossChainDeposit
+  const isCrossChainTransaction = isCrossChainSwapTransaction || isCrossChainDeposit
+  if (
+    isCrossChainTransaction &&
+    'isSourceNetworkTxConfirmed' in transaction &&
+    transaction.isSourceNetworkTxConfirmed
+  ) {
+    Logger.info(
+      `${TAG}@getTransactionReceipt`,
+      `Skipping already confirmed cross-chain swap on source network ${transaction.transactionHash}`
+    )
+    return
+  }
+
   const networkId = networkConfig.networkToNetworkId[network]
 
   try {
@@ -264,18 +70,24 @@ export function* getTransactionReceipt(
       hash: transactionHash as Hash,
     })
 
-    if (receipt) {
-      yield* call(
-        handleTransactionReceiptReceived,
-        transaction.context.id,
-        receipt,
-        networkId,
-        feeCurrencyId
-      )
-    }
+    yield* call(handleTransactionReceiptReceived, {
+      txId: transaction.context.id,
+      receipt,
+      networkId,
+      feeCurrencyId,
+      // The tx receipt for a cross-chain swap/deposit is for the source network only,
+      // so we do not want to mark the whole cross-chain swap as completed if
+      // the status here is successful. We do however want to update the
+      // transaction details, including marking it as failed if the status is
+      // reverted.
+      overrideStatus:
+        isCrossChainTransaction && receipt.status === 'success'
+          ? TransactionStatus.Pending
+          : undefined,
+    })
 
     if (receipt.status === 'success') {
-      if (__typename === 'TokenExchangeV3') {
+      if (isSwapTransaction || isCrossChainSwapTransaction) {
         yield* put(
           trackPointsEvent({
             activityId: 'swap',
@@ -316,13 +128,8 @@ export function* watchPendingTransactionsInNetwork(network: Network) {
 }
 
 export function* watchPendingTransactions() {
-  const supportedNetworkIdsForSend = yield* call(getSupportedNetworkIdsForSend)
-  const supportedNetworkIdsForSwap = yield* call(getSupportedNetworkIdsForSwap)
   const supportedNetworksByViem = Object.keys(publicClient) as Network[]
-  const supportedNetworkIds = new Set([
-    ...supportedNetworkIdsForSend,
-    ...supportedNetworkIdsForSwap,
-  ])
+  const supportedNetworkIds = new Set([...(yield* call(getSupportedNetworkIds))])
 
   const supportedNetworks = supportedNetworksByViem.filter((network) =>
     supportedNetworkIds.has(networkConfig.networkToNetworkId[network])
@@ -333,18 +140,55 @@ export function* watchPendingTransactions() {
   }
 }
 
-export function* transactionSaga() {
-  yield* spawn(watchNewFeedTransactions)
-  yield* spawn(watchAddressToE164PhoneNumberUpdate)
-  yield* spawn(watchPendingTransactions)
+export function* handleTransactionFeedV2ApiFulfilled(
+  action: PayloadAction<TransactionFeedV2Response>
+) {
+  const state = yield* select((state) => state)
+  const pendingStandbyTxs = yield* select(pendingStandbyTransactionsSelector)
+  const newlyCompletedCrossChainTxs = action.payload.transactions.filter(
+    (tx): tx is TokenExchange | DepositOrWithdraw =>
+      tx.status === TransactionStatus.Complete &&
+      (tx.type === TokenTransactionTypeV2.CrossChainSwapTransaction ||
+        tx.type === TokenTransactionTypeV2.CrossChainDeposit) &&
+      pendingStandbyTxs.some((standbyTx) => standbyTx.transactionHash === tx.transactionHash)
+  )
+
+  Logger.debug(
+    TAG,
+    'handleTransactionFeedV2ApiFulfilled newlyCompletedCrossChainTxs',
+    newlyCompletedCrossChainTxs.length
+  )
+
+  trackCompletionOfCrossChainTxs(state, newlyCompletedCrossChainTxs)
+
+  yield* put(transactionsConfirmedFromFeedApi(action.payload.transactions))
 }
 
-function* handleTransactionReceiptReceived(
-  txId: string,
-  receipt: TransactionReceipt | CeloTxReceipt,
-  networkId: NetworkId,
+function* watchTransactionFeedV2ApiFulfilled() {
+  yield* takeEvery(
+    transactionFeedV2Api.endpoints.transactionFeedV2.matchFulfilled,
+    handleTransactionFeedV2ApiFulfilled
+  )
+}
+
+export function* transactionSaga() {
+  yield* spawn(watchPendingTransactions)
+  yield* spawn(watchTransactionFeedV2ApiFulfilled)
+}
+
+function* handleTransactionReceiptReceived({
+  txId,
+  receipt,
+  networkId,
+  feeCurrencyId,
+  overrideStatus,
+}: {
+  txId: string
+  receipt: TransactionReceipt
+  networkId: NetworkId
   feeCurrencyId?: string
-) {
+  overrideStatus?: TransactionStatus
+}) {
   const tokensById = yield* select((state) => tokensByIdSelector(state, [networkId]))
 
   const feeTokenInfo = feeCurrencyId && tokensById[feeCurrencyId]
@@ -360,13 +204,14 @@ function* handleTransactionReceiptReceived(
     new BigNumber(receipt.effectiveGasPrice.toString())
   )
 
+  const transactionStatusFromReceipt =
+    receipt.status === 'reverted' || !receipt.status
+      ? TransactionStatus.Failed
+      : TransactionStatus.Complete
   const baseDetails = {
     transactionHash: receipt.transactionHash,
     block: receipt.blockNumber.toString(),
-    status:
-      receipt.status === 'reverted' || !receipt.status
-        ? TransactionStatus.Failed
-        : TransactionStatus.Complete,
+    status: overrideStatus ?? transactionStatusFromReceipt,
   }
 
   const blockDetails = yield* call([publicClient[networkIdToNetwork[networkId]], 'getBlock'], {
@@ -375,14 +220,14 @@ function* handleTransactionReceiptReceived(
   const blockTimestampInMs = Number(blockDetails.timestamp) * 1000
 
   yield* put(
-    transactionConfirmed(
+    transactionConfirmed({
       txId,
-      {
+      receipt: {
         ...baseDetails,
         fees: feeTokenInfo ? buildGasFees(feeTokenInfo, gasFeeInSmallestUnit) : [],
       },
-      blockTimestampInMs
-    )
+      blockTimestampInMs,
+    })
   )
 }
 
@@ -400,4 +245,84 @@ function buildGasFees(feeCurrencyInfo: BaseToken, gasFeeInSmallestUnit: BigNumbe
       },
     },
   ]
+}
+
+function trackCompletionOfCrossChainTxs(
+  state: RootState,
+  transactions: (TokenExchange | DepositOrWithdraw)[]
+) {
+  const tokensById = tokensByIdSelector(state, getSupportedNetworkIds())
+
+  for (const tx of transactions) {
+    const networkFee = tx.fees.find((fee) => fee.type === FeeType.SecurityFee)
+    const networkFeeTokenPrice = networkFee && tokensById[networkFee?.amount.tokenId]?.priceUsd
+    const appFee = tx.fees.find((fee) => fee.type === FeeType.AppFee)
+    const appFeeTokenPrice = appFee && tokensById[appFee?.amount.tokenId]?.priceUsd
+    const crossChainFee = tx.fees.find((fee) => fee.type === FeeType.CrossChainFee)
+    const crossChainFeeTokenPrice =
+      crossChainFee && tokensById[crossChainFee?.amount.tokenId]?.priceUsd
+
+    const feeProperties = {
+      networkFeeTokenId: networkFee?.amount.tokenId,
+      networkFeeAmount: networkFee?.amount.value.toString(),
+      networkFeeAmountUsd:
+        networkFeeTokenPrice && networkFee.amount.value
+          ? BigNumber(networkFee.amount.value).times(networkFeeTokenPrice).toNumber()
+          : undefined,
+      appFeeTokenId: appFee?.amount.tokenId,
+      appFeeAmount: appFee?.amount.value.toString(),
+      appFeeAmountUsd:
+        appFeeTokenPrice && appFee.amount.value
+          ? BigNumber(appFee.amount.value).times(appFeeTokenPrice).toNumber()
+          : undefined,
+      crossChainFeeTokenId: crossChainFee?.amount.tokenId,
+      crossChainFeeAmount: crossChainFee?.amount.value.toString(),
+      crossChainFeeAmountUsd:
+        crossChainFeeTokenPrice && crossChainFee.amount.value
+          ? BigNumber(crossChainFee.amount.value).times(crossChainFeeTokenPrice).toNumber()
+          : undefined,
+    }
+
+    if (tx.type === TokenTransactionTypeV2.CrossChainSwapTransaction) {
+      const toTokenPrice = tokensById[tx.inAmount.tokenId]?.priceUsd
+      const fromTokenPrice = tokensById[tx.outAmount.tokenId]?.priceUsd
+
+      AppAnalytics.track(SwapEvents.swap_execute_success, {
+        swapType: 'cross-chain',
+        swapExecuteTxId: tx.transactionHash,
+        toTokenId: tx.inAmount.tokenId,
+        toTokenAmount: tx.inAmount.value.toString(),
+        toTokenAmountUsd: toTokenPrice
+          ? BigNumber(tx.inAmount.value).times(toTokenPrice).toNumber()
+          : undefined,
+        fromTokenId: tx.outAmount.tokenId,
+        fromTokenAmount: tx.outAmount.value.toString(),
+        fromTokenAmountUsd: fromTokenPrice
+          ? BigNumber(tx.outAmount.value).times(fromTokenPrice).toNumber()
+          : undefined,
+        ...feeProperties,
+      })
+    } else if (tx.type === TokenTransactionTypeV2.CrossChainDeposit) {
+      const depositTokenId = tx.outAmount.tokenId
+      const position = earnPositionsSelector(state).find(
+        (position) => position.dataProps?.depositTokenId === depositTokenId
+      )
+      AppAnalytics.track(EarnEvents.earn_deposit_execute_success, {
+        networkId: position?.networkId,
+        poolId: position?.positionId,
+        providerId: position?.appId,
+        depositTokenId,
+        depositTokenAmount: tx.outAmount.value.toString(),
+        mode: 'swap-deposit',
+        swapType: 'cross-chain',
+        fromTokenAmount: tx.swap?.outAmount.value.toString(),
+        fromTokenId: tx.swap?.outAmount.tokenId,
+        fromNetworkId: tx.networkId,
+        ...feeProperties,
+      })
+    } else {
+      // should never happen
+      Logger.warn(TAG, 'Unknown cross-chain transaction type', tx)
+    }
+  }
 }

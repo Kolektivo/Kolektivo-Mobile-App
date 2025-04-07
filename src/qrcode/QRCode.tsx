@@ -1,8 +1,10 @@
 import Clipboard from '@react-native-clipboard/clipboard'
-import React, { useState } from 'react'
+import React from 'react'
 import { Trans, useTranslation } from 'react-i18next'
 import { StyleSheet, Text, View } from 'react-native'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { nameSelector } from 'src/account/selectors'
+import { BottomSheetModalRefType } from 'src/components/BottomSheet'
 import Button from 'src/components/Button'
 import ExchangesBottomSheet from 'src/components/ExchangesBottomSheet'
 import InLineNotification, { NotificationVariant } from 'src/components/InLineNotification'
@@ -12,16 +14,15 @@ import StyledQRCode from 'src/qrcode/StyledQRCode'
 import { useSelector } from 'src/redux/hooks'
 import { SVG } from 'src/send/actions'
 import { NETWORK_NAMES } from 'src/shared/conts'
-import { getDynamicConfigParams } from 'src/statsig'
-import { DynamicConfigs } from 'src/statsig/constants'
-import { StatsigDynamicConfigs } from 'src/statsig/types'
 import colors from 'src/styles/colors'
-import fontStyles, { typeScale } from 'src/styles/fonts'
+import { typeScale } from 'src/styles/fonts'
 import { vibrateInformative } from 'src/styles/hapticFeedback'
+import { Spacing } from 'src/styles/styles'
 import variables from 'src/styles/variables'
 import { NetworkId } from 'src/transactions/types'
 import Logger from 'src/utils/Logger'
 import { walletAddressSelector } from 'src/web3/selectors'
+import { getSupportedNetworkIds } from 'src/web3/utils'
 
 interface Props {
   qrSvgRef: React.MutableRefObject<SVG>
@@ -33,16 +34,18 @@ interface Props {
 }
 
 export default function QRCodeDisplay(props: Props) {
+  const exchangesBottomSheetRef = React.createRef<BottomSheetModalRefType>()
+
   const { t } = useTranslation()
   const { exchanges, qrSvgRef } = props
   const address = useSelector(walletAddressSelector)
   const displayName = useSelector(nameSelector)
 
-  const [bottomSheetVisible, setBottomSheetVisible] = useState(false)
+  const insets = useSafeAreaInsets()
 
   const onCloseBottomSheet = () => {
     props.onCloseBottomSheet?.()
-    setBottomSheetVisible(false)
+    exchangesBottomSheetRef.current?.close()
   }
 
   const onPressCopy = () => {
@@ -54,7 +57,7 @@ export default function QRCodeDisplay(props: Props) {
 
   const onPressInfo = () => {
     props.onPressInfo?.()
-    setBottomSheetVisible(true)
+    exchangesBottomSheetRef.current?.snapToIndex(0)
   }
 
   const onPressExchange = (exchange: ExternalExchangeProvider) => {
@@ -62,9 +65,7 @@ export default function QRCodeDisplay(props: Props) {
   }
 
   const getSupportedNetworks = () => {
-    const supportedNetworkIds = getDynamicConfigParams(
-      DynamicConfigs[StatsigDynamicConfigs.MULTI_CHAIN_FEATURES]
-    ).showBalances
+    const supportedNetworkIds = getSupportedNetworkIds()
     const networks = supportedNetworkIds.map((networkId: NetworkId) => {
       return NETWORK_NAMES[networkId]
     })
@@ -89,71 +90,63 @@ export default function QRCodeDisplay(props: Props) {
       </View>
 
       {!!displayName && (
-        <Text
-          style={[styles.name, fontStyles.displayName]}
-          numberOfLines={1}
-          ellipsizeMode="tail"
-          testID="displayName"
-        >
+        <Text style={styles.name} numberOfLines={1} ellipsizeMode="tail" testID="displayName">
           {displayName}
         </Text>
       )}
-      <Text testID="address" style={[fontStyles.mediumNumber, fontStyles.regular, styles.address]}>
+      <Text testID="address" style={styles.address}>
         {address}
       </Text>
       <Button
         text={t('fiatExchangeFlow.exchange.copyAddress')}
         onPress={onPressCopy}
-        icon={<CopyIcon color={colors.white} />}
+        icon={<CopyIcon />}
         iconMargin={12}
         iconPositionLeft={false}
         testID="copyButton"
       />
 
-      {exchanges ? (
-        <>
-          <Text style={[styles.infoWrapper, fontStyles.regular, styles.exchangeText]}>
-            <Trans i18nKey="fiatExchangeFlow.exchange.informationText">
-              <Text
-                testID="bottomSheetLink"
-                style={[fontStyles.regular600, styles.link]}
-                onPress={onPressInfo}
-              ></Text>
-            </Trans>
-          </Text>
-          <ExchangesBottomSheet
-            isVisible={!!bottomSheetVisible}
-            onClose={onCloseBottomSheet}
-            onExchangeSelected={onPressExchange}
-            exchanges={exchanges}
-          />
-        </>
-      ) : (
-        <View style={styles.notificationWrapper}>
+      <View
+        style={[
+          styles.bottomContent,
+          {
+            marginBottom: Math.max(Spacing.Thick24, insets.bottom),
+          },
+        ]}
+      >
+        {exchanges && exchanges.length > 0 ? (
+          <>
+            <Text style={styles.exchangeText}>
+              <Trans i18nKey="fiatExchangeFlow.exchange.informationText">
+                <Text testID="bottomSheetLink" style={styles.link} onPress={onPressInfo}></Text>
+              </Trans>
+            </Text>
+            <ExchangesBottomSheet
+              forwardedRef={exchangesBottomSheetRef}
+              onClose={onCloseBottomSheet}
+              onExchangeSelected={onPressExchange}
+              exchanges={exchanges}
+            />
+          </>
+        ) : (
           <InLineNotification
             variant={NotificationVariant.Info}
             description={description()}
             style={styles.link}
             testID="supportedNetworksNotification"
           />
-        </View>
-      )}
+        )}
+      </View>
     </View>
   )
 }
 
 const styles = StyleSheet.create({
-  infoWrapper: {
+  bottomContent: {
     position: 'absolute',
-    bottom: 20,
-    justifyContent: 'flex-end',
-  },
-  notificationWrapper: {
-    position: 'absolute',
-    bottom: 20,
-    justifyContent: 'flex-end',
+    bottom: 0,
+    paddingHorizontal: Spacing.Regular16,
     width: '100%',
-    paddingHorizontal: 16,
   },
   bold: {
     ...typeScale.labelSemiBoldXSmall,
@@ -164,31 +157,34 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     flexDirection: 'column',
-    justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: colors.white,
+    backgroundColor: colors.backgroundPrimary,
   },
   link: {
+    ...typeScale.labelSemiBoldMedium,
     textDecorationLine: 'underline',
-    color: colors.primary,
+    color: colors.accent,
     flexWrap: 'wrap',
   },
   qrContainer: {
-    marginBottom: 20,
+    marginTop: '35%',
+    marginBottom: Spacing.Thick24,
   },
   name: {
-    marginHorizontal: variables.width / 4,
+    ...typeScale.labelSemiBoldMedium,
+    marginHorizontal: variables.width / 5,
     marginBottom: 8,
   },
   address: {
-    color: colors.gray5,
-    marginHorizontal: variables.width / 4,
+    ...typeScale.bodyMedium,
+    color: colors.contentSecondary,
+    marginHorizontal: variables.width / 5,
     marginBottom: 8,
     textAlign: 'center',
   },
   exchangeText: {
-    color: colors.gray5,
-    marginHorizontal: 20,
+    ...typeScale.bodyMedium,
+    color: colors.contentSecondary,
     textAlign: 'center',
   },
 })

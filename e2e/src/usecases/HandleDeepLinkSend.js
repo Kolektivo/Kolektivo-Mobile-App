@@ -1,18 +1,11 @@
+import jestExpect from 'expect'
 import { E2E_TEST_FAUCET } from '../../scripts/consts'
 import { launchApp, reloadReactNative } from '../utils/retries'
-import {
-  addComment,
-  confirmTransaction,
-  createCommentText,
-  enterPinUiIfNecessary,
-  quote,
-  waitForElementByIdAndTap,
-  waitForElementId,
-} from '../utils/utils'
+import { enterPinUiIfNecessary, waitForElementById } from '../utils/utils'
 
 const deepLinks = {
   withoutAddress:
-    'celo://wallet/pay?amount=0.01&currencyCode=USD&token=cUSD&displayName=TestFaucet&comment=sending+usd:+0.1+to+my+wallet',
+    'celo://wallet/pay?amount=0.01&currencyCode=USD&token=cUSD&displayName=TestFaucet',
 }
 
 // Helper functions
@@ -23,6 +16,16 @@ const launchDeepLink = async ({ url, newInstance = true }) => {
     newInstance,
   })
 }
+/**
+ * Returns the crypto symbol from the SendAmount element
+ * @returns {Promise<string>}
+ */
+const getCryptoSymbol = async () => {
+  const sendAmountCryptoElement = await element(
+    by.id('SendConfirmationToken/PrimaryValue')
+  ).getAttributes()
+  return sendAmountCryptoElement.label.split(' ').at(-1)
+}
 
 const openDeepLink = async (payUrl) => {
   await reloadReactNative()
@@ -31,23 +34,21 @@ const openDeepLink = async (payUrl) => {
 
 export default HandleDeepLinkSend = () => {
   describe('When Launching Deeplink - App Closed', () => {
-    let commentText
     it('Then should handle deeplink with all attributes', async () => {
-      commentText = createCommentText()
       await launchDeepLink({
-        url: `celo://wallet/pay?address=${E2E_TEST_FAUCET}&amount=0.01&currencyCode=USD&token=cUSD&displayName=TestFaucet&comment=${commentText}`,
+        url: `celo://wallet/pay?address=${E2E_TEST_FAUCET}&amount=0.01&currencyCode=USD&token=cUSD&displayName=TestFaucet`,
       })
-      await waitFor(element(by.id('SendAmount')))
-        .toHaveText('0.0067 cUSD') // alfajores uses 1.5 as price for all tokens
-        .withTimeout(10 * 1000)
-      await waitFor(element(by.id('SendAmountFiat')))
+
+      const cryptoSymbol = await getCryptoSymbol()
+      jestExpect(cryptoSymbol).toBe('cUSD')
+
+      // Fiat amount should match value passed in deeplink
+      await waitFor(element(by.id('SendConfirmationToken/SecondaryValue')))
         .toHaveText('$0.01')
         .withTimeout(10 * 1000)
-      await waitFor(element(by.id('DisplayName')))
+
+      await waitFor(element(by.id('SendConfirmationRecipient/PrimaryValue')))
         .toHaveText('TestFaucet')
-        .withTimeout(10 * 1000)
-      await waitFor(element(by.text(commentText)))
-        .toBeVisible()
         .withTimeout(10 * 1000)
 
       // Send Transaction
@@ -58,22 +59,20 @@ export default HandleDeepLinkSend = () => {
       await waitFor(element(by.id('HomeAction-Send')))
         .toBeVisible()
         .withTimeout(30_000)
-
-      await confirmTransaction(commentText)
     })
 
     it('Then should handle deeplink without amount', async () => {
-      commentText = createCommentText()
       await launchDeepLink({
-        url: `celo://wallet/pay?address=${E2E_TEST_FAUCET}&currencyCode=USD&token=cUSD&displayName=TestFaucet&comment=${commentText}`,
+        url: `celo://wallet/pay?address=${E2E_TEST_FAUCET}&currencyCode=USD&token=cUSD&displayName=TestFaucet`,
       })
-      await waitForElementId('SendEnterAmount/TokenSelect', 10_000)
-      await expect(element(by.text('cUSD')).atIndex(0)).toBeVisible()
+      await waitForElementById('SendEnterAmount/TokenSelect')
+      await expect(element(by.text('cUSD on Celo')).atIndex(0)).toBeVisible()
       await element(by.id('SendEnterAmount/TokenAmountInput')).replaceText('0.01')
       await element(by.id('SendEnterAmount/TokenAmountInput')).tapReturnKey()
-      await waitForElementByIdAndTap('SendEnterAmount/ReviewButton', 30_000)
-
-      await addComment(commentText)
+      await waitForElementById('SendEnterAmount/ReviewButton', {
+        timeout: 30_000,
+        tap: true,
+      })
 
       // Send Transaction
       await element(by.id('ConfirmButton')).tap()
@@ -83,8 +82,6 @@ export default HandleDeepLinkSend = () => {
       await waitFor(element(by.id('HomeAction-Send')))
         .toBeVisible()
         .withTimeout(30_000)
-
-      await confirmTransaction(commentText)
     })
 
     it('Then should error if no address provided', async () => {
@@ -92,32 +89,30 @@ export default HandleDeepLinkSend = () => {
       await launchDeepLink({
         url: deepLinks.withoutAddress,
       })
-      await expect(element(by.id('SendAmount'))).not.toBeVisible()
+      await expect(element(by.id('SendConfirmationToken/PrimaryValue'))).not.toBeVisible()
     })
   })
 
   describe(':ios: When Launching Deeplink - App Backgrounded', () => {
-    let commentText
     beforeEach(async () => {
       await reloadReactNative()
       await device.sendToHome()
     })
 
     it('Then should handle deeplink with all attributes', async () => {
-      commentText = createCommentText()
-      const deepLinksWithAll = `celo://wallet/pay?address=${E2E_TEST_FAUCET}&amount=0.01&currencyCode=USD&token=cUSD&displayName=TestFaucet&comment=${commentText}`
+      const deepLinksWithAll = `celo://wallet/pay?address=${E2E_TEST_FAUCET}&amount=0.01&currencyCode=USD&token=cUSD&displayName=TestFaucet`
       await launchDeepLink({ url: deepLinksWithAll, newInstance: false })
-      await waitFor(element(by.id('SendAmount')))
-        .toHaveText('0.0067 cUSD') // alfajores uses 1.5 as price for all tokens
-        .withTimeout(10 * 1000)
-      await waitFor(element(by.id('SendAmountFiat')))
+
+      const cryptoSymbol = await getCryptoSymbol()
+      jestExpect(cryptoSymbol).toBe('cUSD')
+
+      // Fiat amount should match value passed in deeplink
+      await waitFor(element(by.id('SendConfirmationToken/SecondaryValue')))
         .toHaveText('$0.01')
         .withTimeout(10 * 1000)
-      await waitFor(element(by.id('DisplayName')))
+
+      await waitFor(element(by.id('SendConfirmationRecipient/PrimaryValue')))
         .toHaveText('TestFaucet')
-        .withTimeout(10 * 1000)
-      await waitFor(element(by.text(commentText)))
-        .toBeVisible()
         .withTimeout(10 * 1000)
 
       // Send Transaction
@@ -128,33 +123,29 @@ export default HandleDeepLinkSend = () => {
       await waitFor(element(by.id('HomeAction-Send')))
         .toBeVisible()
         .withTimeout(30_000)
-
-      await confirmTransaction(commentText)
     })
 
     it('Then should error if no address provided', async () => {
       await launchDeepLink({ url: deepLinks.withoutAddress, newInstance: false })
-      await expect(element(by.id('SendAmount'))).not.toBeVisible()
+      await expect(element(by.id('SendConfirmationToken/PrimaryValue'))).not.toBeVisible()
     })
   })
 
   describe(':ios: When Opening Deeplink - App in Foreground', () => {
-    let commentText
     it('Then should handle deeplink with all attributes', async () => {
-      commentText = createCommentText()
-      const deepLinksWithAll = `celo://wallet/pay?address=${E2E_TEST_FAUCET}&amount=0.01&currencyCode=USD&token=cUSD&displayName=TestFaucet&comment=${commentText}`
+      const deepLinksWithAll = `celo://wallet/pay?address=${E2E_TEST_FAUCET}&amount=0.01&currencyCode=USD&token=cUSD&displayName=TestFaucet`
       await openDeepLink(deepLinksWithAll)
-      await waitFor(element(by.id('SendAmount')))
-        .toHaveText('0.0067 cUSD') // alfajores uses 1.5 as price for all tokens
-        .withTimeout(10 * 1000)
-      await waitFor(element(by.id('SendAmountFiat')))
+
+      const cryptoSymbol = await getCryptoSymbol()
+      jestExpect(cryptoSymbol).toBe('cUSD')
+
+      // Fiat amount should match value passed in deeplink
+      await waitFor(element(by.id('SendConfirmationToken/SecondaryValue')))
         .toHaveText('$0.01')
         .withTimeout(10 * 1000)
-      await waitFor(element(by.id('DisplayName')))
+
+      await waitFor(element(by.id('SendConfirmationRecipient/PrimaryValue')))
         .toHaveText('TestFaucet')
-        .withTimeout(10 * 1000)
-      await waitFor(element(by.text(commentText)))
-        .toBeVisible()
         .withTimeout(10 * 1000)
 
       // Send Transaction
@@ -165,13 +156,11 @@ export default HandleDeepLinkSend = () => {
       await waitFor(element(by.id('HomeAction-Send')))
         .toBeVisible()
         .withTimeout(30_000)
-
-      await confirmTransaction(commentText)
     })
 
     it('Then should error if no address provided', async () => {
       await openDeepLink(deepLinks.withoutAddress)
-      await expect(element(by.id('SendAmount'))).not.toBeVisible()
+      await expect(element(by.id('SendConfirmationToken/PrimaryValue'))).not.toBeVisible()
     })
   })
 

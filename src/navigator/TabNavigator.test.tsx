@@ -7,6 +7,8 @@ import TabNavigator from 'src/navigator/TabNavigator'
 import MockedNavigator from 'test/MockedNavigator'
 import { createMockStore } from 'test/utils'
 
+jest.mock('src/transactions/feed/TransactionFeedV2')
+
 describe('TabNavigator', () => {
   beforeEach(() => {
     jest.clearAllMocks()
@@ -57,7 +59,10 @@ describe('TabNavigator', () => {
 
       // Check tab navigation
       await fireEvent.press(getByTestId(testId))
-      expect(CommonActions.navigate).toHaveBeenCalledWith({ merge: true, name: expectedScreen })
+      expect(CommonActions.navigate).toHaveBeenCalledWith({
+        name: expectedScreen,
+        key: expect.stringMatching(new RegExp(`${expectedScreen}-\\S+`)),
+      })
     }
   )
 

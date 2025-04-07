@@ -113,7 +113,7 @@ const Toast = ({
         progress.value = ctx.initialProgress - translationY / slidingHeight
       }
     },
-    onEnd: (event: { translationY: number }) => {
+    onEnd: (event) => {
       const dismissThreshold = 0.33 * toastHeight
       const translationY = event.translationY * slidingDirection[position]
       if (onDismiss && translationY > dismissThreshold) {
@@ -166,7 +166,7 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
   },
   backdrop: {
-    backgroundColor: Colors.black,
+    backgroundColor: Colors.backgroundScrim,
   },
   notificationContainer: {
     position: 'absolute',

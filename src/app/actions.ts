@@ -1,6 +1,7 @@
-import { BIOMETRY_TYPE } from 'react-native-keychain'
-import { RemoteConfigValues } from 'src/app/saga'
+import { BIOMETRY_TYPE } from '@divvi/react-native-keychain'
+import { SupportedProtocolId } from 'src/divviProtocol/constants'
 import { Screens } from 'src/navigator/Screens'
+import { NetworkId } from 'src/transactions/types'
 
 // https://facebook.github.io/react-native/docs/appstate
 export enum AppState {
@@ -9,36 +10,22 @@ export enum AppState {
   Inactive = 'Inactive',
 }
 
-export enum MultichainBetaStatus {
-  NotSeen = 'NotSeen',
-  OptedIn = 'OptedIn',
-  OptedOut = 'OptedOut',
-}
-
 export enum Actions {
   SET_APP_STATE = 'APP/SET_APP_STATE',
-  SET_LOGGED_IN = 'APP/SET_LOGGED_IN',
-  SET_NUMBER_VERIFIED = 'APP/SET_NUMBER_VERIFIED',
   SET_SUPPORTED_BIOMETRY_TYPE = 'APP/SET_SUPPORTED_BIOMETRY_TYPE',
   OPEN_DEEP_LINK = 'APP/OPEN_DEEP_LINK',
   DEEP_LINK_DEFERRED = 'APP/DEEP_LINK_DEFERRED',
-  RESET_APP_OPENED_STATE = 'APP/RESET_APP_OPENED_STATE',
-  SET_FEED_CACHE = 'APP/SET_FEED_CACHE',
   SET_ANALYTICS_ENABLED = 'APP/SET_ANALYTICS_ENABLED',
   SET_LOCK_WITH_PIN_ENABLED = 'APP/SET_LOCK_WITH_PIN_ENABLED',
-  SET_USE_BIOMETRY = 'APP/USE_BIOMETRY',
   LOCK = 'APP/LOCK',
   UNLOCK = 'APP/UNLOCK',
   SET_SESSION_ID = 'SET_SESSION_ID',
   OPEN_URL = 'APP/OPEN_URL',
-  MIN_APP_VERSION_DETERMINED = 'APP/MIN_APP_VERSION_DETERMINED',
-  UPDATE_REMOTE_CONFIG_VALUES = 'APP/UPDATE_REMOTE_CONFIG_VALUES',
   ACTIVE_SCREEN_CHANGED = 'APP/ACTIVE_SCREEN_CHANGED',
   APP_MOUNTED = 'APP/APP_MOUNTED',
   APP_UNMOUNTED = 'APP/APP_UNMOUNTED',
   ANDROID_MOBILE_SERVICES_AVAILABILITY_CHECKED = 'APP/ANDROID_MOBILE_SERVICES_AVAILABILITY_CHECKED',
   PHONE_NUMBER_VERIFICATION_COMPLETED = 'APP/PHONE_NUMBER_VERIFICATION_COMPLETED',
-  PHONE_NUMBER_VERIFICATION_MIGRATED = 'APP/PHONE_NUMBER_VERIFICATION_MIGRATED',
   PHONE_NUMBER_REVOKED = 'APP/PHONE_NUMBER_REVOKED',
   INVITE_LINK_CONSUMED = 'APP/INVITE_LINK_CONSUMED',
   HAPTIC_FEEDBACK_SET = 'APP/HAPTIC_FEEDBACK_SET',
@@ -46,22 +33,12 @@ export enum Actions {
   IN_APP_REVIEW_REQUESTED = 'APP/IN_APP_REVIEW_REQUESTED',
   NOTIFICATION_SPOTLIGHT_SEEN = 'APP/NOTIFICATION_SPOTLIGHT_SEEN',
   TOGGLE_HIDE_BALANCES = 'APP/TOGGLE_HIDE_BALANCES',
-  OPT_MULTICHAIN_BETA = 'APP/OPT_MULTICHAIN_BETA',
+  DIVVI_REGISTRATION_COMPLETED = 'APP/DIVVI_REGISTRATION_COMPLETED',
 }
 
 export interface SetAppState {
   type: Actions.SET_APP_STATE
   state: string
-}
-
-interface SetLoggedIn {
-  type: Actions.SET_LOGGED_IN
-  loggedIn: boolean
-}
-
-interface SetNumberVerifiedAction {
-  type: Actions.SET_NUMBER_VERIFIED
-  numberVerified: boolean
 }
 
 interface SetSupportedBiometryType {
@@ -79,10 +56,6 @@ interface DeepLinkDeferred {
   type: Actions.DEEP_LINK_DEFERRED
   deepLink: string
   isSecureOrigin: boolean
-}
-
-interface ResetAppOpenedState {
-  type: Actions.RESET_APP_OPENED_STATE
 }
 
 interface SetAnalyticsEnabled {
@@ -128,16 +101,6 @@ export interface OpenUrlAction {
   isSecureOrigin: boolean
 }
 
-interface MinAppVersionDeterminedAction {
-  type: Actions.MIN_APP_VERSION_DETERMINED
-  minVersion: string | null
-}
-
-export interface UpdateConfigValuesAction {
-  type: Actions.UPDATE_REMOTE_CONFIG_VALUES
-  configValues: RemoteConfigValues
-}
-
 export interface AndroidMobileServicesAvailabilityChecked {
   type: Actions.ANDROID_MOBILE_SERVICES_AVAILABILITY_CHECKED
   googleIsAvailable: boolean | undefined
@@ -148,10 +111,6 @@ export interface PhoneNumberVerificationCompleted {
   type: Actions.PHONE_NUMBER_VERIFICATION_COMPLETED
   e164PhoneNumber: string
   countryCode: string | null
-}
-
-export interface PhoneNumberVerificationMigrated {
-  type: Actions.PHONE_NUMBER_VERIFICATION_MIGRATED
 }
 
 export interface PhoneNumberRevoked {
@@ -188,17 +147,15 @@ interface ToggleHideBalances {
   type: Actions.TOGGLE_HIDE_BALANCES
 }
 
-interface OptMultichainBeta {
-  type: Actions.OPT_MULTICHAIN_BETA
-  optedIn: boolean
+interface DivviRegistrationCompleted {
+  type: Actions.DIVVI_REGISTRATION_COMPLETED
+  networkId: NetworkId
+  protocolIds: SupportedProtocolId[]
 }
 
 export type ActionTypes =
   | SetAppState
-  | SetLoggedIn
-  | SetNumberVerifiedAction
   | SetSupportedBiometryType
-  | ResetAppOpenedState
   | OpenDeepLink
   | SetAnalyticsEnabled
   | SetRequirePinOnAppOpen
@@ -206,14 +163,11 @@ export type ActionTypes =
   | Unlock
   | SetSessionId
   | OpenUrlAction
-  | MinAppVersionDeterminedAction
-  | UpdateConfigValuesAction
   | ActiveScreenChangedAction
   | AppMounted
   | AppUnmounted
   | AndroidMobileServicesAvailabilityChecked
   | PhoneNumberVerificationCompleted
-  | PhoneNumberVerificationMigrated
   | PhoneNumberRevoked
   | InviteLinkConsumed
   | HapticFeedbackSet
@@ -221,22 +175,12 @@ export type ActionTypes =
   | inAppReviewRequested
   | NotificationSpotlightSeen
   | ToggleHideBalances
-  | OptMultichainBeta
   | DeepLinkDeferred
+  | DivviRegistrationCompleted
 
 export const setAppState = (state: string): SetAppState => ({
   type: Actions.SET_APP_STATE,
   state,
-})
-
-export const setLoggedIn = (loggedIn: boolean) => ({
-  type: Actions.SET_LOGGED_IN,
-  loggedIn,
-})
-
-export const setNumberVerified = (numberVerified: boolean) => ({
-  type: Actions.SET_NUMBER_VERIFIED,
-  numberVerified,
 })
 
 export const setSupportedBiometryType = (supportedBiometryType: BIOMETRY_TYPE | null) => ({
@@ -259,10 +203,6 @@ export const deepLinkDeferred = (deepLink: string, isSecureOrigin: boolean): Dee
     isSecureOrigin,
   }
 }
-
-export const resetAppOpenedState = () => ({
-  type: Actions.RESET_APP_OPENED_STATE,
-})
 
 export const setAnalyticsEnabled = (enabled: boolean): SetAnalyticsEnabled => ({
   type: Actions.SET_ANALYTICS_ENABLED,
@@ -306,20 +246,6 @@ export const openUrl = (
   isSecureOrigin,
 })
 
-export const minAppVersionDetermined = (
-  minVersion: string | null
-): MinAppVersionDeterminedAction => ({
-  type: Actions.MIN_APP_VERSION_DETERMINED,
-  minVersion,
-})
-
-export const updateRemoteConfigValues = (
-  configValues: RemoteConfigValues
-): UpdateConfigValuesAction => ({
-  type: Actions.UPDATE_REMOTE_CONFIG_VALUES,
-  configValues,
-})
-
 export const activeScreenChanged = (activeScreen: Screens): ActiveScreenChangedAction => ({
   type: Actions.ACTIVE_SCREEN_CHANGED,
   activeScreen,
@@ -342,12 +268,6 @@ export const phoneNumberVerificationCompleted = (
     type: Actions.PHONE_NUMBER_VERIFICATION_COMPLETED,
     e164PhoneNumber,
     countryCode,
-  }
-}
-
-export const phoneNumberVerificationMigrated = (): PhoneNumberVerificationMigrated => {
-  return {
-    type: Actions.PHONE_NUMBER_VERIFICATION_MIGRATED,
   }
 }
 
@@ -404,9 +324,13 @@ export const toggleHideBalances = (): ToggleHideBalances => {
   }
 }
 
-export const optMultichainBeta = (optedIn: boolean): OptMultichainBeta => {
+export const divviRegistrationCompleted = (
+  networkId: NetworkId,
+  protocolIds: SupportedProtocolId[]
+): DivviRegistrationCompleted => {
   return {
-    type: Actions.OPT_MULTICHAIN_BETA,
-    optedIn,
+    type: Actions.DIVVI_REGISTRATION_COMPLETED,
+    networkId,
+    protocolIds,
   }
 }

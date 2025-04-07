@@ -3,9 +3,9 @@ import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import AppAnalytics from 'src/analytics/AppAnalytics'
 import { HomeEvents } from 'src/analytics/Events'
-import ValoraAnalytics from 'src/analytics/ValoraAnalytics'
-import { BottomSheetRefType } from 'src/components/BottomSheet'
+import { BottomSheetModalRefType } from 'src/components/BottomSheet'
 import BottomSheetBase from 'src/components/BottomSheetBase'
 import Button, { BtnSizes, BtnTypes } from 'src/components/Button'
 import { nftCelebrationDisplayed } from 'src/home/actions'
@@ -17,7 +17,7 @@ import NftMedia from 'src/nfts/NftMedia'
 import { nftsWithMetadataSelector } from 'src/nfts/selectors'
 import { NftOrigin } from 'src/nfts/types'
 import { useDispatch, useSelector } from 'src/redux/hooks'
-import { Colors } from 'src/styles/colors'
+import Colors from 'src/styles/colors'
 import { typeScale } from 'src/styles/fonts'
 import { vibrateSuccess } from 'src/styles/hapticFeedback'
 import { Spacing } from 'src/styles/styles'
@@ -29,7 +29,7 @@ export default function NftCelebration() {
   const insets = useSafeAreaInsets()
   const insetsStyle = { paddingBottom: Math.max(insets.bottom, Spacing.Regular16) }
 
-  const bottomSheetRef = useRef<BottomSheetRefType>(null)
+  const bottomSheetRef = useRef<BottomSheetModalRefType>(null)
 
   const [showConfetti, setShowConfetti] = useState(false)
   const confettiStartTime = useRef(0)
@@ -62,7 +62,7 @@ export default function NftCelebration() {
     }
 
     if (index === -1) {
-      ValoraAnalytics.track(HomeEvents.nft_celebration_displayed, {
+      AppAnalytics.track(HomeEvents.nft_celebration_displayed, {
         networkId: matchingNft.networkId,
         contractAddress: matchingNft.contractAddress,
       })
@@ -91,7 +91,7 @@ export default function NftCelebration() {
       return // this should never happen
     }
 
-    ValoraAnalytics.track(HomeEvents.nft_celebration_animation_displayed, {
+    AppAnalytics.track(HomeEvents.nft_celebration_animation_displayed, {
       userInterrupted,
       durationInSeconds: Math.round((Date.now() - confettiStartTime.current) / 1000),
     })
@@ -174,7 +174,7 @@ const styles = StyleSheet.create({
     borderTopRightRadius: IMAGE_BORDER_RADIUS,
     aspectRatio: 1.45,
     overflow: 'hidden',
-    backgroundColor: Colors.successLight,
+    backgroundColor: Colors.successSecondary,
   },
   imageError: {
     ...StyleSheet.absoluteFillObject,
@@ -189,15 +189,14 @@ const styles = StyleSheet.create({
     width: 40,
     height: 4,
     borderRadius: 4,
-    backgroundColor: '#D8D8D8',
+    backgroundColor: Colors.bottomSheetHandle,
   },
   title: {
     ...typeScale.titleSmall,
-    color: Colors.black,
   },
   description: {
     ...typeScale.bodySmall,
-    color: Colors.gray3,
+    color: Colors.contentSecondary,
     marginTop: Spacing.Smallest8,
   },
   button: {

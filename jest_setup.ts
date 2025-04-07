@@ -27,7 +27,7 @@ jest.mock('react-native/Libraries/Animated/components/AnimatedView.js', () => ({
 jest.mock('react-native/Libraries/Animated/components/AnimatedScrollView.js', () => ({
   default: 'RCTScrollView',
 }))
-jest.mock('react-native-webview', () => {
+jest.mock('@interaxyz/react-native-webview', () => {
   const { View } = require('react-native')
   return {
     default: View,
@@ -40,13 +40,6 @@ jest.mock('react-native/Libraries/Components/ToastAndroid/ToastAndroid.android.j
   show: jest.fn(),
   showWithGravity: jest.fn(),
   showWithGravityAndOffset: jest.fn(),
-}))
-
-// Mock Pixel Ratio to always return 1
-jest.mock('react-native/Libraries/Utilities/PixelRatio.js', () => ({
-  roundToNearestPixel: jest.fn(() => 1),
-  getPixelSizeForLayoutSize: jest.fn(() => 1),
-  getFontScale: jest.fn(() => 1),
 }))
 
 jest.mock('react-native-shake', () => ({
@@ -103,6 +96,3 @@ jest.mock('@react-native-clipboard/clipboard', () => ({
 
 // this mock defaults to granting all permissions
 jest.mock('react-native-permissions', () => require('react-native-permissions/mock'))
-
-// @ts-ignore
-global.__reanimatedWorkletInit = jest.fn()

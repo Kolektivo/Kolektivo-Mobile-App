@@ -1,6 +1,8 @@
 import { differenceInDays } from 'date-fns'
 import { isEqual } from 'lodash'
-import { Actions as AppActions } from 'src/app/actions'
+import { depositSuccess } from 'src/earn/slice'
+import { Actions as HomeActions } from 'src/home/actions'
+import { depositTransactionSucceeded } from 'src/jumpstart/slice'
 import { retrieveSignedMessage } from 'src/pincode/authentication'
 import {
   nextPageUrlSelector,
@@ -19,6 +21,7 @@ import {
   getPointsConfigRetry,
   getPointsConfigStarted,
   getPointsConfigSucceeded,
+  pointsDataRefreshStarted,
   pointsEventProcessed,
   sendPointsEventStarted,
   trackPointsEvent,
@@ -32,6 +35,7 @@ import {
 } from 'src/points/types'
 import { getFeatureGate } from 'src/statsig'
 import { StatsigFeatureGates } from 'src/statsig/types'
+import { swapSuccess } from 'src/swap/slice'
 import Logger from 'src/utils/Logger'
 import { fetchWithTimeout } from 'src/utils/fetchWithTimeout'
 import { safely } from 'src/utils/safely'
@@ -45,6 +49,12 @@ const TAG = 'Points/saga'
 const POINTS_EVENT_EXPIRY_DAYS = 30
 
 export function* getPointsBalance({ type, payload }: ReturnType<typeof getHistoryStarted>) {
+  const showPoints = getFeatureGate(StatsigFeatureGates.SHOW_POINTS)
+  if (!showPoints) {
+    Logger.info(`${TAG}@getPointsBalance`, 'Points feature is disabled, skipping saga execution')
+    return
+  }
+
   if (type === getHistoryStarted.type && payload.getNextPage) {
     // prevent fetching points balance when fetching more history
     return
@@ -52,7 +62,7 @@ export function* getPointsBalance({ type, payload }: ReturnType<typeof getHistor
 
   const address = yield* select(walletAddressSelector)
   if (!address) {
-    Logger.error(TAG, 'No wallet address found when fetching points balance')
+    Logger.error(`${TAG}@getPointsBalance`, 'No wallet address found when fetching points balance')
     return
   }
 
@@ -72,7 +82,7 @@ export function* getPointsBalance({ type, payload }: ReturnType<typeof getHistor
     const { balance }: GetPointsBalanceResponse = yield* call([response, 'json'])
     yield* put(getPointsBalanceSucceeded(balance))
   } catch (error) {
-    Logger.warn(TAG, 'Error fetching points balance', error)
+    Logger.warn(`${TAG}@getPointsBalance`, 'Error fetching points balance', error)
     yield* put(getPointsBalanceError())
   }
 }
@@ -98,9 +108,15 @@ export async function fetchHistory(
 }
 
 export function* getHistory({ payload: params }: ReturnType<typeof getHistoryStarted>) {
+  const showPoints = getFeatureGate(StatsigFeatureGates.SHOW_POINTS)
+  if (!showPoints) {
+    Logger.info(`${TAG}@getHistory`, 'Points feature is disabled, skipping saga execution')
+    return
+  }
+
   const walletAddress = yield* select(walletAddressSelector)
   if (!walletAddress) {
-    Logger.error(TAG, 'No wallet address found when fetching points history')
+    Logger.error(`${TAG}@getHistory`, 'No wallet address found when fetching points history')
     yield* put(
       getHistoryError({
         getNextPage: params.getNextPage,
@@ -114,7 +130,10 @@ export function* getHistory({ payload: params }: ReturnType<typeof getHistorySta
   // Silently succeed if a refresh is requested but no page information
   // is available; not considered an "error" state.
   if (!url && params.getNextPage) {
-    Logger.info(TAG, 'Requested to fetch more points history but no next page available')
+    Logger.info(
+      `${TAG}@getHistory`,
+      'Requested to fetch more points history but no next page available'
+    )
     yield* put(
       getHistorySucceeded({
         appendHistory: params.getNextPage,
@@ -135,7 +154,7 @@ export function* getHistory({ payload: params }: ReturnType<typeof getHistorySta
       })
     )
   } catch (e) {
-    Logger.error(TAG, 'Error fetching points history', e)
+    Logger.error(`${TAG}@getHistory`, 'Error fetching points history', e)
     yield* put(
       getHistoryError({
         getNextPage: params.getNextPage,
@@ -145,8 +164,17 @@ export function* getHistory({ payload: params }: ReturnType<typeof getHistorySta
 }
 
 export function* getPointsConfig() {
-  yield* put(getPointsConfigStarted())
+  const showPoints = getFeatureGate(StatsigFeatureGates.SHOW_POINTS)
+  if (!showPoints) {
+    Logger.info(`${TAG}@getPointsConfig`, 'Points feature is disabled, skipping saga execution')
+    return
+  }
 
+  yield* put(getPointsConfigStarted())
+  yield* fetchPointsConfig()
+}
+
+function* fetchPointsConfig() {
   try {
     const response = yield* call(fetchWithTimeout, networkConfig.getPointsConfigUrl, {
       method: 'GET',
@@ -167,7 +195,7 @@ export function* getPointsConfig() {
     })
     yield* put(getPointsConfigSucceeded(supportedActivities))
   } catch (e) {
-    Logger.error(TAG, 'Error fetching points config', e)
+    Logger.error(`${TAG}@getPointsConfig`, 'Error fetching points config', e)
     yield* put(getPointsConfigError())
   }
 }
@@ -175,21 +203,30 @@ export function* getPointsConfig() {
 export function* fetchTrackPointsEventsEndpoint(event: PointsEvent) {
   const address = yield* select(walletAddressSelector)
   const signedMessage = yield* call(retrieveSignedMessage)
+  if (!signedMessage) {
+    throw new Error(`No signed message found when tracking points event ${event.activityId}`)
+  }
 
   return yield* call(fetchWithTimeout, networkConfig.trackPointsEventUrl, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      authorization: `Valora ${address}:${signedMessage}`,
+      authorization: `${networkConfig.authHeaderIssuer} ${address}:${signedMessage}`,
     },
     body: JSON.stringify(event),
   })
 }
 
 export function* sendPointsEvent({ payload: event }: ReturnType<typeof trackPointsEvent>) {
+  const showPoints = getFeatureGate(StatsigFeatureGates.SHOW_POINTS)
+  if (!showPoints) {
+    Logger.info(`${TAG}@sendPointsEvent`, 'Points feature is disabled, skipping saga execution')
+    return
+  }
+
   const trackOnceActivities = yield* select(trackOnceActivitiesSelector)
   if (trackOnceActivities[event.activityId]) {
-    Logger.debug(TAG, `Skipping already tracked activity: ${event.activityId}`)
+    Logger.debug(`${TAG}@sendPointsEvent`, `Skipping already tracked activity: ${event.activityId}`)
     return
   }
 
@@ -200,7 +237,10 @@ export function* sendPointsEvent({ payload: event }: ReturnType<typeof trackPoin
     // internal transactions watcher. The trackPointsEvent action could be
     // dispatched by the specific feature saga as well as the internal
     // transactions watcher.
-    Logger.debug(TAG, `Skipping already pending tracked event: ${JSON.stringify(event)}`)
+    Logger.debug(
+      `${TAG}@sendPointsEvent`,
+      `Skipping already pending tracked event: ${JSON.stringify(event)}`
+    )
     return
   }
 
@@ -213,25 +253,28 @@ export function* sendPointsEvent({ payload: event }: ReturnType<typeof trackPoin
       event,
     })
   )
+  try {
+    const response = yield* call(fetchTrackPointsEventsEndpoint, event)
+    if (!response.ok) {
+      const responseText = yield* call([response, response.text])
+      throw new Error(
+        `Failed to track points event ${event.activityId}: ${response.status} ${responseText}`
+      )
+    }
 
-  const response = yield* call(fetchTrackPointsEventsEndpoint, event)
-
-  if (response.ok) {
     yield* put(pointsEventProcessed({ id }))
-  } else {
-    const responseText = yield* call([response, response.text])
-    Logger.warn(
-      `${TAG}@sendPointsEvent`,
-      event.activityId,
-      response.status,
-      response.statusText,
-      responseText
-    )
+  } catch (error) {
+    Logger.warn(`${TAG}@sendPointsEvent`, event.activityId, error)
   }
 }
 
 export function* sendPendingPointsEvents() {
   const LOG_TAG = `${TAG}@sendPendingPointsEvents`
+  const showPoints = getFeatureGate(StatsigFeatureGates.SHOW_POINTS)
+  if (!showPoints) {
+    Logger.info(LOG_TAG, 'Points feature is disabled, skipping saga execution')
+    return
+  }
 
   const now = new Date()
   const pendingEvents = yield* select(pendingPointsEventsSelector)
@@ -260,35 +303,94 @@ export function* sendPendingPointsEvents() {
   }
 }
 
-function* watchGetHistory() {
+export function* watchSwapSuccessTransformPayload({
+  payload: params,
+}: ReturnType<typeof swapSuccess>) {
+  yield* call(
+    sendPointsEvent,
+    trackPointsEvent({
+      ...params,
+      activityId: 'swap',
+    })
+  )
+}
+export function* watchSwapSuccess() {
+  yield* takeLeading(swapSuccess.type, safely(watchSwapSuccessTransformPayload))
+}
+
+export function* watchLiveLinkCreatedTransformPayload({
+  payload: params,
+}: ReturnType<typeof depositTransactionSucceeded>) {
+  yield* call(
+    sendPointsEvent,
+    trackPointsEvent({
+      ...params,
+      activityId: 'create-live-link',
+    })
+  )
+}
+export function* watchLiveLinkCreated() {
+  yield* takeLeading(depositTransactionSucceeded.type, safely(watchLiveLinkCreatedTransformPayload))
+}
+
+export function* watchDepositSuccessTransformPayload({
+  payload: params,
+}: ReturnType<typeof depositSuccess>) {
+  yield* call(
+    sendPointsEvent,
+    trackPointsEvent({
+      ...params,
+      activityId: 'deposit-earn',
+    })
+  )
+}
+export function* watchDepositSuccess() {
+  yield* takeLeading(depositSuccess.type, safely(watchDepositSuccessTransformPayload))
+}
+
+export function* watchGetHistory() {
   yield* takeLeading(getHistoryStarted.type, safely(getHistory))
   yield* takeLeading(getHistoryStarted.type, safely(getPointsBalance))
 }
 
-function* watchGetConfig() {
+export function* watchGetConfig() {
   yield* takeLeading(getPointsConfigRetry.type, safely(getPointsConfig))
 }
 
-function* watchTrackPointsEvent() {
+export function* watchTrackPointsEvent() {
   yield* takeEvery(trackPointsEvent.type, safely(sendPointsEvent))
 }
 
-export function* watchAppMounted() {
-  yield* take(AppActions.APP_MOUNTED)
+export function* watchHomeScreenVisit() {
+  yield* take(HomeActions.VISIT_HOME)
+  yield* spawn(
+    sendPointsEvent,
+    trackPointsEvent({
+      activityId: 'create-wallet',
+    })
+  )
   yield* spawn(getPointsConfig)
   yield* spawn(getPointsBalance, getHistoryStarted({ getNextPage: false }))
   yield* spawn(sendPendingPointsEvents)
 }
 
-export function* pointsSaga() {
-  const showPoints = getFeatureGate(StatsigFeatureGates.SHOW_POINTS)
-  if (!showPoints) {
-    Logger.info(TAG, 'Points feature is disabled, not spawning points sagas')
-    return
-  }
+function* updatePointsData() {
+  yield* spawn(fetchPointsConfig)
+  yield* spawn(getPointsBalance, getHistoryStarted({ getNextPage: false }))
+  yield* spawn(getHistory, getHistoryStarted({ getNextPage: false }))
+}
 
+export function* watchPointsDataRefreshStarted() {
+  yield* takeLeading(pointsDataRefreshStarted.type, safely(updatePointsData))
+}
+
+export function* pointsSaga() {
   yield* spawn(watchGetHistory)
   yield* spawn(watchGetConfig)
   yield* spawn(watchTrackPointsEvent)
-  yield* spawn(watchAppMounted)
+  yield* spawn(watchHomeScreenVisit)
+  yield* spawn(watchLiveLinkCreated)
+  yield* spawn(watchSwapSuccess)
+  yield* spawn(watchDepositSuccess)
+  yield* spawn(watchPointsDataRefreshStarted)
 }

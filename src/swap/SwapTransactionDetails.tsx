@@ -1,38 +1,97 @@
 import BigNumber from 'bignumber.js'
 import React from 'react'
-import { Trans, useTranslation } from 'react-i18next'
+import { useTranslation } from 'react-i18next'
 import { StyleSheet, Text, View } from 'react-native'
+import AppAnalytics from 'src/analytics/AppAnalytics'
 import { SwapEvents } from 'src/analytics/Events'
 import { SwapShowInfoType } from 'src/analytics/Properties'
-import ValoraAnalytics from 'src/analytics/ValoraAnalytics'
-import { BottomSheetRefType } from 'src/components/BottomSheet'
-import TokenDisplay from 'src/components/TokenDisplay'
+import { BottomSheetModalRefType } from 'src/components/BottomSheet'
+import SkeletonPlaceholder from 'src/components/SkeletonPlaceholder'
+import { formatValueToDisplay } from 'src/components/TokenDisplay'
 import Touchable from 'src/components/Touchable'
 import InfoIcon from 'src/icons/InfoIcon'
+import { getLocalCurrencySymbol, usdToLocalCurrencyRateSelector } from 'src/localCurrency/selectors'
+import { useSelector } from 'src/redux/hooks'
 import colors from 'src/styles/colors'
 import { typeScale } from 'src/styles/fonts'
 import { Spacing } from 'src/styles/styles'
+import { SwapFeeAmount } from 'src/swap/types'
 import { TokenBalance } from 'src/tokens/slice'
 
 interface Props {
-  maxNetworkFee?: BigNumber
-  estimatedNetworkFee?: BigNumber
-  networkFeeInfoBottomSheetRef: React.RefObject<BottomSheetRefType>
-  slippageInfoBottomSheetRef: React.RefObject<BottomSheetRefType>
+  exchangeRateInfoBottomSheetRef: React.RefObject<BottomSheetModalRefType>
+  feeInfoBottomSheetRef: React.RefObject<BottomSheetModalRefType>
+  slippageInfoBottomSheetRef: React.RefObject<BottomSheetModalRefType>
+  estimatedDurationBottomSheetRef: React.RefObject<BottomSheetModalRefType>
   slippagePercentage: string
-  feeTokenId: string
   fromToken?: TokenBalance
   toToken?: TokenBalance
   exchangeRatePrice?: string
-  exchangeRateInfoBottomSheetRef: React.RefObject<BottomSheetRefType>
   swapAmount?: BigNumber
   fetchingSwapQuote: boolean
-  appFee?: {
-    amount: BigNumber
-    token: TokenBalance
-    percentage: BigNumber
+  estimatedDurationInSeconds?: number
+  appFee?: SwapFeeAmount
+  crossChainFee?: SwapFeeAmount
+  networkFee?: SwapFeeAmount
+}
+
+function getEstimatedTotalFees({
+  usdToLocalCurrencyRate,
+  localCurrencySymbol,
+  feeComponents,
+  errorFallback,
+}: {
+  usdToLocalCurrencyRate: string | null
+  localCurrencySymbol: string | null
+  feeComponents: (SwapFeeAmount | undefined)[]
+  errorFallback: string
+}) {
+  let estimatedFeeInLocalCurrency = new BigNumber(0)
+  const estimatedFeeWithoutFiatPrice: { [tokenId: string]: { amount: BigNumber; symbol: string } } =
+    {}
+
+  for (const feeComponent of feeComponents) {
+    if (feeComponent) {
+      if (!feeComponent.token) {
+        // if any fee component is missing token info, we cannot display the
+        // token symbol or fiat value. In this case it's better to return an
+        // error, rather than showing a total fee that is cheaper due to missing
+        // components.
+        return errorFallback
+      }
+
+      if (usdToLocalCurrencyRate && localCurrencySymbol && feeComponent.token.priceUsd) {
+        estimatedFeeInLocalCurrency = estimatedFeeInLocalCurrency.plus(
+          feeComponent.amount
+            .multipliedBy(feeComponent.token.priceUsd)
+            .multipliedBy(usdToLocalCurrencyRate)
+        )
+      } else {
+        const existingFeeComponentForToken =
+          estimatedFeeWithoutFiatPrice[feeComponent.token.tokenId]
+        if (existingFeeComponentForToken) {
+          const existingFeeAmount = existingFeeComponentForToken.amount
+          estimatedFeeWithoutFiatPrice[feeComponent.token.tokenId].amount =
+            feeComponent.amount.plus(existingFeeAmount)
+        } else {
+          estimatedFeeWithoutFiatPrice[feeComponent.token.tokenId] = {
+            amount: feeComponent.amount,
+            symbol: feeComponent.token.symbol,
+          }
+        }
+      }
+    }
   }
-  appFeeInfoBottomSheetRef: React.RefObject<BottomSheetRefType>
+
+  const fiatFeeString = estimatedFeeInLocalCurrency.gt(0)
+    ? `${localCurrencySymbol}${formatValueToDisplay(estimatedFeeInLocalCurrency)}`
+    : ''
+  const tokenFeeString = Object.values(estimatedFeeWithoutFiatPrice)
+    .map((fee) => `${formatValueToDisplay(fee.amount)} ${fee.symbol}`)
+    .join(' + ')
+  return fiatFeeString || tokenFeeString
+    ? `≈ ${fiatFeeString}${fiatFeeString && tokenFeeString ? ' + ' : ''}${tokenFeeString}`
+    : undefined
 }
 
 function LabelWithInfo({
@@ -48,109 +107,66 @@ function LabelWithInfo({
     <Touchable style={styles.touchableRow} onPress={onPress} testID={testID}>
       <>
         <Text style={styles.label}>{label}</Text>
-        <InfoIcon size={14} color={colors.gray4} testID={`${testID}/Icon`} />
+        <InfoIcon size={14} color={colors.contentSecondary} testID={`${testID}/Icon`} />
       </>
     </Touchable>
   )
 }
 
-function NetworkFeeDetails({
-  label,
-  infoType,
-  infoBottomSheetRef,
-  fetchingSwapQuote,
-  fee,
-  feeTokenId,
-  showLocalAmount,
-  placeholder,
-  testID,
-}: {
-  label: string
-  infoType: SwapShowInfoType
-  infoBottomSheetRef: React.RefObject<BottomSheetRefType>
-  fetchingSwapQuote: boolean
-  fee?: BigNumber
-  feeTokenId: string
-  showLocalAmount: boolean
-  placeholder: string
-  testID: string
-}) {
+function ValueWithLoading({ value, isLoading }: { value: React.ReactNode; isLoading: boolean }) {
   return (
-    <View style={styles.row} testID={testID}>
-      <LabelWithInfo
-        onPress={() => {
-          ValoraAnalytics.track(SwapEvents.swap_show_info, {
-            type: infoType,
-          })
-          infoBottomSheetRef.current?.snapToIndex(0)
-        }}
-        label={label}
-        testID={`${testID}/MoreInfo`}
-      />
-      {!fetchingSwapQuote && fee ? (
-        <View style={styles.networkFeeContainer}>
-          {showLocalAmount ? (
-            <>
-              <TokenDisplay
-                style={styles.value}
-                amount={fee}
-                showApprox
-                tokenId={feeTokenId}
-                showLocalAmount={true}
-              />
-              <Text style={[styles.value, { fontWeight: '400' }]}>
-                {` (`}
-                <TokenDisplay
-                  amount={fee}
-                  tokenId={feeTokenId}
-                  showSymbol={true}
-                  showLocalAmount={false}
-                />
-                {')'}
-              </Text>
-            </>
-          ) : (
-            <TokenDisplay
-              style={[styles.value, { fontWeight: '400' }]}
-              amount={fee}
-              tokenId={feeTokenId}
-              showSymbol={true}
-              showLocalAmount={false}
-            />
-          )}
-        </View>
-      ) : (
-        <Text style={styles.value}>{placeholder}</Text>
-      )}
+    <View style={styles.valueContainer}>
+      <View>
+        <Text style={[styles.value, { opacity: isLoading ? 0 : 1 }]}>{value}</Text>
+        {isLoading && (
+          <View style={styles.loaderContainer}>
+            <SkeletonPlaceholder testID="SwapTransactionDetails/ExchangeRate/Loader">
+              <View style={styles.loader} />
+            </SkeletonPlaceholder>
+          </View>
+        )}
+      </View>
     </View>
   )
 }
 
 export function SwapTransactionDetails({
-  maxNetworkFee,
-  estimatedNetworkFee,
-  networkFeeInfoBottomSheetRef,
+  feeInfoBottomSheetRef,
   slippageInfoBottomSheetRef,
-  feeTokenId,
+  estimatedDurationBottomSheetRef,
   slippagePercentage,
   fromToken,
   toToken,
   exchangeRatePrice,
   exchangeRateInfoBottomSheetRef,
-  swapAmount,
   fetchingSwapQuote,
   appFee,
-  appFeeInfoBottomSheetRef,
+  estimatedDurationInSeconds,
+  crossChainFee,
+  networkFee,
 }: Props) {
   const { t } = useTranslation()
+  const usdToLocalCurrencyRate = useSelector(usdToLocalCurrencyRateSelector)
+  const localCurrencySymbol = useSelector(getLocalCurrencySymbol)
+  const estimatedFeesString = getEstimatedTotalFees({
+    usdToLocalCurrencyRate,
+    localCurrencySymbol,
+    feeComponents: [appFee, crossChainFee, networkFee],
+    errorFallback: t('swapScreen.transactionDetails.feesCalculationError'),
+  })
 
   const placeholder = '-'
+
+  if (!toToken || !fromToken || !exchangeRatePrice || fetchingSwapQuote) {
+    return null
+  }
+
   return (
     <View style={styles.container} testID="SwapTransactionDetails">
       <View style={styles.row} testID="SwapTransactionDetails/ExchangeRate">
         <LabelWithInfo
           onPress={() => {
-            ValoraAnalytics.track(SwapEvents.swap_show_info, {
+            AppAnalytics.track(SwapEvents.swap_show_info, {
               type: SwapShowInfoType.EXCHANGE_RATE,
             })
             exchangeRateInfoBottomSheetRef.current?.snapToIndex(0)
@@ -158,98 +174,54 @@ export function SwapTransactionDetails({
           label={t('swapScreen.transactionDetails.exchangeRate')}
           testID="SwapTransactionDetails/ExchangeRate/MoreInfo"
         />
-        <Text style={styles.value}>
-          {!fetchingSwapQuote && fromToken && toToken && exchangeRatePrice ? (
-            <>
-              {`1 ${fromToken.symbol} ≈ `}
-              <Text style={styles.value}>
-                {`${new BigNumber(exchangeRatePrice).toFormat(5, BigNumber.ROUND_DOWN)} ${
-                  toToken.symbol
-                }`}
-              </Text>
-            </>
-          ) : (
-            <Text style={styles.value}>
-              {fromToken ? `1 ${fromToken.symbol} ≈ ` : ''}
-              {placeholder}
-            </Text>
-          )}
-        </Text>
+        <ValueWithLoading
+          isLoading={fetchingSwapQuote}
+          value={`1 ${fromToken.symbol} ≈ ${new BigNumber(exchangeRatePrice).toFormat(5, BigNumber.ROUND_DOWN)} ${
+            toToken.symbol
+          }`}
+        />
       </View>
-      {/* Estimated network fee */}
-      <NetworkFeeDetails
-        label={t(`swapScreen.transactionDetails.estimatedNetworkFee`)}
-        infoType={SwapShowInfoType.ESTIMATED_NETWORK_FEE}
-        infoBottomSheetRef={networkFeeInfoBottomSheetRef}
-        fetchingSwapQuote={fetchingSwapQuote}
-        fee={estimatedNetworkFee}
-        feeTokenId={feeTokenId}
-        showLocalAmount={true}
-        placeholder={placeholder}
-        testID={`SwapTransactionDetails/EstimatedNetworkFee`}
-      />
-      {/* Max network fee */}
-      <NetworkFeeDetails
-        label={t(`swapScreen.transactionDetails.maxNetworkFee`)}
-        infoType={SwapShowInfoType.MAX_NETWORK_FEE}
-        infoBottomSheetRef={networkFeeInfoBottomSheetRef}
-        fetchingSwapQuote={fetchingSwapQuote}
-        fee={maxNetworkFee}
-        feeTokenId={feeTokenId}
-        showLocalAmount={false}
-        placeholder={placeholder}
-        testID={`SwapTransactionDetails/MaxNetworkFee`}
-      />
-      <View style={styles.row}>
+      <View style={styles.row} testID="SwapTransactionDetails/Fees">
         <LabelWithInfo
           onPress={() => {
-            ValoraAnalytics.track(SwapEvents.swap_show_info, {
-              type: SwapShowInfoType.APP_FEE,
+            AppAnalytics.track(SwapEvents.swap_show_info, {
+              type: SwapShowInfoType.FEES,
             })
-            appFeeInfoBottomSheetRef.current?.snapToIndex(0)
+            feeInfoBottomSheetRef.current?.snapToIndex(0)
           }}
-          label={t('swapScreen.transactionDetails.appFee')}
-          testID="SwapTransactionDetails/AppFee/MoreInfo"
+          label={t('swapScreen.transactionDetails.fees')}
+          testID="SwapTransactionDetails/Fees/MoreInfo"
         />
-        <Text testID={'SwapTransactionDetails/AppFee'} style={styles.value}>
-          <Trans
-            i18nKey={'swapScreen.transactionDetails.appFeeValue'}
-            context={
-              !appFee || fetchingSwapQuote
-                ? 'placeholder'
-                : appFee.percentage.isLessThanOrEqualTo(0)
-                  ? 'free'
-                  : !appFee.token.priceUsd
-                    ? 'withoutPriceUsd'
-                    : undefined
-            }
-            tOptions={{ appFeePercentage: appFee?.percentage.toFormat() ?? '0' }}
-          >
-            {appFee && (
-              <TokenDisplay
-                amount={appFee.amount}
-                tokenId={appFee.token.tokenId}
-                showLocalAmount={!!appFee.token.priceUsd}
-                showApprox={!!appFee.token.priceUsd}
-                style={styles.value}
-              />
-            )}
-            {appFee && !!appFee.token.priceUsd && (
-              <Text style={styles.noBold}>
-                <TokenDisplay
-                  amount={appFee.amount}
-                  tokenId={appFee.token.tokenId}
-                  showLocalAmount={false}
-                />
-              </Text>
-            )}
-          </Trans>
-        </Text>
+        <ValueWithLoading
+          isLoading={fetchingSwapQuote}
+          value={estimatedFeesString ?? placeholder}
+        />
       </View>
+      {!!estimatedDurationInSeconds && (
+        <View style={styles.row} testID="SwapTransactionDetails/EstimatedDuration">
+          <LabelWithInfo
+            onPress={() => {
+              AppAnalytics.track(SwapEvents.swap_show_info, {
+                type: SwapShowInfoType.ESTIMATED_DURATION,
+              })
+              estimatedDurationBottomSheetRef.current?.snapToIndex(0)
+            }}
+            label={t('swapScreen.transactionDetails.estimatedTransactionTime')}
+            testID="SwapTransactionDetails/EstimatedDuration/MoreInfo"
+          />
+          <ValueWithLoading
+            isLoading={fetchingSwapQuote}
+            value={t('swapScreen.transactionDetails.estimatedTransactionTimeInMinutes', {
+              minutes: Math.ceil(estimatedDurationInSeconds / 60),
+            })}
+          />
+        </View>
+      )}
+
       <View style={styles.row} testID="SwapTransactionDetails/Slippage">
         <LabelWithInfo
           onPress={() => {
-            ValoraAnalytics.track(SwapEvents.swap_show_info, {
+            AppAnalytics.track(SwapEvents.swap_show_info, {
               type: SwapShowInfoType.SLIPPAGE,
             })
             slippageInfoBottomSheetRef.current?.snapToIndex(0)
@@ -265,32 +237,37 @@ export function SwapTransactionDetails({
 
 const styles = StyleSheet.create({
   container: {
-    paddingHorizontal: Spacing.Tiny4,
+    gap: Spacing.Regular16,
   },
   row: {
     flexDirection: 'row',
+    alignItems: 'flex-start',
     justifyContent: 'space-between',
-    paddingBottom: Spacing.Small12,
+    gap: Spacing.Small12,
   },
   touchableRow: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  value: {
-    ...typeScale.bodyXSmall,
-    color: colors.gray4,
-    fontWeight: '600',
+  valueContainer: {
+    flex: 1,
+    alignItems: 'flex-end',
   },
-  noBold: {
-    fontWeight: '400',
+  value: {
+    ...typeScale.bodySmall,
+    textAlign: 'right',
   },
   label: {
-    ...typeScale.bodyXSmall,
-    color: colors.gray4,
+    ...typeScale.bodySmall,
+    color: colors.contentSecondary,
     marginRight: Spacing.Tiny4,
   },
-  networkFeeContainer: {
-    flexDirection: 'row',
+  loaderContainer: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  loader: {
+    height: '100%',
+    width: '100%',
   },
 })
 
