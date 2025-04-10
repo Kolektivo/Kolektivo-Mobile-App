@@ -6,7 +6,9 @@ import MapView, { Geojson } from 'react-native-maps'
 import Animated from 'react-native-reanimated'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useDispatch, useSelector } from 'react-redux'
+import ForestMarker from 'src/kolektivo/icons/ForestMarker'
 import MapBottomSheet from 'src/kolektivo/map/MapBottomSheet'
+import { setFoodForest } from 'src/kolektivo/map/actions'
 import { GMAP_STYLE, LOCALE_REGION, MapCategory } from 'src/kolektivo/map/constants'
 import { useMap } from 'src/kolektivo/map/hooks'
 import { currentMapCategorySelector, foodForestsSelector } from 'src/kolektivo/map/selector'
@@ -54,15 +56,14 @@ export default function MapScreen({ route }: Props) {
     return (
       <>
         {map(forests, (forest: FoodForest) => {
-          return null
-          // return (
-          //   <ForestMarker
-          //     title={forest.title}
-          //     coordinate={forest.ingress || { latitude: 0, longitude: 0 }}
-          //     key={forest.title}
-          //     onPress={() => dispatch(setFoodForest(forest))}
-          //   />
-          // )
+          return (
+            <ForestMarker
+              title={forest.title}
+              coordinate={forest.ingress || { latitude: 0, longitude: 0 }}
+              key={forest.title}
+              onPress={() => dispatch(setFoodForest(forest))}
+            />
+          )
         })}
       </>
     )

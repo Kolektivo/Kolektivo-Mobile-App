@@ -21,6 +21,19 @@ export enum Colors {
   errorDark = '#C93717',
   errorLight = '#FBF2F0',
 
+  // Map Colors
+  activeMarker = '#D55C38',
+
+  // Vendor Map Marker Colors
+  inactiveVendor = '#D55C38',
+
+  // Food Forest Marker Colors
+  inactiveForest = '#68DB88',
+
+  // Map Filter Buttons
+  vendorButton = '#F07C4B',
+  forestButton = '#307582',
+
   /** @deprecated */
   goldBrand = '#FBCC5C',
   /** @deprecated */
