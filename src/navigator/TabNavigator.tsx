@@ -4,9 +4,9 @@ import React from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet } from 'react-native'
 import TabHome from 'src/home/TabHome'
+import Compass from 'src/icons/Compass'
 import Logo from 'src/icons/Logo'
 import Wallet from 'src/icons/navigator/Wallet'
-import Pin from 'src/icons/Pin'
 import ActivityScreen from 'src/kolektivo/activities/ActivityScreen'
 import { Activity } from 'src/kolektivo/icons/Activity'
 import MapScreen from 'src/kolektivo/map/MapScreen'
@@ -46,15 +46,6 @@ export default function TabNavigator({ route }: Props) {
       }}
     >
       <Tab.Screen
-        name={Screens.TabWallet}
-        component={TabWallet}
-        options={{
-          tabBarLabel: t('bottomTabsNavigator.wallet.tabName') as string,
-          tabBarIcon: Wallet,
-          tabBarTestID: 'Tab/Wallet',
-        }}
-      />
-      <Tab.Screen
         name={Screens.TabHome}
         component={TabHome}
         options={{
@@ -64,6 +55,15 @@ export default function TabNavigator({ route }: Props) {
           tabBarIcon: Logo,
           tabBarTestID: 'Tab/Home',
           headerTitle: t('bottomTabsNavigator.home.tabName') as string,
+        }}
+      />
+      <Tab.Screen
+        name={Screens.TabWallet}
+        component={TabWallet}
+        options={{
+          tabBarLabel: t('bottomTabsNavigator.wallet.tabName') as string,
+          tabBarIcon: Wallet,
+          tabBarTestID: 'Tab/Wallet',
         }}
       />
       <Tab.Screen
@@ -85,7 +85,7 @@ export default function TabNavigator({ route }: Props) {
           freezeOnBlur: false,
           lazy: false,
           tabBarLabel: t('bottomTabsNavigator.map.tabName') as string,
-          tabBarIcon: Pin,
+          tabBarIcon: Compass,
           tabBarTestID: 'Tab/Map',
           headerTitle: t('bottomTabsNavigator.map.tabName') as string,
         }}
