@@ -5,24 +5,26 @@ import { Platform, StyleSheet } from 'react-native'
 import MapView, { Geojson } from 'react-native-maps'
 import Animated from 'react-native-reanimated'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { useDispatch, useSelector } from 'react-redux'
 import ForestMarker from 'src/kolektivo/icons/ForestMarker'
+import VendorMarker from 'src/kolektivo/icons/VendorMarker'
 import MapBottomSheet from 'src/kolektivo/map/MapBottomSheet'
 import { setFoodForest } from 'src/kolektivo/map/actions'
 import { GMAP_STYLE, LOCALE_REGION, MapCategory } from 'src/kolektivo/map/constants'
 import { useMap } from 'src/kolektivo/map/hooks'
 import { currentMapCategorySelector, foodForestsSelector } from 'src/kolektivo/map/selector'
 import { FoodForest } from 'src/kolektivo/map/types'
+import { setCurrentVendor } from 'src/kolektivo/vendors/actions'
 import { vendorsWithLocationSelector } from 'src/kolektivo/vendors/selector'
 import { VendorWithLocation } from 'src/kolektivo/vendors/types'
-// import DrawerTopBar from 'src/navigator/DrawerTopBar'
 import { Screens } from 'src/navigator/Screens'
 import { StackParamList } from 'src/navigator/types'
+import { useDispatch, useSelector } from 'src/redux/hooks'
 import Colors from 'src/styles/colors'
 
 type Props = NativeStackScreenProps<StackParamList, Screens.MapScreen>
 export default function MapScreen({ route }: Props) {
   const scrollPosition = useRef(new Animated.Value(0)).current
+
   const dispatch = useDispatch()
   const mapCategory = useSelector(currentMapCategorySelector)
   const forests = useSelector(foodForestsSelector)
@@ -35,17 +37,16 @@ export default function MapScreen({ route }: Props) {
     return (
       <>
         {vendors.map((vendor: VendorWithLocation) => {
-          return null
-          // return (
-          //   <VendorMarker
-          //     title={vendor.title}
-          //     coordinate={vendor.location}
-          //     key={vendor.title}
-          //     description={vendor.subtitle}
-          //     onPress={() => dispatch(setCurrentVendor(vendor))}
-          //     color={currentVendor === vendor ? Colors.primary : Colors.primaryDisabled}
-          //   />
-          // )
+          return (
+            <VendorMarker
+              title={vendor.name}
+              coordinate={vendor.location}
+              key={vendor.name}
+              description={vendor.name}
+              onPress={() => dispatch(setCurrentVendor(vendor))}
+              color={_currentVendor === vendor ? Colors.primary : Colors.primaryDisabled}
+            />
+          )
         })}
       </>
     )
@@ -55,12 +56,12 @@ export default function MapScreen({ route }: Props) {
     if (!mapCategory.includes(MapCategory.FoodForest)) return // forest is selected
     return (
       <>
-        {map(forests, (forest: FoodForest, i: number) => {
+        {map(forests, (forest: FoodForest) => {
           return (
             <ForestMarker
-              title={forest.title}
+              title={forest.name}
               coordinate={forest.ingress || { latitude: 0, longitude: 0 }}
-              key={forest.title + i}
+              key={forest.name}
               onPress={() => dispatch(setFoodForest(forest))}
             />
           )
@@ -100,7 +101,6 @@ export default function MapScreen({ route }: Props) {
         {forests && forestLocationMarkers()}
         {vendors && vendorLocationMarkers()}
       </MapView>
-      {/* <DrawerTopBar scrollPosition={scrollPosition} /> */}
       <MapBottomSheet mapRef={mapRef} />
     </SafeAreaView>
   )

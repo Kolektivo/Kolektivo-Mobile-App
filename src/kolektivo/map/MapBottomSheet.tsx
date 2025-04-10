@@ -2,7 +2,6 @@ import BottomSheet, { BottomSheetBackgroundProps, BottomSheetFlatList } from '@g
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { ListRenderItemInfo, StyleSheet, View } from 'react-native'
 import MapView from 'react-native-maps'
-import { useDispatch, useSelector } from 'react-redux'
 import FoodForestDetails from 'src/kolektivo/map/FoodForestDetails'
 import MapSheetHandle from 'src/kolektivo/map/MapSheetHandle'
 import { setFoodForest } from 'src/kolektivo/map/actions'
@@ -21,6 +20,7 @@ import { Vendor, VendorWithLocation } from 'src/kolektivo/vendors/types'
 import { useInteractiveBottomSheet } from 'src/kolektivo/vendors/utils'
 import { navigate } from 'src/navigator/NavigationService'
 import { Screens } from 'src/navigator/Screens'
+import { useDispatch, useSelector } from 'src/redux/hooks'
 import Colors from 'src/styles/colors'
 
 type Props = {
@@ -49,7 +49,7 @@ const MapBottomSheet = ({ mapRef }: Props) => {
       <VendorListItem
         listMode={listMode}
         vendor={item}
-        id={item.title}
+        id={item.name}
         onPress={() => dispatch(setCurrentVendor(item))}
       />
     )
@@ -87,10 +87,11 @@ const MapBottomSheet = ({ mapRef }: Props) => {
       {!currentVendor && !currentForest && (
         <BottomSheetFlatList
           key={!listMode ? 'VendorList/Icons' : 'VendorList/List'}
-          numColumns={!listMode ? 4 : 1}
+          numColumns={!listMode ? undefined : 1}
           data={searchQuery.length > 0 ? filteredVendors : vendors}
-          keyExtractor={(vendor: Vendor) => vendor.title}
+          keyExtractor={(vendor: Vendor) => vendor.name}
           renderItem={renderVendorItem}
+          horizontal={!listMode}
           contentContainerStyle={!listMode ? styles.innerContainer : null}
         />
       )}

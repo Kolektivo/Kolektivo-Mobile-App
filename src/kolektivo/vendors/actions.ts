@@ -1,4 +1,4 @@
-import { Vendor, Vendors } from 'src/kolektivo/vendors/types'
+import { Vendor, Vendors, VendorWithLocation } from 'src/kolektivo/vendors/types'
 
 export enum Actions {
   FETCH_VENDORS = 'VENDORS/FETCH_VENDORS',
@@ -18,7 +18,7 @@ export interface SetLoadingAction {
 
 export interface setVendorsAction {
   type: Actions.SET_VENDORS
-  allVendors: Vendors
+  allVendors: Vendors | VendorWithLocation
 }
 
 export interface SetCurrentVendorAction {
@@ -30,7 +30,7 @@ export const fetchVendors = (): FetchVendorsAction => ({
   type: Actions.FETCH_VENDORS,
 })
 
-export const setVendors = (allVendors: Vendors): setVendorsAction => ({
+export const setVendors = (allVendors: Vendors | VendorWithLocation): setVendorsAction => ({
   type: Actions.SET_VENDORS,
   allVendors,
 })

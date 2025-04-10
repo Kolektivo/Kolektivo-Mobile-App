@@ -1,14 +1,35 @@
+import { LatLng } from 'react-native-maps'
+
 export type Vendor = {
-  title: string
-  subtitle?: string
-  logoURI: string
+  attributes: {
+    name: any
+    subtitle: any
+    logo: any
+    website: any
+    latitude: any
+    longitude: any
+    phone_number: any
+    acceptsGuilder: any
+    providesGuilder: any
+    street: any
+    building_number: any
+    city: any
+    account: any
+  }
+  name: string
+  location?: string
+  website?: string
+  community?: string
+  logo_path?: string
   siteURI: string
   description: string
+  opening_hours: Array<string>
+  wifi?: boolean
   tags: Array<string>
   currencies: Array<string>
   address?: string
-  phoneNumber?: string
-  acceptsGuilder?: boolean
+  phone?: string
+  category?: boolean
   providesGuilder?: boolean
   street: string
   building_number: string
@@ -17,7 +38,7 @@ export type Vendor = {
 }
 
 export type VendorWithLocation = Vendor & {
-  location: unknown
+  location: LatLng
 }
 
 export type Vendors = {

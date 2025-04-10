@@ -27,7 +27,7 @@ type Props = {
 
 const VendorDetails = ({ vendor, close, action }: Props) => {
   const {
-    title,
+    name,
     subtitle,
     street,
     building_number,
@@ -35,8 +35,8 @@ const VendorDetails = ({ vendor, close, action }: Props) => {
     siteURI,
     description,
     tags,
-    logoURI,
-    phoneNumber,
+    logo_path,
+    phone,
     acceptsGuilder,
     providesGuilder,
     account,
@@ -48,14 +48,14 @@ const VendorDetails = ({ vendor, close, action }: Props) => {
     <View style={styles.container}>
       <View style={styles.sheetHeader}>
         <View style={styles.sheetIcon}>
-          <Image source={{ uri: logoURI }} style={styles.vendorIcon} />
+          <Image source={{ uri: logo_path }} style={styles.vendorIcon} />
         </View>
         <Touchable style={styles.sheetClose} onPress={close}>
           <Times />
         </Touchable>
       </View>
       <View style={styles.innerContainer}>
-        <Text style={styles.title}>{title}</Text>
+        <Text style={styles.title}>{name}</Text>
         <Text style={styles.subtitle}>{subtitle}</Text>
         <Text style={styles.description}>{description}</Text>
         <View style={[styles.cico, acceptsGuilder && providesGuilder ? styles.cicoPartner : null]}>
@@ -74,7 +74,7 @@ const VendorDetails = ({ vendor, close, action }: Props) => {
         </View>
 
         <View style={styles.contactRow}>
-          {!!phoneNumber && (
+          {!!phone && (
             <TouchableOpacity
               // @ts-ignore @todo
               onPress={void 0}

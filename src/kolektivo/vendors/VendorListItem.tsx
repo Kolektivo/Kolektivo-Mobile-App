@@ -16,8 +16,8 @@ type Props = {
 }
 
 export default function VendorListItem({ listMode, vendor, id, onPress }: Props) {
-  const { title, subtitle, logoURI } = vendor
-
+  const { name, subtitle, logo_path } = vendor
+  console.log('VendorListItem', logo_path)
   const goToVendor = (vendor: Vendor) => {
     const { siteURI } = vendor
     return () => {
@@ -29,13 +29,13 @@ export default function VendorListItem({ listMode, vendor, id, onPress }: Props)
     <TouchableOpacity key={id} onPress={onPress} testID={`Vendors/VendorItem`}>
       <View style={styles.vendorItem}>
         <Image
-          source={{ uri: logoURI }}
+          source={{ uri: logo_path }}
           style={[styles.vendorIcon, listMode ? styles.listVendorIcon : null]}
         />
         <View style={styles.vendorDetails}>
           {listMode && (
             <>
-              <Text style={styles.title}>{title}</Text>
+              <Text style={styles.title}>{name}</Text>
               <Text style={styles.subtitle}>{subtitle}</Text>
             </>
           )}

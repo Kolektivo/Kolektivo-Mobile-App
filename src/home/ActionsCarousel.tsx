@@ -44,7 +44,7 @@ function ActionsCarousel() {
       icon: <Scan color={Colors.primaryDark} />,
       onPress: () => {
         navigate(Screens.QRNavigator, {
-          screen: Screens.QRCode,
+          screen: Screens.QRScanner,
         })
       },
     },

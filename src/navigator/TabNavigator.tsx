@@ -6,6 +6,7 @@ import { StyleSheet } from 'react-native'
 import TabHome from 'src/home/TabHome'
 import Logo from 'src/icons/Logo'
 import Wallet from 'src/icons/navigator/Wallet'
+import Pin from 'src/icons/Pin'
 import ActivityScreen from 'src/kolektivo/activities/ActivityScreen'
 import { Activity } from 'src/kolektivo/icons/Activity'
 import MapScreen from 'src/kolektivo/map/MapScreen'
@@ -84,7 +85,7 @@ export default function TabNavigator({ route }: Props) {
           freezeOnBlur: false,
           lazy: false,
           tabBarLabel: t('bottomTabsNavigator.map.tabName') as string,
-          tabBarIcon: Activity,
+          tabBarIcon: Pin,
           tabBarTestID: 'Tab/Map',
           headerTitle: t('bottomTabsNavigator.map.tabName') as string,
         }}

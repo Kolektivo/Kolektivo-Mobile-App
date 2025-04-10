@@ -3,7 +3,6 @@ import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, Text, View } from 'react-native'
 import { TouchableOpacity } from 'react-native-gesture-handler'
-import { useDispatch } from 'react-redux'
 import { showError } from 'src/alert/actions'
 import { ErrorMessages } from 'src/app/ErrorMessages'
 import Button, { BtnSizes, BtnTypes } from 'src/components/Button'
@@ -23,6 +22,7 @@ import {
   initiateShare,
 } from 'src/kolektivo/map/utils'
 import { VendorWithLocation } from 'src/kolektivo/vendors/types'
+import { useDispatch } from 'src/redux/hooks'
 import colors from 'src/styles/colors'
 import fontStyles from 'src/styles/fonts'
 import variables from 'src/styles/variables'
@@ -39,7 +39,7 @@ const FoodForestDetails = ({ forest, close, action }: Props) => {
   const {
     area,
     start,
-    title,
+    name,
     street,
     building_number,
     city,
@@ -67,7 +67,7 @@ const FoodForestDetails = ({ forest, close, action }: Props) => {
 
   const handleOpenMap = (): void => {
     try {
-      initiateDirection({ title, coordinate: location, building_number, street, city })
+      initiateDirection({ name, coordinate: location, building_number, street, city })
     } catch (error) {
       Logger.warn('Directions', error)
       dispatch(showError(ErrorMessages.FAILED_OPEN_DIRECTION))
@@ -83,7 +83,7 @@ const FoodForestDetails = ({ forest, close, action }: Props) => {
         </Touchable>
       </View>
       <View style={styles.innerContainer}>
-        <Text style={styles.title}>{title}</Text>
+        <Text style={styles.title}>{name}</Text>
         <View style={[styles.cico, acceptsGuilder && providesGuilder ? styles.cicoPartner : null]}>
           {acceptsGuilder && (
             <View style={styles.verifiedRow}>
@@ -99,13 +99,13 @@ const FoodForestDetails = ({ forest, close, action }: Props) => {
           )}
         </View>
         <View style={styles.furtherDetailsRow}>
-          {area && (
+          {!!area && (
             <View style={styles.metric}>
               <Text style={styles.metricType}>Area</Text>
               <Text style={styles.metricValue}>{t('foodForestDetails.area', { area })}</Text>
             </View>
           )}
-          {start && (
+          {!!start && (
             <View style={styles.metric}>
               <Text style={styles.metricType}>Age</Text>
               <Text style={styles.metricValue}>{age}</Text>
@@ -113,7 +113,7 @@ const FoodForestDetails = ({ forest, close, action }: Props) => {
           )}
         </View>
         <View style={styles.contactRow}>
-          {phoneNumber && (
+          {!!phoneNumber && (
             <TouchableOpacity onPress={() => initiatePhoneCall(phoneNumber)}>
               <Phone />
             </TouchableOpacity>
@@ -123,14 +123,14 @@ const FoodForestDetails = ({ forest, close, action }: Props) => {
               <Directions />
             </TouchableOpacity>
           )}
-          {siteURI && (
+          {!!siteURI && (
             <TouchableOpacity onPress={() => navigateToURI(siteURI)}>
               <Website />
             </TouchableOpacity>
           )}
           {true && (
             <TouchableOpacity
-              onPress={() => initiateShare({ message: `${title} Age: ${age} Area: ${area} m²` })}
+              onPress={() => initiateShare({ message: `${name} Age: ${age} Area: ${area} m²` })}
             >
               <Share />
             </TouchableOpacity>
