@@ -50,7 +50,6 @@ const MapSheetHandle: React.FC<CustomHandleProps> = ({ title, style, animatedInd
     return (
       <>
         {remove(valuesIn(MapCategory), (x) => x !== 'All').map((cat: string) => {
-          return null
           // return (
           //   <View style={styles.filterRow}>
           //     <MapFilterButton
@@ -84,7 +83,7 @@ const MapSheetHandle: React.FC<CustomHandleProps> = ({ title, style, animatedInd
     >
       <View>
         <View style={[styles.headerFilter, styles.flex]}>
-          {!currentVendor && !currentForest && renderFilters()}
+          {/* {!currentVendor && !currentForest && renderFilters()} */}
           <TouchableOpacity style={styles.findMy} onPress={handleFindMy}>
             <FindMy size={14} />
           </TouchableOpacity>

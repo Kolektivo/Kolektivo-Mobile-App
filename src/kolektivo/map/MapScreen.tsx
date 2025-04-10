@@ -1,14 +1,15 @@
 import { NativeStackScreenProps } from '@react-navigation/native-stack'
-import { map } from 'lodash'
+import { includes, map, remove, valuesIn } from 'lodash'
 import React, { useRef } from 'react'
-import { Platform, StyleSheet } from 'react-native'
+import { Platform, StyleSheet, View } from 'react-native'
 import MapView, { Geojson } from 'react-native-maps'
 import Animated from 'react-native-reanimated'
 import { SafeAreaView } from 'react-native-safe-area-context'
+import { MapFilterButton } from 'src/kolektivo/components/MapButtons'
 import ForestMarker from 'src/kolektivo/icons/ForestMarker'
 import VendorMarker from 'src/kolektivo/icons/VendorMarker'
 import MapBottomSheet from 'src/kolektivo/map/MapBottomSheet'
-import { setFoodForest } from 'src/kolektivo/map/actions'
+import { removeMapCategory, setFoodForest, setMapCategory } from 'src/kolektivo/map/actions'
 import { GMAP_STYLE, LOCALE_REGION, MapCategory } from 'src/kolektivo/map/constants'
 import { useMap } from 'src/kolektivo/map/hooks'
 import { currentMapCategorySelector, foodForestsSelector } from 'src/kolektivo/map/selector'
@@ -88,8 +89,38 @@ export default function MapScreen({ route }: Props) {
     )
   }
 
+  const handleFilterToggle = (category: MapCategory) => {
+    if (includes(mapCategory, category)) {
+      dispatch(removeMapCategory(category))
+    } else {
+      dispatch(setMapCategory(category))
+    }
+  }
+
+  const RenderFilters = () => {
+    return (
+      <View style={{ zIndex: 1000, position: 'absolute', top: 10, left: 0, right: 0 }}>
+        {remove(valuesIn(MapCategory), (x) => x !== 'All').map((cat: string) => {
+          return (
+            <View>
+              <MapFilterButton
+                text={cat}
+                active={mapCategory.includes(cat as MapCategory)}
+                type={cat as any}
+                onPress={() => {
+                  handleFilterToggle(cat as MapCategory)
+                }}
+              />
+            </View>
+          )
+        })}
+      </View>
+    )
+  }
+
   return (
     <SafeAreaView style={styles.container}>
+      <RenderFilters />
       <MapView
         ref={mapRef}
         style={styles.map}
