@@ -199,11 +199,7 @@ export type StackParamList = {
   }
   [Screens.Main]: undefined
   [Screens.MainModal]: undefined
-  [Screens.MapScreen]:
-    | {
-        targetId: string
-      }
-    | undefined
+  [Screens.MapScreen]: {} | undefined
   [Screens.MultichainBeta]: undefined
   [Screens.NotificationCenter]: undefined
   [Screens.NftsInfoCarousel]: { nfts: Nft[]; networkId: NetworkId }

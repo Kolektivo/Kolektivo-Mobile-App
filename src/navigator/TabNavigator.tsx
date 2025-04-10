@@ -8,6 +8,7 @@ import Logo from 'src/icons/Logo'
 import Wallet from 'src/icons/navigator/Wallet'
 import ActivityScreen from 'src/kolektivo/activities/ActivityScreen'
 import { Activity } from 'src/kolektivo/icons/Activity'
+import MapScreen from 'src/kolektivo/map/MapScreen'
 import { tabHeader } from 'src/navigator/Headers'
 import { Screens } from 'src/navigator/Screens'
 import { StackParamList } from 'src/navigator/types'
@@ -74,6 +75,18 @@ export default function TabNavigator({ route }: Props) {
           tabBarIcon: Activity,
           tabBarTestID: 'Tab/Activities',
           headerTitle: t('bottomTabsNavigator.activities.tabName') as string,
+        }}
+      />
+      <Tab.Screen
+        name={Screens.MapScreen}
+        component={MapScreen}
+        options={{
+          freezeOnBlur: false,
+          lazy: false,
+          tabBarLabel: t('bottomTabsNavigator.map.tabName') as string,
+          tabBarIcon: Activity,
+          tabBarTestID: 'Tab/Map',
+          headerTitle: t('bottomTabsNavigator.map.tabName') as string,
         }}
       />
     </Tab.Navigator>

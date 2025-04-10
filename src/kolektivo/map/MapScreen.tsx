@@ -13,14 +13,13 @@ import { currentMapCategorySelector, foodForestsSelector } from 'src/kolektivo/m
 import { FoodForest } from 'src/kolektivo/map/types'
 import { vendorsWithLocationSelector } from 'src/kolektivo/vendors/selector'
 import { VendorWithLocation } from 'src/kolektivo/vendors/types'
-import DrawerTopBar from 'src/navigator/DrawerTopBar'
+// import DrawerTopBar from 'src/navigator/DrawerTopBar'
 import { Screens } from 'src/navigator/Screens'
 import { StackParamList } from 'src/navigator/types'
 import Colors from 'src/styles/colors'
 
 type Props = NativeStackScreenProps<StackParamList, Screens.MapScreen>
 export default function MapScreen({ route }: Props) {
-  const { targetId: _targetId } = route.params || {}
   const scrollPosition = useRef(new Animated.Value(0)).current
   const dispatch = useDispatch()
   const mapCategory = useSelector(currentMapCategorySelector)
@@ -100,7 +99,7 @@ export default function MapScreen({ route }: Props) {
         {forests && forestLocationMarkers()}
         {vendors && vendorLocationMarkers()}
       </MapView>
-      <DrawerTopBar scrollPosition={scrollPosition} />
+      {/* <DrawerTopBar scrollPosition={scrollPosition} /> */}
       <MapBottomSheet mapRef={mapRef} />
     </SafeAreaView>
   )

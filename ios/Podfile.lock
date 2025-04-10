@@ -546,6 +546,8 @@ PODS:
     - React-Core
   - react-native-launch-arguments (4.0.2):
     - React
+  - react-native-maps (1.20.1):
+    - React-Core
   - react-native-netinfo (11.3.2):
     - React-Core
   - react-native-randombytes (3.6.1):
@@ -850,6 +852,7 @@ DEPENDENCIES:
   - react-native-get-random-values (from `../node_modules/react-native-get-random-values`)
   - react-native-in-app-review (from `../node_modules/react-native-in-app-review`)
   - react-native-launch-arguments (from `../node_modules/react-native-launch-arguments`)
+  - react-native-maps (from `../node_modules/react-native-maps`)
   - "react-native-netinfo (from `../node_modules/@react-native-community/netinfo`)"
   - react-native-randombytes (from `../node_modules/react-native-randombytes`)
   - react-native-safe-area-context (from `../node_modules/react-native-safe-area-context`)
@@ -1029,6 +1032,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-in-app-review"
   react-native-launch-arguments:
     :path: "../node_modules/react-native-launch-arguments"
+  react-native-maps:
+    :path: "../node_modules/react-native-maps"
   react-native-netinfo:
     :path: "../node_modules/@react-native-community/netinfo"
   react-native-randombytes:
@@ -1213,6 +1218,7 @@ SPEC CHECKSUMS:
   react-native-get-random-values: d16467cf726c618e9c7a8c3c39c31faa2244bbba
   react-native-in-app-review: b3d1eed3d1596ebf6539804778272c4c65e4a400
   react-native-launch-arguments: d4759f7591e2766e6c5ec746b7032429edaf7058
+  react-native-maps: 9febd31278b35cd21e4fad2cf6fa708993be5dab
   react-native-netinfo: ce102083db558237dac20cf64172ef569ebe2dd9
   react-native-randombytes: 3c8f3e89d12487fd03a2f966c288d495415fc116
   react-native-safe-area-context: 96a29fae9fd5c088236c84d69ce3a4ee0e148c1d
