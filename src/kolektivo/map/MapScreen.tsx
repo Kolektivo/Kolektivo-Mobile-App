@@ -55,12 +55,12 @@ export default function MapScreen({ route }: Props) {
     if (!mapCategory.includes(MapCategory.FoodForest)) return // forest is selected
     return (
       <>
-        {map(forests, (forest: FoodForest) => {
+        {map(forests, (forest: FoodForest, i: number) => {
           return (
             <ForestMarker
               title={forest.title}
               coordinate={forest.ingress || { latitude: 0, longitude: 0 }}
-              key={forest.title}
+              key={forest.title + i}
               onPress={() => dispatch(setFoodForest(forest))}
             />
           )
