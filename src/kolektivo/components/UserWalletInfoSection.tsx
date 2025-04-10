@@ -1,3 +1,4 @@
+import Clipboard from '@react-native-clipboard/clipboard'
 import React from 'react'
 import { StyleSheet, Text, View } from 'react-native'
 import { TouchableOpacity } from 'react-native-gesture-handler'
@@ -5,7 +6,7 @@ import { useSelector } from 'react-redux'
 import KolCurrency from 'src/icons/KolCurrency'
 import LinearBackground from 'src/kolektivo/components/LinearBackground'
 import { TokenBalance } from 'src/kolektivo/components/TokenBalance'
-import Clipboard from 'src/kolektivo/icons/Clipboard'
+import ClipboardIco from 'src/kolektivo/icons/Clipboard'
 import { typeScale } from 'src/kolektivo/styles/kolektivoFonts'
 import variables from 'src/kolektivo/styles/variables'
 import { currentAccountSelector } from 'src/web3/selectors'
@@ -13,15 +14,21 @@ import { currentAccountSelector } from 'src/web3/selectors'
 export default function UserWalletInfoSection() {
   const account = useSelector(currentAccountSelector)
 
+  const handleCopyToClipboard = () => {
+    if (account) {
+      Clipboard.setString(account)
+    }
+  }
+
   return (
     <View style={styles.container}>
       <LinearBackground
         borderRadius={10}
         backgroundImage={require('src/kolektivo/images/UserWalletDetailsMask.png')}
       >
-        <TouchableOpacity style={styles.addressClipboard}>
+        <TouchableOpacity style={styles.addressClipboard} onPress={handleCopyToClipboard}>
           <Text style={{ paddingRight: 8 }}>{account?.slice(0, 9)}...</Text>
-          <Clipboard />
+          <ClipboardIco />
         </TouchableOpacity>
         <View style={styles.currency}>
           <KolCurrency size={23} />

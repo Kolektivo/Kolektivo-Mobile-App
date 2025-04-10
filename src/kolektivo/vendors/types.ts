@@ -30,6 +30,7 @@ export type Vendor = {
   address?: string
   phone?: string
   category?: boolean
+  acceptsGuilder?: boolean
   providesGuilder?: boolean
   street: string
   building_number: string
