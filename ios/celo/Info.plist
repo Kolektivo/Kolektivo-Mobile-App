@@ -115,5 +115,7 @@
 	<false/>
   <key>ITSAppUsesNonExemptEncryption</key>
   <false />
+  <key>NSLocationWhenInUseUsageDescription</key>
+  <string>We need your location to show nearby vendors and food forests.</string>
 </dict>
 </plist>
