@@ -2580,5 +2580,7 @@
   "signedUp": "Signed Up",
   "completed": "Completed",
   "point": "Points",
-  "stampTitle": "{{stamp}} Stamp"
+  "stampTitle": "{{stamp}} Stamp",
+  "acceptsGuilder": "Accepts KGuilder",
+  "providesGuilder": "Provides KGuilder"
 }

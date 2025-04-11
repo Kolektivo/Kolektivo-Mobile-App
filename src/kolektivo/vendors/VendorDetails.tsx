@@ -46,18 +46,20 @@ const VendorDetails = ({ vendor, close, action }: Props) => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.sheetHeader}>
+      <View style={[styles.sheetHeader]}>
         <View style={styles.sheetIcon}>
           <Image source={{ uri: logo_path }} style={styles.vendorIcon} />
+        </View>
+        <View style={styles.sheetDetails}>
+          <Text style={styles.title}>{name}</Text>
+          <Text style={styles.subtitle}>{subtitle}</Text>
+          <Text style={styles.description}>{description}</Text>
         </View>
         <Touchable style={styles.sheetClose} onPress={close}>
           <Times />
         </Touchable>
       </View>
       <View style={styles.innerContainer}>
-        <Text style={styles.title}>{name}</Text>
-        <Text style={styles.subtitle}>{subtitle}</Text>
-        <Text style={styles.description}>{description}</Text>
         <View style={[styles.cico, acceptsGuilder && providesGuilder ? styles.cicoPartner : null]}>
           {!!acceptsGuilder && (
             <View style={styles.verifiedRow}>
@@ -160,19 +162,6 @@ const styles = StyleSheet.create({
   innerContainer: {
     marginHorizontal: 20,
   },
-  title: {
-    ...fontStyles.h2,
-    textAlign: 'center',
-    paddingHorizontal: 36,
-    marginBottom: 16,
-  },
-  subtitle: {
-    ...fontStyles.regular,
-    textAlign: 'center',
-    color: colors.gray5,
-    paddingHorizontal: 36,
-    marginBottom: 16,
-  },
   cico: {},
   cicoPartner: {
     flexDirection: 'row',
@@ -184,34 +173,6 @@ const styles = StyleSheet.create({
     color: colors.gray5,
     paddingHorizontal: 10,
     marginBottom: 16,
-  },
-  description: {
-    ...fontStyles.regular,
-    textAlign: 'justify',
-    fontSize: 14,
-  },
-  sheetHeader: {
-    flexDirection: 'row',
-    paddingBottom: 16,
-  },
-  sheetIcon: {
-    flexGrow: 1,
-    flexDirection: 'row',
-    justifyContent: 'center',
-  },
-  sheetClose: {
-    padding: 13,
-    position: 'absolute',
-    right: 0,
-  },
-  vendorIcon: {
-    resizeMode: 'contain',
-    width: 70,
-    height: 70,
-    borderRadius: 35,
-    borderColor: colors.gray3,
-    borderWidth: StyleSheet.hairlineWidth,
-    backgroundColor: 'white',
   },
   contactRow: {
     flexDirection: 'row',
@@ -251,6 +212,52 @@ const styles = StyleSheet.create({
     width: '100%',
     flexDirection: 'row',
     justifyContent: 'space-around',
+  },
+  sheetHeader: {
+    flexDirection: 'row', // Arrange items in a row
+    alignItems: 'center', // Align items vertically in the center
+    paddingBottom: 16,
+    paddingHorizontal: 20,
+  },
+  sheetIcon: {
+    flex: 0.3, // Take 30% of the row width
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  sheetDetails: {
+    flex: 0.7, // Take 70% of the row width
+    justifyContent: 'center',
+    paddingLeft: 10, // Add spacing between the icon and text
+  },
+  sheetClose: {
+    position: 'absolute',
+    right: 0,
+    padding: 13,
+  },
+  vendorIcon: {
+    resizeMode: 'contain',
+    width: 70,
+    height: 70,
+    borderRadius: 10,
+    borderColor: colors.gray3,
+    borderWidth: StyleSheet.hairlineWidth,
+    backgroundColor: 'white',
+  },
+  title: {
+    ...fontStyles.h2,
+    textAlign: 'left', // Align text to the left
+    marginBottom: 4,
+  },
+  subtitle: {
+    ...fontStyles.regular,
+    textAlign: 'left', // Align text to the left
+    color: colors.gray5,
+    marginBottom: 4,
+  },
+  description: {
+    ...fontStyles.regular,
+    textAlign: 'left', // Align text to the left
+    fontSize: 14,
   },
 })
 

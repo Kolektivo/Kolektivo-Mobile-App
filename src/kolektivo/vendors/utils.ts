@@ -17,6 +17,8 @@ export const formatVendors = (vendorObject: Record<string, any>): Vendors => {
         category,
         community,
         logo_path,
+        accepts_guilder,
+        provides_guilder,
         website,
         latitude,
         longitude,
@@ -40,8 +42,8 @@ export const formatVendors = (vendorObject: Record<string, any>): Vendors => {
             latitude: latitude ?? 0,
             longitude: longitude ?? 0,
           },
-          acceptsGuilder: false, // Assuming not present in the data
-          providesGuilder: false, // Assuming not present in the data
+          acceptsGuilder: accepts_guilder, // Assuming not present in the data
+          providesGuilder: provides_guilder, // Assuming not present in the data
           street: '',
           building_number: '',
           city: location,
