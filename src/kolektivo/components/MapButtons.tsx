@@ -2,6 +2,9 @@ import { TouchableOpacity } from '@gorhom/bottom-sheet'
 import { debounce } from 'lodash'
 import React, { ReactNode, useCallback } from 'react'
 import { StyleSheet, Text } from 'react-native'
+import Groceries from 'src/kolektivo/icons/Groceries'
+import Restaurant from 'src/kolektivo/icons/Restaurant'
+import { MapCategory } from 'src/kolektivo/map/constants'
 import Colors from 'src/styles/colors'
 import fontStyles from 'src/styles/fonts'
 import variables from 'src/styles/variables'
@@ -12,12 +15,7 @@ export type FilterButtonProps = {
   accessibilityLabel?: string
   activeColor?: Colors
   active: boolean
-  type?: FilterButtonTypes
-}
-
-export enum FilterButtonTypes {
-  VENDOR = 'Vendor',
-  FOREST = 'Food Forest',
+  type?: MapCategory
 }
 
 export const FilterButton = ({
@@ -57,7 +55,6 @@ export const FilterButton = ({
 
 const styles = StyleSheet.create({
   wrapper: {
-    maxHeight: 24,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -65,40 +62,48 @@ const styles = StyleSheet.create({
     marginHorizontal: variables.contentPadding / 3,
   },
   rounded: {
-    borderRadius: 100,
+    borderRadius: 10,
   },
   textStyle: {
+    padding: variables.contentPadding / 3,
     ...fontStyles.small,
   },
 })
 
-const getIcon = (type: FilterButtonTypes | undefined, active: boolean = false): ReactNode => {
+const getIcon = (type: MapCategory | undefined, active: boolean = false): ReactNode => {
   switch (type) {
-    case FilterButtonTypes.VENDOR: {
+    case MapCategory.Vendor: {
       return <></>
     }
-    case FilterButtonTypes.FOREST: {
+    case MapCategory.FoodForest: {
       return <></>
+    }
+    case MapCategory.Restaurant: {
+      return <Restaurant color={active ? '#0F0F0F' : Colors.white} />
+    }
+    case MapCategory.Groceries: {
+      return <Groceries color={active ? '#0F0F0F' : Colors.white} />
     }
     default: {
       return <></>
     }
   }
 }
-const getColors = (type: FilterButtonTypes | undefined, active: boolean = false) => {
-  const textColor = active ? Colors.primaryLight : Colors.primaryDark
-  let backgroundColor, opacity
+
+const getColors = (type: MapCategory | undefined, active: boolean = false) => {
+  const textColor = active ? '#0F0F0F' : Colors.white
+  let backgroundColor
   switch (type) {
-    case FilterButtonTypes.VENDOR: {
-      backgroundColor = active ? Colors.vendorButton : Colors.gray3
-      break
-    }
-    case FilterButtonTypes.FOREST: {
-      backgroundColor = active ? Colors.forestButton : Colors.gray3
-      break
-    }
+    // case MapCategory.Vendor: {
+    //   backgroundColor = active ? Colors.vendorButton : Colors.gray3
+    //   break
+    // }
+    // case MapCategory.FoodForest: {
+    //   backgroundColor = active ? Colors.forestButton : Colors.gray3
+    //   break
+    // }
     default: {
-      backgroundColor = active ? Colors.forestButton : Colors.gray3
+      backgroundColor = active ? Colors.white : Colors.gray3
       break
     }
   }

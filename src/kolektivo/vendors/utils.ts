@@ -29,11 +29,13 @@ export const formatVendors = (vendorObject: Record<string, any>): Vendors => {
 
       return {
         [name]: {
+          ...vendorObject,
           name: name,
           subtitle: community || category || '',
           logo_path: logo_path,
           siteURI: website,
-          phoneNumber: phone,
+          phone: phone,
+          category: category,
           location: {
             latitude: latitude ?? 0,
             longitude: longitude ?? 0,

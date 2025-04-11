@@ -17,7 +17,6 @@ type Props = {
 
 export default function VendorListItem({ listMode, vendor, id, onPress }: Props) {
   const { name, subtitle, logo_path } = vendor
-  console.log('VendorListItem', logo_path)
   const goToVendor = (vendor: Vendor) => {
     const { siteURI } = vendor
     return () => {

@@ -17,6 +17,7 @@ export type Vendor = {
     account: any
   }
   name: string
+  subtitle?: string
   location?: string
   website?: string
   community?: string
@@ -29,7 +30,7 @@ export type Vendor = {
   currencies: Array<string>
   address?: string
   phone?: string
-  category?: boolean
+  category?: string
   acceptsGuilder?: boolean
   providesGuilder?: boolean
   street: string

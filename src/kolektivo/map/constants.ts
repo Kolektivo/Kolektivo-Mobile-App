@@ -7,6 +7,8 @@ export const BASE_TAG = 'MapScreen'
 
 export enum MapCategory {
   All = 'All',
+  Restaurant = 'Restaurant',
+  Groceries = 'Groceries',
   Vendor = 'Vendor',
   FoodForest = 'Food Forest',
 }

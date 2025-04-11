@@ -1,7 +1,7 @@
 import { NativeStackScreenProps } from '@react-navigation/native-stack'
 import { includes, map, remove, valuesIn } from 'lodash'
 import React, { useRef } from 'react'
-import { Platform, StyleSheet, View } from 'react-native'
+import { Platform, ScrollView, StyleSheet, View } from 'react-native'
 import MapView, { Geojson } from 'react-native-maps'
 import Animated from 'react-native-reanimated'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -34,10 +34,16 @@ export default function MapScreen({ route }: Props) {
   const { currentVendor: _currentVendor } = vendorData
 
   const vendorLocationMarkers = () => {
-    if (!mapCategory.includes(MapCategory.Vendor)) return
+    if (!mapCategory.includes(MapCategory.Vendor)) return null // Ensure Vendor category is selected
+
     return (
       <>
         {vendors.map((vendor: VendorWithLocation) => {
+          // Check if the vendor's category is set and included in the mapCategory
+          if (vendor.category && !mapCategory.includes(vendor.category as MapCategory)) {
+            return null
+          }
+
           return (
             <VendorMarker
               title={vendor.name}
@@ -100,20 +106,26 @@ export default function MapScreen({ route }: Props) {
   const RenderFilters = () => {
     return (
       <View style={{ zIndex: 1000, position: 'absolute', top: 10, left: 0, right: 0 }}>
-        {remove(valuesIn(MapCategory), (x) => x !== 'All').map((cat: string) => {
-          return (
-            <View>
-              <MapFilterButton
-                text={cat}
-                active={mapCategory.includes(cat as MapCategory)}
-                type={cat as any}
-                onPress={() => {
-                  handleFilterToggle(cat as MapCategory)
-                }}
-              />
-            </View>
-          )
-        })}
+        <ScrollView
+          horizontal={true}
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ paddingHorizontal: 10 }}
+        >
+          {remove(valuesIn(MapCategory), (x) => x !== 'All').map((cat: string) => {
+            return (
+              <View key={cat} style={{ marginRight: 10 }}>
+                <MapFilterButton
+                  text={cat}
+                  active={mapCategory.includes(cat as MapCategory)}
+                  type={cat as any}
+                  onPress={() => {
+                    handleFilterToggle(cat as MapCategory)
+                  }}
+                />
+              </View>
+            )
+          })}
+        </ScrollView>
       </View>
     )
   }
