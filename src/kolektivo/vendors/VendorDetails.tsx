@@ -1,10 +1,9 @@
-import { map } from 'lodash'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
 import { Image, ScrollView, StyleSheet, Text, View } from 'react-native'
 import { TouchableOpacity } from 'react-native-gesture-handler'
-import Button, { BtnSizes, BtnTypes } from 'src/components/Button'
 import Touchable from 'src/components/Touchable'
+import Clock from 'src/icons/Clock'
 import Directions from 'src/icons/Directions'
 import KolCurrency from 'src/icons/KolCurrency'
 import Phone from 'src/icons/Phone'
@@ -13,14 +12,16 @@ import Share from 'src/icons/Share'
 import Times from 'src/icons/Times'
 import Website from 'src/icons/Website'
 import AchievementListItem from 'src/kolektivo/components/AchievementListItem'
-import { Vendor, VendorWithLocation } from 'src/kolektivo/vendors/types'
+import OpeningHours from 'src/kolektivo/components/OpeningHours'
+import { Wifi } from 'src/kolektivo/icons/wifi'
+import { VendorWithLocation } from 'src/kolektivo/vendors/types'
 import colors from 'src/styles/colors'
 import fontStyles from 'src/styles/fonts'
 import variables from 'src/styles/variables'
 import { navigateToURI } from 'src/utils/linking'
 
 type Props = {
-  vendor: Vendor
+  vendor: VendorWithLocation
   close: () => void
   action: () => void
 }
@@ -37,13 +38,15 @@ const VendorDetails = ({ vendor, close, action }: Props) => {
     tags,
     logo_path,
     phone,
+    locationAddress,
     acceptsGuilder,
     providesGuilder,
     account,
+    wifi,
+    opening_hours,
   } = vendor
   const { location } = vendor as VendorWithLocation
   const { t } = useTranslation()
-
   return (
     <View style={styles.container}>
       <View style={[styles.sheetHeader]}>
@@ -136,28 +139,39 @@ const VendorDetails = ({ vendor, close, action }: Props) => {
           />
         </View>
 
-        <View style={styles.actionButtons}></View>
-        <View style={styles.furtherDetailsRow}>
-          {!!street && (
-            <View style={styles.streetContainer}>
+        <ScrollView
+          showsVerticalScrollIndicator={true} // Enable vertical scrolling with an indicator
+          keyboardShouldPersistTaps="handled" // Ensure taps do not reset scroll
+          scrollEnabled={true} // Explicitly enable scrolling
+        >
+          {!!locationAddress && (
+            <View style={styles.detailsContainer}>
               <Pin />
-              <Text style={styles.street}>{`${street} ${building_number}${
-                city ? `,${city}` : ''
-              }`}</Text>
+              <Text style={styles.detailsContent}>{locationAddress}</Text>
             </View>
           )}
-        </View>
-        <View style={styles.tags}>
-          {map(tags, (tag) => (
-            <Button
-              type={BtnTypes.ONBOARDING_SECONDARY}
-              size={BtnSizes.SMALL}
-              text={`${tag}`}
-              // eslint-disable-next-line @typescript-eslint/no-empty-function
-              onPress={() => {}}
-            />
-          ))}
-        </View>
+          {!!opening_hours && (
+            <View style={[styles.detailsContainer, { alignItems: 'flex-start' }]}>
+              <View style={{ marginTop: 5 }}>
+                <Clock color={colors.gray5} height={24} />
+              </View>
+              <OpeningHours hours={opening_hours} />
+            </View>
+          )}
+          {!!siteURI && (
+            <View style={styles.detailsContainer}>
+              <Website color={colors.gray5} size={24} />
+              <Text style={styles.detailsContent}>{siteURI}</Text>
+            </View>
+          )}
+          <View style={styles.detailsContainer}>
+            <Wifi color={colors.gray5} size={24} />
+            <Text style={styles.detailsContent}>
+              {wifi === 'Yes' ? 'Wi-Fi Available' : 'Wi-Fi Not Available'}
+            </Text>
+          </View>
+          <View style={{ paddingBottom: 400 }} />
+        </ScrollView>
         {/* @todo Add QR scanning button, this should utilize deep linking */}
       </View>
     </View>
@@ -171,21 +185,6 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 20,
     borderTopLeftRadius: 20,
     backgroundColor: 'white',
-  },
-  innerContainer: {
-    marginHorizontal: 20,
-  },
-  cico: {},
-  cicoPartner: {
-    flexDirection: 'row',
-    justifyContent: 'space-evenly',
-  },
-  verified: {
-    ...fontStyles.regular,
-    textAlign: 'center',
-    color: colors.gray5,
-    paddingHorizontal: 10,
-    marginBottom: 16,
   },
   contactRowContainer: {
     flexDirection: 'row',
@@ -212,32 +211,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     fontSize: 14,
   },
-  furtherDetailsRow: {},
-  streetContainer: {
-    ...fontStyles.regular,
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginVertical: 20,
-  },
-  street: {
-    ...fontStyles.regular,
-    color: colors.gray5,
-    textAlign: 'justify',
-    fontSize: 14,
-  },
-  tags: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-evenly',
-    marginVertical: 20,
-  },
-  actionButtons: {
-    width: '100%',
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-  },
+
   sheetHeader: {
     flexDirection: 'row', // Arrange items in a row
     alignItems: 'center', // Align items vertically in the center
@@ -255,9 +229,10 @@ const styles = StyleSheet.create({
     paddingLeft: 10, // Add spacing between the icon and text
   },
   sheetClose: {
-    position: 'absolute',
-    right: 0,
-    padding: 13,
+    position: 'absolute', // Position the button absolutely
+    top: -8, // Align it to the top
+    right: 0, // Align it to the left
+    padding: 13, // Add padding for better touch area
   },
   vendorIcon: {
     resizeMode: 'contain',
@@ -281,14 +256,60 @@ const styles = StyleSheet.create({
   },
   description: {
     ...fontStyles.regular,
-    textAlign: 'left', // Align text to the left
+    textAlign: 'left',
     fontSize: 14,
   },
   badgeContainer: {
-    // works like a 2x2 grid
     flexDirection: 'row',
     justifyContent: 'center',
     flexWrap: 'wrap',
+  },
+  detailsContainer: {
+    flexDirection: 'row', // Arrange items in a row
+    alignItems: 'center', // Align items vertically inthe center
+    paddingVertical: 10, // Add vertical padding
+    borderBottomWidth: 1, // Add a bottom border
+    borderBottomColor: colors.gray2, // Set the border color to grey
+    marginHorizontal: 20, // Add horizontal margin for spacing
+    marginRight: 45,
+    gap: 16,
+  },
+  detailsContent: {
+    ...fontStyles.small, // Use regular font style
+    flex: 1, // Allow the content to take up remaining space
+  },
+
+  street: {
+    ...fontStyles.regular,
+    color: colors.gray5,
+    textAlign: 'justify',
+    fontSize: 14,
+  },
+  tags: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-evenly',
+    marginVertical: 20,
+  },
+  actionButtons: {
+    width: '100%',
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+  },
+  innerContainer: {
+    marginHorizontal: 20,
+  },
+  cico: {},
+  cicoPartner: {
+    flexDirection: 'row',
+    justifyContent: 'space-evenly',
+  },
+  verified: {
+    ...fontStyles.regular,
+    textAlign: 'center',
+    color: colors.gray5,
+    paddingHorizontal: 10,
+    marginBottom: 16,
   },
 })
 

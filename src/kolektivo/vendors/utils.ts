@@ -26,6 +26,7 @@ export const formatVendors = (vendorObject: Record<string, any>): Vendors => {
         location,
         id,
         created_by,
+        opening_hours,
         wifi,
       } = v
 
@@ -38,6 +39,7 @@ export const formatVendors = (vendorObject: Record<string, any>): Vendors => {
           siteURI: website,
           phone: phone,
           category: category,
+          locationAddress: location,
           location: {
             latitude: latitude ?? 0,
             longitude: longitude ?? 0,
@@ -48,11 +50,12 @@ export const formatVendors = (vendorObject: Record<string, any>): Vendors => {
           building_number: '',
           city: location,
           account: created_by || '',
+          wifi,
+          opening_hours,
         } as unknown as VendorWithLocation,
       }
     })
   )
-
   return result
 }
 

@@ -24,8 +24,8 @@ export type Vendor = {
   logo_path?: string
   siteURI: string
   description: string
-  opening_hours: Array<string>
-  wifi?: boolean
+  opening_hours: OpeningHour[]
+  wifi?: string
   tags: Array<string>
   currencies: Array<string>
   address?: string
@@ -37,6 +37,14 @@ export type Vendor = {
   building_number: string
   city: string
   account?: string
+  locationAddress?: string
+}
+
+export type OpeningHour = {
+  day: number
+  openingTime: string
+  closingTime: string
+  isClosed: boolean
 }
 
 export type VendorWithLocation = Vendor & {
