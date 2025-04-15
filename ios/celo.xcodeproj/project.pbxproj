@@ -1035,7 +1035,7 @@
 				CODE_SIGN_ENTITLEMENTS = celo/celo.entitlements;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 7245;
+				CURRENT_PROJECT_VERSION = 7246;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = "";
 				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = 2QB23S3GZ3;
@@ -1046,6 +1046,7 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)",
 				);
+				MARKETING_VERSION = 1.881;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
@@ -1072,7 +1073,7 @@
 				CODE_SIGN_ENTITLEMENTS = celo/celo.entitlements;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 7245;
+				CURRENT_PROJECT_VERSION = 7246;
 				DEVELOPMENT_TEAM = "";
 				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = 2QB23S3GZ3;
 				INFOPLIST_FILE = celo/Info.plist;
@@ -1082,6 +1083,7 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)",
 				);
+				MARKETING_VERSION = 1.881;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",

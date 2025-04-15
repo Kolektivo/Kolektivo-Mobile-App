@@ -1,18 +1,18 @@
 import { map } from 'lodash'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
-import { Image, StyleSheet, Text, View } from 'react-native'
+import { Image, ScrollView, StyleSheet, Text, View } from 'react-native'
 import { TouchableOpacity } from 'react-native-gesture-handler'
-import QRCode from 'react-native-qrcode-svg'
 import Button, { BtnSizes, BtnTypes } from 'src/components/Button'
 import Touchable from 'src/components/Touchable'
 import Directions from 'src/icons/Directions'
+import KolCurrency from 'src/icons/KolCurrency'
 import Phone from 'src/icons/Phone'
 import Pin from 'src/icons/Pin'
 import Share from 'src/icons/Share'
 import Times from 'src/icons/Times'
-import VerifiedIcon from 'src/icons/VerifiedIcon'
 import Website from 'src/icons/Website'
+import AchievementListItem from 'src/kolektivo/components/AchievementListItem'
 import { Vendor, VendorWithLocation } from 'src/kolektivo/vendors/types'
 import colors from 'src/styles/colors'
 import fontStyles from 'src/styles/fonts'
@@ -59,8 +59,8 @@ const VendorDetails = ({ vendor, close, action }: Props) => {
           <Times />
         </Touchable>
       </View>
-      <View style={styles.innerContainer}>
-        <View style={[styles.cico, acceptsGuilder && providesGuilder ? styles.cicoPartner : null]}>
+      <View testID="Profile/AchievementSummary" style={styles.container}>
+        {/* <View style={[styles.cico, acceptsGuilder && providesGuilder ? styles.cicoPartner : null]}>
           {!!acceptsGuilder && (
             <View style={styles.verifiedRow}>
               <VerifiedIcon />
@@ -73,42 +73,69 @@ const VendorDetails = ({ vendor, close, action }: Props) => {
               <Text style={styles.verified}>{t('providesGuilder')}</Text>
             </View>
           )}
+        </View> */}
+        <View style={styles.contactRowContainer}>
+          <ScrollView
+            horizontal={true} // Enable horizontal scrolling
+            showsHorizontalScrollIndicator={false} // Hide the scroll indicator (optional)
+            contentContainerStyle={styles.contactRow} // Apply styles for spacing
+          >
+            {!!(
+              ((location as any).latitude !== 0 && (location as any).longitude !== 0) ||
+              street
+            ) && (
+              <TouchableOpacity
+                // @ts-ignore @todo
+                onPress={void 0}
+                style={styles.contactItem}
+              >
+                <Directions color="white" size={24} />
+                <Text style={styles.contactTitle}>Get Directions</Text>
+              </TouchableOpacity>
+            )}
+            {!!phone && (
+              <TouchableOpacity
+                // @ts-ignore @todo
+                onPress={void 0}
+                style={styles.contactItem}
+              >
+                <Phone color="white" size={24} />
+                <Text style={styles.contactTitle}>Call</Text>
+              </TouchableOpacity>
+            )}
+            {!!siteURI && (
+              <TouchableOpacity onPress={() => navigateToURI(siteURI)} style={styles.contactItem}>
+                <Website color="white" size={24} />
+                <Text style={styles.contactTitle}>Website</Text>
+              </TouchableOpacity>
+            )}
+            {true && (
+              <TouchableOpacity
+                // @ts-ignore @todo
+                onPress={void 0}
+                style={styles.contactItem}
+              >
+                <Share color="white" size={24} />
+                <Text style={styles.contactTitle}>Share</Text>
+              </TouchableOpacity>
+            )}
+          </ScrollView>
+        </View>
+        <View style={styles.badgeContainer}>
+          <AchievementListItem
+            icon={<KolCurrency size={22} />}
+            title={'Points Available'}
+            subtitle={'1000'}
+            onPress={() => 0}
+          />
+          <AchievementListItem
+            icon={<KolCurrency size={22} />}
+            title={'Donated'}
+            subtitle={'260'}
+            onPress={() => 0}
+          />
         </View>
 
-        <View style={styles.contactRow}>
-          {!!phone && (
-            <TouchableOpacity
-              // @ts-ignore @todo
-              onPress={void 0}
-            >
-              <Phone />
-            </TouchableOpacity>
-          )}
-          {!!(
-            ((location as any).latitude !== 0 && (location as any).longitude !== 0) ||
-            street
-          ) && (
-            <TouchableOpacity
-              // @ts-ignore @todo
-              onPress={void 0}
-            >
-              <Directions />
-            </TouchableOpacity>
-          )}
-          {!!siteURI && (
-            <TouchableOpacity onPress={() => navigateToURI(siteURI)}>
-              <Website />
-            </TouchableOpacity>
-          )}
-          {true && (
-            <TouchableOpacity
-              // @ts-ignore @todo
-              onPress={void 0}
-            >
-              <Share />
-            </TouchableOpacity>
-          )}
-        </View>
         <View style={styles.actionButtons}></View>
         <View style={styles.furtherDetailsRow}>
           {!!street && (
@@ -130,20 +157,6 @@ const VendorDetails = ({ vendor, close, action }: Props) => {
               onPress={() => {}}
             />
           ))}
-        </View>
-        <View style={styles.actionButtons}>
-          {!!account && (
-            <Button
-              type={BtnTypes.PRIMARY}
-              size={BtnSizes.MEDIUM}
-              text={t('payVendor')}
-              // @ts-ignore @todo
-              onPress={void 0}
-            />
-          )}
-          <TouchableOpacity onPress={action}>
-            <QRCode />
-          </TouchableOpacity>
         </View>
         {/* @todo Add QR scanning button, this should utilize deep linking */}
       </View>
@@ -174,18 +187,30 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     marginBottom: 16,
   },
-  contactRow: {
+  contactRowContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
     paddingVertical: variables.contentPadding,
-    borderTopColor: colors.gray3,
-    borderBottomColor: colors.gray3,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderBottomWidth: StyleSheet.hairlineWidth,
   },
-  verifiedRow: {
+  contactRow: {
+    flexDirection: 'row', // Arrange items in a row
+    alignItems: 'center', // Align items vertically in the center
+    paddingHorizontal: 10, // Add horizontal padding for spacing
+  },
+  contactItem: {
+    paddingVertical: 5,
+    paddingHorizontal: 10,
     display: 'flex',
     flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 10,
+    backgroundColor: colors.primary,
+    marginRight: 10, // Add spacing between items
+  },
+  contactTitle: {
+    ...fontStyles.regular,
+    color: 'white',
+    paddingHorizontal: 10,
+    fontSize: 14,
   },
   furtherDetailsRow: {},
   streetContainer: {
@@ -258,6 +283,12 @@ const styles = StyleSheet.create({
     ...fontStyles.regular,
     textAlign: 'left', // Align text to the left
     fontSize: 14,
+  },
+  badgeContainer: {
+    // works like a 2x2 grid
+    flexDirection: 'row',
+    justifyContent: 'center',
+    flexWrap: 'wrap',
   },
 })
 
