@@ -13,7 +13,7 @@ import Times from 'src/icons/Times'
 import Website from 'src/icons/Website'
 import AchievementListItem from 'src/kolektivo/components/AchievementListItem'
 import OpeningHours from 'src/kolektivo/components/OpeningHours'
-import { Wifi } from 'src/kolektivo/icons/wifi'
+import WifiIco from 'src/kolektivo/icons/WifiIco'
 import { VendorWithLocation } from 'src/kolektivo/vendors/types'
 import colors from 'src/styles/colors'
 import fontStyles from 'src/styles/fonts'
@@ -165,7 +165,7 @@ const VendorDetails = ({ vendor, close, action }: Props) => {
             </View>
           )}
           <View style={styles.detailsContainer}>
-            <Wifi color={colors.gray5} size={24} />
+            <WifiIco color={colors.gray5} size={24} />
             <Text style={styles.detailsContent}>
               {wifi === 'Yes' ? 'Wi-Fi Available' : 'Wi-Fi Not Available'}
             </Text>

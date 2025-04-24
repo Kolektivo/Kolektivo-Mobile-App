@@ -3,7 +3,7 @@ import { Path } from 'react-native-svg'
 import { Colors } from 'src/styles/colors'
 import Svg from 'svgs'
 
-export function Wifi({ color = Colors.black as string, size = 24, focused = false }) {
+export function WifiIco({ color = Colors.black as string, size = 24, focused = false }) {
   const height = (size / 32) * 33
   return (
     <Svg width={size} height={height} viewBox="0 0 22 16" fill="none">
@@ -16,4 +16,4 @@ export function Wifi({ color = Colors.black as string, size = 24, focused = fals
   )
 }
 
-export default React.memo(Wifi)
+export default React.memo(WifiIco)
