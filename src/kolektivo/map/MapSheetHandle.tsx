@@ -1,20 +1,12 @@
 import { BottomSheetHandleProps } from '@gorhom/bottom-sheet'
-import { includes, remove, valuesIn } from 'lodash'
 import React, { memo, useMemo } from 'react'
 import { StyleProp, StyleSheet, Text, TouchableOpacity, View, ViewStyle } from 'react-native'
 import MapView from 'react-native-maps'
 import Animated, { Extrapolate, interpolate, useAnimatedStyle } from 'react-native-reanimated'
 import { rgbaColor } from 'react-native-reanimated/src/reanimated2/Colors'
-import { useDispatch, useSelector } from 'react-redux'
+import { useSelector } from 'react-redux'
 import FindMy from 'src/icons/FindMy'
-import { removeMapCategory, setMapCategory } from 'src/kolektivo/map/actions'
-import { MapCategory } from 'src/kolektivo/map/constants'
-import {
-  currentForestSelector,
-  currentMapCategorySelector,
-  userLocationSelector,
-} from 'src/kolektivo/map/selector'
-import { currentVendorSelector } from 'src/kolektivo/vendors/selector'
+import { userLocationSelector } from 'src/kolektivo/map/selector'
 import variables from 'src/styles/variables'
 
 interface CustomHandleProps extends BottomSheetHandleProps {
@@ -24,11 +16,7 @@ interface CustomHandleProps extends BottomSheetHandleProps {
 }
 
 const MapSheetHandle: React.FC<CustomHandleProps> = ({ title, style, animatedIndex, mapRef }) => {
-  const dispatch = useDispatch()
   const userLocation = useSelector(userLocationSelector)
-  const mapCategory = useSelector(currentMapCategorySelector)
-  const currentVendor = useSelector(currentVendorSelector)
-  const currentForest = useSelector(currentForestSelector)
   const containerStyle = useMemo(() => [styles.container, style], [style])
   const containerAnimatedStyle = useAnimatedStyle(() => {
     const borderTopRadius = interpolate(animatedIndex.value, [1, 2], [20, 0], Extrapolate.CLAMP)
@@ -37,35 +25,6 @@ const MapSheetHandle: React.FC<CustomHandleProps> = ({ title, style, animatedInd
       borderTopRightRadius: borderTopRadius,
     }
   })
-
-  const handleFilterToggle = (category: MapCategory) => {
-    if (includes(mapCategory, category)) {
-      dispatch(removeMapCategory(category))
-    } else {
-      dispatch(setMapCategory(category))
-    }
-  }
-
-  const renderFilters = () => {
-    return (
-      <>
-        {remove(valuesIn(MapCategory), (x) => x !== 'All').map((cat: string) => {
-          // return (
-          //   <View style={styles.filterRow}>
-          //     <MapFilterButton
-          //       text={cat}
-          //       active={mapCategory.includes(cat as MapCategory)}
-          //       type={cat as any}
-          //       onPress={() => {
-          //         handleFilterToggle(cat as MapCategory)
-          //       }}
-          //     />
-          //   </View>
-          // )
-        })}
-      </>
-    )
-  }
 
   const handleFindMy = () => {
     mapRef.current?.animateToRegion({
@@ -83,7 +42,6 @@ const MapSheetHandle: React.FC<CustomHandleProps> = ({ title, style, animatedInd
     >
       <View>
         <View style={[styles.headerFilter, styles.flex]}>
-          {/* {!currentVendor && !currentForest && renderFilters()} */}
           <TouchableOpacity style={styles.findMy} onPress={handleFindMy}>
             <FindMy size={14} />
           </TouchableOpacity>

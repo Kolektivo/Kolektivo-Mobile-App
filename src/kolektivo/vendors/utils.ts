@@ -72,7 +72,7 @@ export const hasValidLocation = (vendor: VendorWithLocation): boolean => {
 
 export const useInteractiveBottomSheet = (
   bottomSheetRef: React.RefObject<BottomSheet>
-): [string[]] => {
+): [string[], (index: number, listMode?: boolean) => void] => {
   const snapPoints = React.useMemo(() => ['10%', '24%', '50%', '80%'], [])
   const currentVendor = useSelector(currentVendorSelector)
 
@@ -90,5 +90,13 @@ export const useInteractiveBottomSheet = (
     }
   }
 
-  return [snapPoints]
+  const setSnapPoints = (index: number, listMode: boolean = false) => {
+    if (listMode) {
+      bottomSheetRef.current?.snapToIndex(index)
+    } else {
+      bottomSheetRef.current?.snapToIndex(0)
+    }
+  }
+
+  return [snapPoints, setSnapPoints]
 }

@@ -1,7 +1,7 @@
 import { NativeStackScreenProps } from '@react-navigation/native-stack'
 import { includes, map, remove, valuesIn } from 'lodash'
-import React, { useEffect, useRef } from 'react'
-import { Platform, ScrollView, StyleSheet, View } from 'react-native'
+import React, { useEffect, useRef, useState } from 'react'
+import { Platform, ScrollView, StyleSheet, TextInput, View } from 'react-native'
 import MapView, { Geojson } from 'react-native-maps'
 import Animated from 'react-native-reanimated'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -9,7 +9,12 @@ import { MapFilterButton } from 'src/kolektivo/components/MapButtons'
 import ForestMarker from 'src/kolektivo/icons/ForestMarker'
 import VendorMarker from 'src/kolektivo/icons/VendorMarker'
 import MapBottomSheet from 'src/kolektivo/map/MapBottomSheet'
-import { removeMapCategory, setFoodForest, setMapCategory } from 'src/kolektivo/map/actions'
+import {
+  removeMapCategory,
+  setFoodForest,
+  setMapCategory,
+  setSearchQuery,
+} from 'src/kolektivo/map/actions'
 import { GMAP_STYLE, LOCALE_REGION, MapCategory } from 'src/kolektivo/map/constants'
 import { useMap } from 'src/kolektivo/map/hooks'
 import { currentMapCategorySelector, foodForestsSelector } from 'src/kolektivo/map/selector'
@@ -38,6 +43,7 @@ export default function MapScreen({ route }: Props) {
   const vendors = useSelector(vendorsWithLocationSelector)
   const { mapRef, ...vendorData } = useMap()
   const { currentVendor: _currentVendor } = vendorData
+  const [localSearchText, setLocalSearchText] = useState('') // Local state for immediate updates
 
   useEffect(() => {
     if (route.params?.mapCategory) {
@@ -130,36 +136,19 @@ export default function MapScreen({ route }: Props) {
     }
   }
 
-  const RenderFilters = () => {
-    return (
-      <View style={{ zIndex: 1000, position: 'absolute', top: 10, left: 0, right: 0 }}>
-        <ScrollView
-          horizontal={true}
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ paddingHorizontal: 10 }}
-        >
-          {remove(valuesIn(MapCategory), (x) => x !== 'All').map((cat: string) => {
-            return (
-              <View key={cat} style={{ marginRight: 10 }}>
-                <MapFilterButton
-                  text={cat}
-                  active={mapCategory.includes(cat as MapCategory)}
-                  type={cat as any}
-                  onPress={() => {
-                    handleFilterToggle(cat as MapCategory)
-                  }}
-                />
-              </View>
-            )
-          })}
-        </ScrollView>
-      </View>
-    )
+  const handleSearch = (search: string) => {
+    setLocalSearchText(search)
+    dispatch(setSearchQuery(search)) // Clear the filtered vendors if search is empty
   }
 
   return (
     <SafeAreaView style={styles.container}>
-      <RenderFilters />
+      <RenderFilters
+        localSearchText={localSearchText}
+        handleSearch={handleSearch}
+        mapCategory={mapCategory}
+        handleFilterToggle={handleFilterToggle}
+      />
       <MapView
         ref={mapRef}
         style={styles.map}
@@ -176,9 +165,86 @@ export default function MapScreen({ route }: Props) {
   )
 }
 
+const SearchBar = React.memo(
+  ({
+    localSearchText,
+    handleSearch,
+  }: {
+    localSearchText: string
+    handleSearch: (text: string) => void
+  }) => {
+    return (
+      <View style={styles.searchBarContainer}>
+        <TextInput
+          style={styles.searchBar}
+          placeholder="Search here"
+          placeholderTextColor={Colors.gray5}
+          value={localSearchText}
+          onChangeText={handleSearch}
+        />
+      </View>
+    )
+  }
+)
+
+const RenderFilters = React.memo(
+  ({
+    localSearchText,
+    handleSearch,
+    mapCategory,
+    handleFilterToggle,
+  }: {
+    localSearchText: string
+    handleSearch: (text: string) => void
+    mapCategory: MapCategory[]
+    handleFilterToggle: (category: MapCategory) => void
+  }) => {
+    return (
+      <View style={{ zIndex: 1000, position: 'absolute', top: 70, left: 0, right: 0 }}>
+        {/* Search Bar */}
+        <SearchBar localSearchText={localSearchText} handleSearch={handleSearch} />
+
+        {/* Filter Buttons */}
+        <ScrollView
+          horizontal={true}
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ paddingHorizontal: 10 }}
+        >
+          {remove(valuesIn(MapCategory), (x) => x !== 'All').map((cat: string) => (
+            <View key={cat} style={{ marginRight: 10 }}>
+              <MapFilterButton
+                text={cat}
+                active={mapCategory.includes(cat as MapCategory)}
+                type={cat as any}
+                onPress={() => {
+                  handleFilterToggle(cat as MapCategory)
+                }}
+              />
+            </View>
+          ))}
+        </ScrollView>
+      </View>
+    )
+  }
+)
+
 const styles = StyleSheet.create({
+  searchBarContainer: {
+    paddingHorizontal: 10,
+    marginBottom: 10, // Add spacing between the search bar and the filter buttons
+  },
+  searchBar: {
+    height: 40,
+    borderRadius: 10,
+    backgroundColor: Colors.white,
+    paddingHorizontal: 10,
+    borderWidth: 1,
+    borderColor: Colors.gray1,
+    color: Colors.black,
+  },
   container: {
     ...StyleSheet.absoluteFillObject,
+    height: '100%',
   },
   map: {
     ...StyleSheet.absoluteFillObject,

@@ -59,7 +59,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: (variables.contentPadding * 2) / 3,
-    marginHorizontal: variables.contentPadding / 3,
+    marginHorizontal: variables.contentPadding / 4,
   },
   rounded: {
     borderRadius: 10,

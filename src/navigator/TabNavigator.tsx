@@ -82,12 +82,10 @@ export default function TabNavigator({ route }: Props) {
         name={Screens.MapScreen}
         component={MapScreen}
         options={{
-          freezeOnBlur: false,
-          lazy: false,
           tabBarLabel: t('bottomTabsNavigator.map.tabName') as string,
+
           tabBarIcon: Compass,
-          tabBarTestID: 'Tab/Map',
-          headerTitle: t('bottomTabsNavigator.map.tabName') as string,
+          headerShown: false,
         }}
       />
     </Tab.Navigator>

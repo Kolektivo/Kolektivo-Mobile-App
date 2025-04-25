@@ -37,12 +37,19 @@ const MapBottomSheet = ({ mapRef }: Props) => {
   const currentForest = useSelector(currentForestSelector)
 
   const bottomSheetRef = useRef<BottomSheet>(null)
-  const [snapPoints] = useInteractiveBottomSheet(bottomSheetRef)
-  const [listMode, setListMode] = useState<boolean>(false)
+  const [snapPoints, setSnapPoints] = useInteractiveBottomSheet(bottomSheetRef)
+  const [listMode, setListMode] = useState<boolean>(true)
 
   useEffect(() => {
     setListMode(listMode || !!searchQuery.length)
   }, [searchQuery])
+
+  useEffect(() => {
+    if (searchQuery.length > 0 && filteredVendors.length > 0 && !currentVendor && !currentForest) {
+      setListMode(true)
+      setSnapPoints(3, listMode)
+    }
+  }, [filteredVendors])
 
   const renderVendorItem = ({ item }: ListRenderItemInfo<Vendor | VendorWithLocation>) => {
     return (
