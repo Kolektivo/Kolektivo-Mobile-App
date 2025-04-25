@@ -1,6 +1,6 @@
 import BottomSheet, { BottomSheetBackgroundProps, BottomSheetFlatList } from '@gorhom/bottom-sheet'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
-import { ListRenderItemInfo, StyleSheet, View } from 'react-native'
+import { ListRenderItemInfo, StyleSheet, Text, View } from 'react-native'
 import MapView from 'react-native-maps'
 import FoodForestDetails from 'src/kolektivo/map/FoodForestDetails'
 import MapSheetHandle from 'src/kolektivo/map/MapSheetHandle'
@@ -92,15 +92,23 @@ const MapBottomSheet = ({ mapRef }: Props) => {
       backgroundComponent={SheetBackground}
     >
       {!currentVendor && !currentForest && (
-        <BottomSheetFlatList
-          key={!listMode ? 'VendorList/Icons' : 'VendorList/List'}
-          numColumns={!listMode ? undefined : 1}
-          data={searchQuery.length > 0 ? filteredVendors : vendors}
-          keyExtractor={(vendor: Vendor) => vendor.name}
-          renderItem={renderVendorItem}
-          horizontal={!listMode}
-          contentContainerStyle={!listMode ? styles.innerContainer : null}
-        />
+        <>
+          {searchQuery.length > 0 && filteredVendors.length === 0 ? (
+            <View style={styles.noResultsContainer}>
+              <Text style={styles.noResultsText}>No results for '{searchQuery}'</Text>
+            </View>
+          ) : (
+            <BottomSheetFlatList
+              key={!listMode ? 'VendorList/Icons' : 'VendorList/List'}
+              numColumns={!listMode ? undefined : 1}
+              data={searchQuery.length > 0 ? filteredVendors : vendors}
+              keyExtractor={(vendor: Vendor) => vendor.name}
+              renderItem={renderVendorItem}
+              horizontal={!listMode}
+              contentContainerStyle={!listMode ? styles.innerContainer : null}
+            />
+          )}
+        </>
       )}
       {currentVendor && (
         <VendorDetails
@@ -144,6 +152,17 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.white,
     borderTopEndRadius: variables.borderRadius,
     borderTopStartRadius: variables.borderRadius,
+  },
+  noResultsContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  noResultsText: {
+    fontSize: 16,
+    color: Colors.gray5,
+    textAlign: 'center',
   },
 })
 

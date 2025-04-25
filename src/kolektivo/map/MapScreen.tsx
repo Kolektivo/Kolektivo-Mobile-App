@@ -200,7 +200,7 @@ const RenderFilters = React.memo(
     handleFilterToggle: (category: MapCategory) => void
   }) => {
     return (
-      <View style={{ zIndex: 1000, position: 'absolute', top: 70, left: 0, right: 0 }}>
+      <View style={{ zIndex: 1000, position: 'absolute', top: 60, left: 0, right: 0 }}>
         {/* Search Bar */}
         <SearchBar localSearchText={localSearchText} handleSearch={handleSearch} />
 
