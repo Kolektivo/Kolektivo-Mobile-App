@@ -205,7 +205,7 @@ export const ActivityDetailScreen = ({ route }: Props) => {
           </View>
           <ActivityDetailListItem
             category="Location"
-            content={activity.full_address}
+            content={activity.location}
             icon={<Pin color="#737373" />}
           />
           <ActivityDetailListItem

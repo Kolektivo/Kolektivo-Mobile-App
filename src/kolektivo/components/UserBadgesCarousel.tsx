@@ -7,6 +7,8 @@ import BadgeProgressTile from 'src/kolektivo/activities/badges/BadgeProgressTile
 import { BadgeDataResponse } from 'src/kolektivo/activities/badges/saga'
 import Colors from 'src/kolektivo/styles/colors'
 import variables from 'src/kolektivo/styles/variables'
+import { navigate } from 'src/navigator/NavigationService'
+import { Screens } from 'src/navigator/Screens'
 import { typeScale } from 'src/styles/fonts'
 
 export default function UserBadgesCarousel() {
@@ -28,11 +30,11 @@ export default function UserBadgesCarousel() {
   ]
 
   const onBadgePress = (badge: BadgeDataResponse) => {
-    // @todo Navigate to badge detail
+    navigate(Screens.BadgesCenter)
   }
 
   const navigateToAllBadges = () => {
-    // @todo Navigate to badge list
+    navigate(Screens.BadgesCenter)
   }
 
   // horizontal scroll view of 5 most recent badges

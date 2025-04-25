@@ -1,6 +1,6 @@
 import { NativeStackScreenProps } from '@react-navigation/native-stack'
 import { includes, map, remove, valuesIn } from 'lodash'
-import React, { useRef } from 'react'
+import React, { useEffect, useRef } from 'react'
 import { Platform, ScrollView, StyleSheet, View } from 'react-native'
 import MapView, { Geojson } from 'react-native-maps'
 import Animated from 'react-native-reanimated'
@@ -22,7 +22,13 @@ import { StackParamList } from 'src/navigator/types'
 import { useDispatch, useSelector } from 'src/redux/hooks'
 import Colors from 'src/styles/colors'
 
-type Props = NativeStackScreenProps<StackParamList, Screens.MapScreen>
+type Props = NativeStackScreenProps<StackParamList, Screens.MapScreen> & {
+  route: {
+    params?: {
+      mapCategory?: MapCategory
+    }
+  }
+}
 export default function MapScreen({ route }: Props) {
   const scrollPosition = useRef(new Animated.Value(0)).current
 
@@ -32,6 +38,27 @@ export default function MapScreen({ route }: Props) {
   const vendors = useSelector(vendorsWithLocationSelector)
   const { mapRef, ...vendorData } = useMap()
   const { currentVendor: _currentVendor } = vendorData
+
+  useEffect(() => {
+    if (route.params?.mapCategory) {
+      if (route.params.mapCategory === MapCategory.All) {
+        // If the category is 'All', set all categories
+        Object.values(MapCategory).forEach((category) => {
+          dispatch(setMapCategory(category))
+        })
+      } else {
+        // Remove all categories except the one found in route.params.mapCategory
+        Object.values(MapCategory).forEach((category) => {
+          if (category !== route.params?.mapCategory) {
+            dispatch(removeMapCategory(category))
+          }
+        })
+
+        // Set the found mapCategory
+        dispatch(setMapCategory(route.params.mapCategory))
+      }
+    }
+  }, [route.params?.mapCategory, dispatch])
 
   const vendorLocationMarkers = () => {
     if (!mapCategory.includes(MapCategory.Vendor)) return null // Ensure Vendor category is selected
