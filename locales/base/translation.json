@@ -2534,10 +2534,14 @@
   "badge": {
     "rank": ["Beginner", "Intermediate", "Advanced", "Expert"],
     "myBadges": "My Badges",
+    "myBadge": "My Badge",
     "more": "View All"
   },
   "upcomingActivities": {
     "title": "Upcoming Activities"
+  },
+  "relatedActivities": {
+    "title": "Related Activities"
   },
   "spendPoints": {
     "title": "Spend Points"

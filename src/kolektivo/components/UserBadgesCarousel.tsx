@@ -30,7 +30,7 @@ export default function UserBadgesCarousel() {
   ]
 
   const onBadgePress = (badge: BadgeDataResponse) => {
-    navigate(Screens.BadgesCenter)
+    navigate(Screens.MyBadgeScreen)
   }
 
   const navigateToAllBadges = () => {

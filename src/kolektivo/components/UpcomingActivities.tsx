@@ -8,13 +8,13 @@ import colors from 'src/styles/colors'
 import { typeScale } from 'src/styles/fonts'
 import { Spacing } from 'src/styles/styles'
 
-const UpcomingActivities = () => {
+const UpcomingActivities = ({ title = 'upcomingActivities.title' }) => {
   const { upcomingActivities } = useAvailableActivities()
   const { t } = useTranslation()
 
   return (
     <View>
-      <Text style={styles.sectionTitle}>{t('upcomingActivities.title')}</Text>
+      <Text style={styles.sectionTitle}>{t(title)}</Text>
       <ScrollView
         style={styles.horizontalList}
         horizontal

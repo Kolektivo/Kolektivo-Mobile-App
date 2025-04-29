@@ -60,6 +60,7 @@ export enum Screens {
   NotificationCenter = 'NotificationCenter',
   BadgesCenter = 'BadgesCenter',
   MyCommunityDetailsScreen = 'MyCommunityDetailsScreen',
+  MyBadgeScreen = 'MyBadgeScreen',
   NftsInfoCarousel = 'NftsInfoCarousel',
   OnboardingRecoveryPhrase = 'OnboardingRecoveryPhrase',
   OnboardingSuccessScreen = 'OnboardingSuccessScreen',

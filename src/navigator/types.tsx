@@ -204,6 +204,7 @@ export type StackParamList = {
   [Screens.NotificationCenter]: undefined
   [Screens.BadgesCenter]: undefined
   [Screens.MyCommunityDetailsScreen]: undefined
+  [Screens.MyBadgeScreen]: undefined
   [Screens.NftsInfoCarousel]: { nfts: Nft[]; networkId: NetworkId }
   [Screens.KycLanding]: KycLandingProps
   [Screens.PincodeEnter]: {

@@ -76,6 +76,7 @@ import WalletSecurityPrimer from 'src/keylessBackup/WalletSecurityPrimer'
 import ActivityDetailScreen from 'src/kolektivo/activities/ActivityDetailScreen'
 import QRKolektivoNavigator from 'src/kolektivo/qrcode/QRKolektivoNavigator'
 import BadgesCenter from 'src/kolektivo/screens/BadgesCenter'
+import MyBadgeScreen from 'src/kolektivo/screens/MyBadgeScreen'
 import MyCommunityDetailsScreen from 'src/kolektivo/screens/MyCommunityDetailsScreen'
 import Language from 'src/language/Language'
 import SelectLocalCurrency from 'src/localCurrency/SelectLocalCurrency'
@@ -545,6 +546,11 @@ const generalScreens = (Navigator: typeof Stack) => (
       name={Screens.MyCommunityDetailsScreen}
       component={MyCommunityDetailsScreen}
       options={MyCommunityDetailsScreen.navigationOptions as NativeStackNavigationOptions}
+    />
+    <Navigator.Screen
+      name={Screens.MyBadgeScreen}
+      component={MyBadgeScreen}
+      options={MyBadgeScreen.navigationOptions as NativeStackNavigationOptions}
     />
     <Navigator.Screen name={Screens.Settings} component={SettingsScreen} options={noHeader} />
     <Navigator.Screen name={Screens.Invite} component={Invite} options={noHeader} />
