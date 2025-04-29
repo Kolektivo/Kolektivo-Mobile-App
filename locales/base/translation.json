@@ -2543,7 +2543,8 @@
     "title": "Spend Points"
   },
   "myCommunity": {
-    "title": "My Community"
+    "title": "My Community",
+    "impactPartners": "Impact Partners"
   },
   "checkIn": {
     "title": "Check In",

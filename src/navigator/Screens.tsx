@@ -59,6 +59,7 @@ export enum Screens {
   MultichainBeta = 'MultichainBeta',
   NotificationCenter = 'NotificationCenter',
   BadgesCenter = 'BadgesCenter',
+  MyCommunityDetailsScreen = 'MyCommunityDetailsScreen',
   NftsInfoCarousel = 'NftsInfoCarousel',
   OnboardingRecoveryPhrase = 'OnboardingRecoveryPhrase',
   OnboardingSuccessScreen = 'OnboardingSuccessScreen',

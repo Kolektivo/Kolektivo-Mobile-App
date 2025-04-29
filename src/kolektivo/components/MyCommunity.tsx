@@ -4,6 +4,8 @@ import { ImageBackground, StyleSheet, Text, TouchableOpacity, View } from 'react
 import KolCurrency from 'src/icons/KolCurrency'
 import Members from 'src/kolektivo/icons/Members'
 import variables from 'src/kolektivo/styles/variables'
+import { navigate } from 'src/navigator/NavigationService'
+import { Screens } from 'src/navigator/Screens'
 import { typeScale } from 'src/styles/fonts'
 
 export default function MyCommunity() {
@@ -12,7 +14,12 @@ export default function MyCommunity() {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>{t('myCommunity.title')}</Text>
-      <TouchableOpacity style={styles.block}>
+      <TouchableOpacity
+        style={styles.block}
+        onPress={() => {
+          navigate(Screens.MyCommunityDetailsScreen)
+        }}
+      >
         <ImageBackground
           source={require('src/kolektivo/images/Flag.png')} // Adjust the path to your image
           style={styles.backgroundImage}
