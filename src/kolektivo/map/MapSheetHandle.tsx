@@ -3,7 +3,6 @@ import React, { memo, useMemo } from 'react'
 import { StyleProp, StyleSheet, Text, TouchableOpacity, View, ViewStyle } from 'react-native'
 import MapView from 'react-native-maps'
 import Animated, { Extrapolate, interpolate, useAnimatedStyle } from 'react-native-reanimated'
-import { rgbaColor } from 'react-native-reanimated/src/reanimated2/Colors'
 import { useSelector } from 'react-redux'
 import FindMy from 'src/icons/FindMy'
 import { userLocationSelector } from 'src/kolektivo/map/selector'
@@ -81,7 +80,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   findMy: {
-    backgroundColor: String(rgbaColor(255, 255, 255, 0.5)),
+    backgroundColor: `rgba(255, 255, 255, 0.5)})`,
     borderRadius: 100,
     marginLeft: variables.contentPadding / 3,
     padding: variables.contentPadding / 2,
