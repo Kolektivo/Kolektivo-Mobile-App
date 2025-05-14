@@ -36,8 +36,6 @@ const UpcomingActivities = ({ title = 'upcomingActivities.title' }) => {
 
 const styles = StyleSheet.create({
   horizontalList: {
-    flex: 1,
-    flexDirection: 'row',
     height: 146,
   },
   sectionTitle: {

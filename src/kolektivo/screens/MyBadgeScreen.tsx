@@ -47,7 +47,7 @@ export const MyBadgeScreen = ({ route }: Props) => {
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={[]}>
+    <SafeAreaView edges={[]}>
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.hero}>
           <View testID="BadgeProgressTile/BoundedBox" style={styles.wireframe}>
@@ -59,14 +59,7 @@ export const MyBadgeScreen = ({ route }: Props) => {
           </View>
           <ProgressBar progress={badge.stamps.amount} total={20} />
         </View>
-        <View style={[styles.main]}>
-          <View
-            style={{
-              display: 'flex',
-              flexDirection: 'row',
-              justifyContent: 'space-between',
-            }}
-          ></View>
+        <View style={styles.main}>
           <DateObtainedListItem levels={dummyLevels} />
           <ActivityDetailListItem
             category={`About this badge`}
@@ -74,8 +67,8 @@ export const MyBadgeScreen = ({ route }: Props) => {
             icon={<Exclamation color={'#737373'} />}
             showCategory={true}
           />
-        </View>
         <UpcomingActivities title={'relatedActivities.title'} />
+        </View>
       </ScrollView>
     </SafeAreaView>
   )
@@ -184,13 +177,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
-  container: {
-    flex: 1,
-    paddingBottom: 35,
-  },
   main: {
     flex: 1,
-    justifyContent: 'flex-start',
     paddingHorizontal: Spacing.Regular16,
   },
   detailRow: {
