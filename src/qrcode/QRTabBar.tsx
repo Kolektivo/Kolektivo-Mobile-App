@@ -1,8 +1,8 @@
 import { MaterialTopTabBarProps } from '@react-navigation/material-top-tabs'
 import React, { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Dimensions, Platform, StyleSheet, Text, View } from 'react-native'
-import Animated from 'react-native-reanimated'
+import { Dimensions, StyleSheet, Text, View } from 'react-native'
+import Animated, { Extrapolation, interpolate } from 'react-native-reanimated'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import SegmentedControl from 'src/components/SegmentedControl'
 import BackChevron from 'src/icons/BackChevron'
@@ -10,9 +10,10 @@ import Share from 'src/icons/Share'
 import Times from 'src/icons/Times'
 import { TopBarIconButton } from 'src/navigator/TopBarButton'
 import { useDispatch } from 'src/redux/hooks'
-import { SVG, shareQRCode } from 'src/send/actions'
+import { shareQRCode, SVG } from 'src/send/actions'
 import colors from 'src/styles/colors'
-import fontStyles from 'src/styles/fonts'
+import { typeScale } from 'src/styles/fonts'
+import { Spacing } from 'src/styles/styles'
 
 type Props = MaterialTopTabBarProps & {
   qrSvgRef: React.MutableRefObject<SVG>
@@ -24,7 +25,6 @@ export default function QRTabBar({
   state,
   descriptors,
   navigation,
-  position,
   qrSvgRef,
   leftIcon = 'times',
   canSwitch = true,
@@ -41,25 +41,8 @@ export default function QRTabBar({
     [state, descriptors]
   )
 
-  const shareOpacity = Animated.interpolateNode(position, {
-    inputRange: [0, 0.1],
-    outputRange: [1, 0],
-  })
-
-  const animatedColor = Animated.interpolateColors(position, {
-    inputRange: [0.9, 1],
-    outputColorRange: [colors.black, colors.white],
-  })
-
-  // using `animatedColor` with animated svg causes android crash since
-  // upgrading react-native-svg to v13. there are some suggested solutions
-  // linked below, but none that i could get to work after many attempts. since
-  // this is a relatively low impact feature, i'm going to leave it as is for
-  // now.
-  // https://github.com/software-mansion/react-native-svg/issues/1976
-  // https://github.com/software-mansion/react-native-reanimated/issues/3775
-  const color =
-    Platform.OS === 'ios' ? animatedColor : state.index === 0 ? colors.black : colors.white
+  const color = state.index === 0 ? colors.qrTabBarPrimary : colors.qrTabBarSecondary
+  const shareOpacity = interpolate(state.index, [0, 0.1], [1, 0], Extrapolation.CLAMP)
 
   const onPressClose = () => {
     navigation.getParent()?.goBack()
@@ -97,24 +80,19 @@ export default function QRTabBar({
         />
       </View>
       {canSwitch ? (
-        <SegmentedControl
-          values={values}
-          selectedIndex={state.index}
-          position={position}
-          onChange={onChange}
-        />
+        <SegmentedControl values={values} selectedIndex={state.index} onChange={onChange} />
       ) : (
         <View style={styles.headerTitleContainer}>
           <Text
             testID="HeaderTitle"
             style={{
               ...styles.headerTitle,
-              color: state.index === 0 ? colors.black : colors.white,
+              color: state.index === 0 ? colors.qrTabBarPrimary : colors.qrTabBarSecondary,
             }}
             numberOfLines={1}
             allowFontScaling={false}
           >
-            {state.index === 0 ? t('myCode') : t('scanCode')}
+            {state.index === 0 ? t('walletAddress') : t('scanCode')}
           </Text>
         </View>
       )}
@@ -122,7 +100,7 @@ export default function QRTabBar({
         style={[styles.rightContainer, { opacity: shareOpacity }]}
         pointerEvents={state.index > 0 ? 'none' : undefined}
       >
-        <TopBarIconButton icon={<Share />} onPress={onPressShare} />
+        <TopBarIconButton icon={<Share color={colors.qrTabBarPrimary} />} onPress={onPressShare} />
       </Animated.View>
     </SafeAreaView>
   )
@@ -137,6 +115,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 8,
+    paddingTop: Spacing.Regular16,
   },
   leftContainer: {
     width: 50,
@@ -152,7 +131,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   headerTitle: {
-    ...fontStyles.notificationHeadline,
+    ...typeScale.labelSemiBoldMedium,
     maxWidth: Dimensions.get('window').width * 0.6,
   },
 })

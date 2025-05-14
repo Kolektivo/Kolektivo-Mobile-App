@@ -1,9 +1,8 @@
 import { NativeStackScreenProps } from '@react-navigation/native-stack'
 import { includes, map, remove, valuesIn } from 'lodash'
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Platform, ScrollView, StyleSheet, TextInput, View } from 'react-native'
 import MapView, { Geojson } from 'react-native-maps'
-import Animated from 'react-native-reanimated'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { MapFilterButton } from 'src/kolektivo/components/MapButtons'
 import ForestMarker from 'src/kolektivo/icons/ForestMarker'
@@ -35,8 +34,6 @@ type Props = NativeStackScreenProps<StackParamList, Screens.MapScreen> & {
   }
 }
 export default function MapScreen({ route }: Props) {
-  const scrollPosition = useRef(new Animated.Value(0)).current
-
   const dispatch = useDispatch()
   const mapCategory = useSelector(currentMapCategorySelector)
   const forests = useSelector(foodForestsSelector)

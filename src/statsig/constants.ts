@@ -138,6 +138,29 @@ export const DynamicConfigs = {
       rewardReminderDate: new Date(0).toISOString(),
     },
   },
+  [StatsigDynamicConfigs.APP_CONFIG]: {
+    configName: StatsigDynamicConfigs.APP_CONFIG,
+    defaultValues: {
+      minRequiredVersion: '0.0.0',
+      // TODO: add link to documentation for what kind of content these links should link to
+      links: {
+        web: '',
+        tos: '',
+        privacy: '',
+        faq: '',
+        funding: '',
+        forum: '',
+        swapLearnMore: '',
+        transactionFeesLearnMore: '',
+        inviteRewardsNftsLearnMore: '',
+        inviteRewardsStableTokenLearnMore: '',
+        earnStablecoinsLearnMore: '',
+        celoEducation: '',
+        dappList: 'https://api.mainnet.valora.xyz/dappList',
+        celoNews: 'https://blog.celo.org',
+      },
+    },
+  },
   [StatsigDynamicConfigs.EARN_STABLECOIN_CONFIG]: {
     configName: StatsigDynamicConfigs.EARN_STABLECOIN_CONFIG,
     defaultValues: {

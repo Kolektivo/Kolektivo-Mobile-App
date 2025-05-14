@@ -174,6 +174,7 @@
     "react-native-localize": "^3.1.0",
     "react-native-maps": "1.20.1",
     "react-native-modal": "^13.0.1",
+    "react-native-pager-view": "^6.4.1",
     "react-native-permissions": "^4.1.5",
     "react-native-persona": "^2.2.23",
     "react-native-picker-select": "^9.1.3",
