@@ -1024,7 +1024,7 @@
 				CODE_SIGN_ENTITLEMENTS = celo/celo.entitlements;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 7248;
+				CURRENT_PROJECT_VERSION = "7249 ";
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = "";
 				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = 2QB23S3GZ3;
@@ -1061,7 +1061,7 @@
 				CODE_SIGN_ENTITLEMENTS = celo/celo.entitlements;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 7248;
+				CURRENT_PROJECT_VERSION = "7249 ";
 				DEVELOPMENT_TEAM = "";
 				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = 2QB23S3GZ3;
 				INFOPLIST_FILE = celo/Info.plist;

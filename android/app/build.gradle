@@ -1,7 +1,7 @@
 apply plugin: "com.android.application"
+apply plugin: "org.jetbrains.kotlin.android"
 apply plugin: "com.facebook.react"
 
-import com.android.build.OutputFile
 import groovy.json.JsonSlurper
 
 /**
@@ -11,14 +11,14 @@ import groovy.json.JsonSlurper
 
 react {
     /* Folders */
-    //   The root of your project, i.e. where "package.json" lives. Default is '..'
-    // root = file("../")
-    //   The folder where the react-native NPM package is. Default is ../node_modules/react-native
-    // reactNativeDir = file("../node_modules/react-native")
-    //   The folder where the react-native Codegen package is. Default is ../node_modules/react-native-codegen
-    // codegenDir = file("../node_modules/react-native-codegen")
-    //   The cli.js file which is the React Native CLI entrypoint. Default is ../node_modules/react-native/cli.js
-    // cliFile = file("../node_modules/react-native/cli.js")
+    //   The root of your project, i.e. where "package.json" lives. Default is '../..'
+    // root = file("../../")
+    //   The folder where the react-native NPM package is. Default is ../../node_modules/react-native
+    // reactNativeDir = file("../../node_modules/react-native")
+    //   The folder where the react-native Codegen package is. Default is ../../node_modules/@react-native/codegen
+    // codegenDir = file("../../node_modules/@react-native/codegen")
+    //   The cli.js file which is the React Native CLI entrypoint. Default is ../../node_modules/react-native/cli.js
+    // cliFile = file("../../node_modules/react-native/cli.js")
     /* Variants */
     //   The list of variants to that are debuggable. For those we're going to
     //   skip the bundling of the JS bundle and the assets. By default is just 'debug'.
@@ -34,7 +34,7 @@ react {
     //   The path to the CLI configuration file. Default is empty.
     // bundleConfig = file(../rn-cli.config.js)
     //
-    //   The name of the generated asset file containing your JS bundle
+    //   The name of the generated asset file containing yourf JS bundle
     // bundleAssetName = "MyApplication.android.bundle"
     //
     //   The entry file for bundle generation. Default is 'index.android.js' or 'index.js'
@@ -49,7 +49,12 @@ react {
     //
     //   The list of flags to pass to the Hermes compiler. By default is "-O", "-output-source-map"
     // hermesFlags = ["-O", "-output-source-map"]
+
+    /* Autolinking */
+    autolinkLibrariesWithApp()
 }
+
+
 
 project.ext.envConfigFiles = [
     // IMPORTANT: longer variants should be first, as react-native-config plugin matches the first prefix it finds
@@ -75,7 +80,7 @@ apply from: project(':react-native-config').projectDir.getPath() + "/dotenv.grad
  */
 def isDetoxTestBuild = Boolean.valueOf(project.properties['isDetoxBuild'] ?: 'false')
 
-if (!isDetoxTestBuild) {
+if (false) {
   apply from: "../../node_modules/@sentry/react-native/sentry.gradle"
 }
 
@@ -84,14 +89,6 @@ if (!isDetoxTestBuild) {
  * Use passed property to recognize the build is for profiling
  */
 def isProfilingBuild = Boolean.valueOf(System.env.IS_PROFILING_BUILD ?: 'false')
-
-/**
- * Set this to true to create four separate APKs instead of one,
- * one for each native architecture. This is useful if you don't
- * use App Bundles (https://developer.android.com/guide/app-bundle/)
- * and want to have separate APKs to upload to the Play Store.
- */
-def enableSeparateBuildPerCPUArchitecture = false
 
 /**
  * Set this to true to Run Proguard on Release builds to minify the Java bytecode.
@@ -111,16 +108,6 @@ def enableProguardInReleaseBuilds = true
  */
 def jscFlavor = 'org.webkit:android-jsc:+'
 
-/**
- * Private function to get the list of Native Architectures you want to build.
- * This reads the value from reactNativeArchitectures in your gradle.properties
- * file and works together with the --active-arch-only flag of react-native run-android.
- */
-def reactNativeArchitectures() {
-    def value = project.getProperties().get("reactNativeArchitectures")
-    return value ? value.split(",") : ["armeabi-v7a", "x86", "x86_64", "arm64-v8a"]
-}
-
 def appVersionCode = Integer.valueOf(System.env.CIRCLE_BUILD_NUM ?: VERSION_CODE)
 
 def loadProjectSecrets(String chainName) {
@@ -137,13 +124,9 @@ def loadProjectSecrets(String chainName) {
 def secrets = loadProjectSecrets(project.env.get("DEFAULT_TESTNET"))
 
 android {
-    compileSdkVersion rootProject.ext.compileSdkVersion
+    buildToolsVersion rootProject.ext.buildToolsVersion
+    compileSdk rootProject.ext.compileSdkVersion
     namespace "org.celo.mobile"
-
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_11
-        targetCompatibility JavaVersion.VERSION_11
-    }
 
     defaultConfig {
         applicationId project.env.get("APP_BUNDLE_ID")
@@ -191,14 +174,6 @@ android {
             keyPassword 'android'
         }
     }
-    splits {
-        abi {
-            reset()
-            enable enableSeparateBuildPerCPUArchitecture
-            universalApk false  // If true, also generate a universal APK
-            include (*reactNativeArchitectures())
-        }
-    }
     buildTypes {
         debug {
             // uncomment this to test proguard in debug builds
@@ -208,7 +183,8 @@ android {
         }
 
         release {
-            minifyEnabled enableProguardInReleaseBuilds
+          // @TODO: check why proguard-rules arent working, changes made in "proguard-rules.pro" dont seem to be applied
+            minifyEnabled false
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
             if (isDetoxTestBuild) {
               // Detox-specific additions to pro-guard
@@ -244,19 +220,6 @@ android {
             dimension "default"
         }
     }
-    // applicationVariants are e.g. debug, release
-    applicationVariants.all { variant ->
-        variant.outputs.each { output ->
-            // https://developer.android.com/studio/build/configure-apk-splits.html
-            def versionCodes = ["armeabi-v7a":1, "x86":2, "arm64-v8a": 4, "x86_64": 5]
-            def abi = output.getFilter(OutputFile.ABI)
-            if (abi != null) {  // null for the universal-debug, universal-release variants
-                output.versionCodeOverride =
-                        versionCodes.get(abi) * 1048576 + defaultConfig.versionCode
-            }
-        }
-    }
-
     packagingOptions {
         exclude 'META-INF/-no-jdk.kotlin_module'
         exclude 'META-INF/androidx.exifinterface_exifinterface.version'
@@ -268,25 +231,33 @@ android {
 dependencies {
     // Use legacy tag so that Detox uses Java 11
     // https://github.com/wix/Detox/releases/tag/20.18.5
-    androidTestImplementation('com.wix:detox-legacy:+') {
+    androidTestImplementation('com.wix:detox:+') {
         exclude group: 'com.google.android.material'
     }
     androidTestImplementation('com.linkedin.testbutler:test-butler-library:2.2.1')
 
     implementation 'androidx.multidex:multidex:2.0.1'
     implementation 'androidx.appcompat:appcompat:1.2.0'
-    implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.1.0'
     implementation 'com.squareup.okhttp3:okhttp-urlconnection:4.9.0'
 
     // The version of react-native is set by the React Native Gradle Plugin
     implementation("com.facebook.react:react-android")
 
-    implementation "androidx.swiperefreshlayout:swiperefreshlayout:1.1.0"
+    if (hermesEnabled.toBoolean()) {
+        implementation("com.facebook.react:hermes-android")
+    } else {
+        implementation jscFlavor
+    }
 
     implementation 'com.clevertap.android:clevertap-android-sdk:5.2.2'
     //For CleverTap Android SDK v3.6.4 and above add the following -
     implementation 'com.android.installreferrer:installreferrer:2.2'
-    implementation 'com.google.android.gms:play-services-base:17.4.0'
+    implementation 'com.google.android.gms:play-services-base:18.0.1'
+    implementation 'com.google.android.gms:play-services-location:19.0.1'
+    implementation 'com.google.android.gms:play-services-maps:18.0.2'
+    // ML Kit dependencies required by react-native-camera
+    implementation 'com.google.mlkit:barcode-scanning:17.0.3'
+    implementation 'com.google.mlkit:text-recognition:16.0.0'
     implementation "com.google.firebase:firebase-messaging:23.0.6"
     implementation 'com.google.android.exoplayer:exoplayer:2.17.1'
     implementation 'com.google.android.exoplayer:exoplayer-hls:2.17.1'
@@ -295,19 +266,13 @@ dependencies {
     implementation 'androidx.recyclerview:recyclerview:1.3.2'
     implementation 'androidx.viewpager:viewpager:1.0.0'
     implementation 'com.google.android.material:material:1.2.1'
-    implementation 'androidx.core:core:1.4.0'
-    implementation 'androidx.fragment:fragment:1.3.6'
+    implementation 'androidx.core:core:1.16.0'
+    implementation 'androidx.fragment:fragment:1.8.6'
     implementation 'com.android.installreferrer:installreferrer:2.1'
     implementation 'com.android.support:appcompat-v7:28.0.0'
     implementation 'com.android.support:design:28.0.0'
     implementation project(':clevertap-react-native')
     // https://github.com/facebook/react-native/issues/31572#issuecomment-912017067
-    // TODO: remove this when upgrading RN to 0.68.2
-    implementation ('androidx.appcompat:appcompat:1.3.1') {
-      version {
-        strictly '1.3.1'
-      }
-    }
 
     // this fixes an crash on devices with API level 31+ that requires a
     // FLAG_IMMUTABLE or FLAG_MUTABLE be specified when creating a PendingIntent
@@ -317,18 +282,6 @@ dependencies {
     // https://github.com/invertase/react-native-firebase/blob/v11.5.0/packages/auth/android/build.gradle#L88
     // which requires minCompileSdk 33
     implementation 'androidx.browser:browser:1.4.0'
-
-    debugImplementation("com.facebook.flipper:flipper:${FLIPPER_VERSION}")
-    debugImplementation("com.facebook.flipper:flipper-network-plugin:${FLIPPER_VERSION}") {
-        exclude group:'com.squareup.okhttp3', module:'okhttp'
-    }
-    debugImplementation("com.facebook.flipper:flipper-fresco-plugin:${FLIPPER_VERSION}")
-
-    if (hermesEnabled.toBoolean()) {
-        implementation("com.facebook.react:hermes-android")
-    } else {
-        implementation jscFlavor
-    }
 }
 
 def enableFirebase = project.env.get("FIREBASE_ENABLED")
@@ -339,8 +292,6 @@ if (enableFirebase.toBoolean()){
 } else {
   println 'Info: Firebase is disabled in .env variable'
 }
-
-apply from: file("../../node_modules/@react-native-community/cli-platform-android/native_modules.gradle"); applyNativeModulesAppBuildGradle(project)
 
 // This is to fix a duplicate class error
 // Duplicate class org.bouncycastle.LICENSE found in modules jetified-bcprov-jdk15to18-1.69 (org.bouncycastle:bcprov-jdk15to18:1.69) and jetified-bcprov-jdk18on-1.71 (org.bouncycastle:bcprov-jdk18on:1.71)

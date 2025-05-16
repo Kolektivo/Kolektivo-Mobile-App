@@ -1,8 +1,8 @@
 import { BottomSheetHandleProps } from '@gorhom/bottom-sheet'
-import React, { memo, useMemo } from 'react'
+import React, { forwardRef, memo, useMemo } from 'react'
 import { StyleProp, StyleSheet, Text, TouchableOpacity, View, ViewStyle } from 'react-native'
 import MapView from 'react-native-maps'
-import Animated, { Extrapolate, interpolate, useAnimatedStyle } from 'react-native-reanimated'
+import Animated from 'react-native-reanimated'
 import { useSelector } from 'react-redux'
 import FindMy from 'src/icons/FindMy'
 import { userLocationSelector } from 'src/kolektivo/map/selector'
@@ -14,44 +14,46 @@ interface CustomHandleProps extends BottomSheetHandleProps {
   mapRef: React.RefObject<MapView>
 }
 
-const MapSheetHandle: React.FC<CustomHandleProps> = ({ title, style, animatedIndex, mapRef }) => {
-  const userLocation = useSelector(userLocationSelector)
-  const containerStyle = useMemo(() => [styles.container, style], [style])
-  const containerAnimatedStyle = useAnimatedStyle(() => {
-    const borderTopRadius = interpolate(animatedIndex.value, [1, 2], [20, 0], Extrapolate.CLAMP)
-    return {
-      borderTopLeftRadius: borderTopRadius,
-      borderTopRightRadius: borderTopRadius,
+const MapSheetHandle = forwardRef<View, CustomHandleProps>(
+  ({ title, style, animatedIndex, mapRef }, ref) => {
+    const userLocation = useSelector(userLocationSelector)
+    const containerStyle = useMemo(() => [styles.container, style], [style])
+    // const containerAnimatedStyle = useAnimatedStyle(() => {
+    //   const borderTopRadius = interpolate(animatedIndex.value, [1, 2], [20, 0], Extrapolation.CLAMP)
+    //   return {
+    //     borderTopLeftRadius: borderTopRadius,
+    //     borderTopRightRadius: borderTopRadius,
+    //   }
+    // })
+
+    const handleFindMy = () => {
+      mapRef.current?.animateToRegion({
+        ...userLocation,
+        latitudeDelta: 0.005,
+        longitudeDelta: 0.005,
+      })
     }
-  })
 
-  const handleFindMy = () => {
-    mapRef.current?.animateToRegion({
-      ...userLocation,
-      latitudeDelta: 0.005,
-      longitudeDelta: 0.005,
-    })
+    // render
+    return (
+      <Animated.View ref={ref} style={[containerStyle]} renderToHardwareTextureAndroid={true}>
+        <View>
+          <View style={[styles.headerFilter, styles.flex]}>
+            <TouchableOpacity style={styles.findMy} onPress={handleFindMy}>
+              <FindMy size={14} />
+            </TouchableOpacity>
+          </View>
+          <View style={[styles.searchFilter]}>
+            <Text>{title}</Text>
+          </View>
+        </View>
+      </Animated.View>
+    )
   }
+)
 
-  // render
-  return (
-    <Animated.View
-      style={[containerStyle, containerAnimatedStyle]}
-      renderToHardwareTextureAndroid={true}
-    >
-      <View>
-        <View style={[styles.headerFilter, styles.flex]}>
-          <TouchableOpacity style={styles.findMy} onPress={handleFindMy}>
-            <FindMy size={14} />
-          </TouchableOpacity>
-        </View>
-        <View style={[styles.searchFilter]}>
-          <Text>{title}</Text>
-        </View>
-      </View>
-    </Animated.View>
-  )
-}
+// Add a display name to help with debugging
+MapSheetHandle.displayName = 'MapSheetHandle'
 
 export default memo(MapSheetHandle)
 
