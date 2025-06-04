@@ -119,7 +119,7 @@ before_all do
   setup_ci
   load_asc_api_token
   xcodes(
-    version: '15.2',
+    version: '16.2',
     select_for_current_build_only: true,
     )
   end
@@ -219,7 +219,7 @@ before_all do
     )
 
     xcodes(
-      version: '15.2',
+      version: '16.2',
       select_for_current_build_only: true,
       )
     
