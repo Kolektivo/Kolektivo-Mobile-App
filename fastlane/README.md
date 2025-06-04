@@ -100,6 +100,14 @@ Build an Android bundle
 
 Build the iOS application - requires environment param
 
+### ios load_asc_api_token
+
+```sh
+[bundle exec] fastlane ios load_asc_api_token
+```
+
+Load the App Store Connect API token
+
 ### ios upload
 
 ```sh

@@ -124,13 +124,13 @@ before_all do
     )
   end
 
-    increment_version_number(
-      xcodeproj: 'ios/celo.xcodeproj'
-    )
+    # increment_version_number(
+    #   xcodeproj: 'ios/celo.xcodeproj'
+    # )
     
-    increment_build_number(
-      xcodeproj: 'ios/celo.xcodeproj'
-    )
+    # increment_build_number(
+    #   xcodeproj: 'ios/celo.xcodeproj'
+    # )
 
   desc 'Build the iOS application - requires environment param'
   lane :build do |options|
