@@ -115,6 +115,9 @@ jobs:
       - name: Set File Permissions for AuthKey.p8
         run: chmod 600 ios/AuthKey.p8
 
+      - name: Remove xcode.env.local
+        run: rm $(pwd)/ios/.xcode.env.local
+
       # 15) Run Fastlane for TestFlight Upload
       - name: Run Fastlane for TestFlight Upload 🚀
         run: fastlane ios mainnet
