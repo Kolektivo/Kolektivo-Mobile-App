@@ -20,6 +20,12 @@ jobs:
       - name: Select Xcode 16.2
         run: sudo xcode-select -s /Applications/Xcode_16.2.app/Contents/Developer
 
+        #test
+      - name: test base
+        run: |
+          mkdir -p ios  # Ensure directory exists
+          echo "${{ secrets.GOOGLE_SERVICE_INFO_PLIST_BASE64 }}" | base64 -d > ios/GoogleService-Info.mainnet.plist
+
       # 3) Install Node.js and Yarn
       - name: Install Node.js and Yarn
         uses: actions/setup-node@v3
