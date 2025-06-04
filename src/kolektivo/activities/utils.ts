@@ -16,6 +16,7 @@ export type ActivityModel = {
   description: string
   start_date: string
   end_date: string
+  location: string
   full_address: string
   badge_contract_address: string
   requirements: string

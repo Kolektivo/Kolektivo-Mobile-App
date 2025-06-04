@@ -65,3 +65,17 @@
   public *;
 }
 
+# Required for ML Kit barcode scanning
+-keep class com.google.mlkit.vision.barcode.** { *; }
+
+# Required for ML Kit text recognition
+-keep class com.google.mlkit.vision.text.** { *; }
+
+# Needed for react-native-camera tasks
+-keep class org.reactnative.camera.tasks.** { *; }
+
+# This prevents removing Kotlin companion objects that R8 often strips
+-keepclassmembers class ** {
+    companion object;
+}
+

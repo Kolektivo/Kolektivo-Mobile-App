@@ -13,7 +13,7 @@ export default function BadgeProgressTile({
   stamps,
   onPress,
   ...rest
-}: BadgeDataResponse & { onPress: (badge: BadgeDataResponse) => void }) {
+}: BadgeDataResponse & { onPress?: (badge: BadgeDataResponse) => void }) {
   const { contractAddress, amount } = stamps
   const { t } = useTranslation()
 

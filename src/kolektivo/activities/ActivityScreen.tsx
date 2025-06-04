@@ -1,5 +1,5 @@
 import { isEmpty } from 'lodash'
-import React, { useRef, useState } from 'react'
+import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   RefreshControl,
@@ -10,7 +10,7 @@ import {
   Text,
   View,
 } from 'react-native'
-import Animated from 'react-native-reanimated'
+import Animated, { useAnimatedScrollHandler, useSharedValue } from 'react-native-reanimated'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { ActivityCategorySwitcher } from 'src/kolektivo/activities/ActivityCategorySwitcher'
 import { ActivityListItem } from 'src/kolektivo/activities/ActivityListItem'
@@ -25,7 +25,13 @@ const AnimatedSectionList = Animated.createAnimatedComponent(SectionList)
 
 const ActivityScreen = () => {
   const { t } = useTranslation()
-  const scrollPosition = useRef(new Animated.Value(0)).current
+  const scrollPosition = useSharedValue(0)
+
+  const scrollHandler = useAnimatedScrollHandler({
+    onScroll: (event) => {
+      scrollPosition.value = event.contentOffset.y
+    },
+  })
   const {
     loading,
     signedUpActivities,
@@ -108,14 +114,12 @@ const ActivityScreen = () => {
         <AnimatedSectionList
           style={styles.verticalList}
           sections={sections}
+          onScroll={scrollHandler}
           keyExtractor={(item) => (item as any).id}
           renderItem={({ item }) => <ActivityListItem {...(item as ActivityModel)} fullWidth />}
           refreshControl={<RefreshControl refreshing={false} tintColor={'transparent'} />}
           onEndReachedThreshold={0.1}
           scrollEventThrottle={16}
-          onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollPosition } } }], {
-            useNativeDriver: true,
-          })}
         />
       </ScrollView>
     </SafeAreaView>

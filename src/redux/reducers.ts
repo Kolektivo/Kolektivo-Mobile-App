@@ -17,6 +17,8 @@ import { reducer as identity } from 'src/identity/reducer'
 import { reducer as imports } from 'src/import/reducer'
 import jumpstartReducer from 'src/jumpstart/slice'
 import keylessBackupReducer from 'src/keylessBackup/slice'
+import { reducer as map } from 'src/kolektivo/map/reducer'
+import { reducer as vendors } from 'src/kolektivo/vendors/reducer'
 import { reducer as localCurrency } from 'src/localCurrency/reducer'
 import { reducer as networkInfo } from 'src/networkInfo/reducer'
 import nftsReducer from 'src/nfts/slice'
@@ -61,6 +63,8 @@ const appReducer = combineReducers({
   jumpstart: jumpstartReducer,
   points: pointsReducer,
   earn: earnReducer,
+  map: map,
+  vendors: vendors,
 })
 
 const rootReducer = (state: RootState | undefined, action: Action): RootState => {

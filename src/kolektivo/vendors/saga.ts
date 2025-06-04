@@ -1,6 +1,8 @@
-import { Actions, setLoading } from 'src/kolektivo/vendors/actions'
+import { getAllVendors } from 'src/kolektivo/activities/service'
+import { Actions, setLoading, setVendors } from 'src/kolektivo/vendors/actions'
+import { formatVendors } from 'src/kolektivo/vendors/utils'
 import Logger from 'src/utils/Logger'
-import { put, take } from 'typed-redux-saga'
+import { call, put, spawn, take } from 'typed-redux-saga'
 
 let vendorsInitialized: boolean = false
 export function* watchFetchVendors(): any {
@@ -9,6 +11,9 @@ export function* watchFetchVendors(): any {
       if (vendorsInitialized) yield* take(Actions.FETCH_VENDORS)
       yield* put(setLoading(true))
       // @todo Fetch vendor data from off-chain source
+      const vendors: any = yield* call(getAllVendors)
+      const formattedVendorObject = formatVendors(vendors)
+      yield* put(setVendors(formattedVendorObject))
       yield* put(setLoading(false))
       vendorsInitialized = true
     } catch (error: any) {
@@ -22,5 +27,5 @@ export function* watchFetchVendors(): any {
 }
 
 export function* vendorsSaga() {
-  // yield spawn(watchFetchVendors)
+  yield* spawn(watchFetchVendors)
 }

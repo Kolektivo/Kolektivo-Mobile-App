@@ -3,6 +3,7 @@ import { isEmpty } from 'lodash'
 import * as RNFS from 'react-native-fs'
 import { ActivityModel } from 'src/kolektivo/activities/utils'
 import { supabase } from 'src/kolektivo/config/services'
+import { Vendor, Vendors } from 'src/kolektivo/vendors/types'
 
 const ACTIVITY_BASE_FIELDS = `
 *,
@@ -363,4 +364,25 @@ export const hasCheckedOut = async (
   }
 
   return !isEmpty(data)
+}
+
+/**
+ * @description Get all vendors from the database
+ * @returns {Array} List of vendor objects
+ */
+export const getAllVendors = async (): Promise<Vendors> => {
+  const { data, error } = await supabase.from('vendors').select('*')
+
+  if (error) {
+    throw new Error(error.message)
+  }
+
+  // Optionally map over the vendors to add public URLs for logos if stored in Supabase storage
+  return data.reduce((vendors: Vendors, vendor: Vendor) => {
+    vendors[vendor.name] = {
+      ...vendor,
+      logo_path: getStoragePublicUrl(vendor.logo_path || ''),
+    }
+    return vendors
+  }, {} as Vendors)
 }

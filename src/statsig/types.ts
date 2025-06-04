@@ -8,6 +8,11 @@ export enum StatsigDynamicConfigs {
   WALLET_JUMPSTART_CONFIG = 'wallet_jumpstart_config',
   NFT_CELEBRATION_CONFIG = 'nft_celebration_config',
   EARN_STABLECOIN_CONFIG = 'earn_stablecoin_config',
+  APP_CONFIG = 'app_config',
+  EARN_CONFIG = 'earn_config',
+  DEMO_MODE_CONFIG = 'demo_mode_config',
+  FIAT_CONNECT_CONFIG = 'fiat_connect_config',
+  INVITE_REWARDS_CONFIG = 'invite_rewards_config',
 }
 
 export enum StatsigFeatureGates {

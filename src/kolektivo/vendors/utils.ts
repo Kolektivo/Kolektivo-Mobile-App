@@ -1,58 +1,58 @@
 import BottomSheet from '@gorhom/bottom-sheet'
-import { map } from 'lodash'
 import React, { useEffect } from 'react'
 import { useSelector } from 'react-redux'
 import { currentVendorSelector } from 'src/kolektivo/vendors/selector'
-import { Vendor, Vendors, VendorWithLocation } from 'src/kolektivo/vendors/types'
+import { Vendors, VendorWithLocation } from 'src/kolektivo/vendors/types'
 
 /**
  * Formats the REST API response to a format that is more usable in the app.
- * @param vendorObject Vendor object
+ * @param vendorObject Vendor object from API
  * @returns {Vendors}
  */
-export const formatVendors = (vendorObject: any): Vendors => {
-  const { data } = vendorObject
+export const formatVendors = (vendorObject: Record<string, any>): Vendors => {
   const result = Object.assign(
     {},
-    ...data.map((v: any) => {
+    ...Object.entries(vendorObject).map(([name, v]) => {
       const {
-        name,
-        subtitle,
-        logo,
-        tags,
+        category,
+        community,
+        logo_path,
+        accepts_guilder,
+        provides_guilder,
         website,
         latitude,
         longitude,
-        phone_number,
-        acceptsGuilder,
-        providesGuilder,
-        street,
-        building_number,
-        city,
-        account,
-      } = v.attributes
+        phone,
+        location,
+        id,
+        created_by,
+        opening_hours,
+        wifi,
+      } = v
+
       return {
         [name]: {
-          tags: map(tags, (t: any) => t?.tag),
-          logoURI: logo?.data?.attributes?.url,
+          ...vendorObject,
+          name: name,
+          subtitle: community || category || '',
+          logo_path: logo_path,
           siteURI: website,
-          title: name,
-          subtitle: subtitle,
-          phoneNumber: phone_number,
-          street: street,
-          building_number: building_number,
-          city: city,
+          phone: phone,
+          category: category,
+          locationAddress: location,
           location: {
-            // The Latitude and Longitude attributes cannot be null or undefined
-            // in the Android environment.
-            // See https://github.com/react-native-maps/react-native-maps/issues/3159
-            latitude: Number(latitude),
-            longitude: Number(longitude),
+            latitude: latitude ?? 0,
+            longitude: longitude ?? 0,
           },
-          acceptsGuilder: !!acceptsGuilder,
-          providesGuilder: !!providesGuilder,
-          account: account,
-        } as Vendor | VendorWithLocation,
+          acceptsGuilder: accepts_guilder, // Assuming not present in the data
+          providesGuilder: provides_guilder, // Assuming not present in the data
+          street: '',
+          building_number: '',
+          city: location,
+          account: created_by || '',
+          wifi,
+          opening_hours,
+        } as unknown as VendorWithLocation,
       }
     })
   )
@@ -72,7 +72,7 @@ export const hasValidLocation = (vendor: VendorWithLocation): boolean => {
 
 export const useInteractiveBottomSheet = (
   bottomSheetRef: React.RefObject<BottomSheet>
-): [string[]] => {
+): [string[], (index: number, listMode?: boolean) => void] => {
   const snapPoints = React.useMemo(() => ['10%', '24%', '50%', '80%'], [])
   const currentVendor = useSelector(currentVendorSelector)
 
@@ -86,9 +86,17 @@ export const useInteractiveBottomSheet = (
 
   const handleVendorChange = () => {
     if (currentVendor) {
-      bottomSheetRef.current?.snapToIndex(2)
+      bottomSheetRef.current?.snapToIndex(0)
     }
   }
 
-  return [snapPoints]
+  const setSnapPoints = (index: number, listMode: boolean = false) => {
+    if (listMode) {
+      bottomSheetRef.current?.snapToIndex(index)
+    } else {
+      bottomSheetRef.current?.snapToIndex(0)
+    }
+  }
+
+  return [snapPoints, setSnapPoints]
 }

@@ -30,6 +30,7 @@ import { Actions as ImportActions } from 'src/import/actions'
 import { importSaga } from 'src/import/saga'
 import { jumpstartSaga } from 'src/jumpstart/saga'
 import { keylessBackupSaga } from 'src/keylessBackup/saga'
+import { mapSaga } from 'src/kolektivo/map/saga'
 import { localCurrencySaga } from 'src/localCurrency/saga'
 import { networkInfoSaga } from 'src/networkInfo/saga'
 import { nftsSaga } from 'src/nfts/saga'
@@ -141,6 +142,7 @@ export function* rootSaga() {
     yield* spawn(priceHistorySaga)
     yield* spawn(pointsSaga)
     yield* spawn(earnSaga)
+    yield* spawn(mapSaga)
   } catch (error) {
     Logger.error('@rootSaga', 'Error while initializing sagas', error)
     // Propagate so it's handled by Sentry

@@ -2263,7 +2263,7 @@
       "title": "My Wallet"
     },
     "home": {
-      "tabName": "Kolektivo",
+      "tabName": "Home",
       "title": "Welcome"
     },
     "discover": {
@@ -2273,6 +2273,10 @@
     "activities": {
       "tabName": "Activities",
       "title": "Activities"
+    },
+    "map": {
+      "tabName": "Explore",
+      "title": "Explore"
     }
   },
   "jumpstartStatus": {
@@ -2530,16 +2534,21 @@
   "badge": {
     "rank": ["Beginner", "Intermediate", "Advanced", "Expert"],
     "myBadges": "My Badges",
+    "myBadge": "My Badge",
     "more": "View All"
   },
   "upcomingActivities": {
     "title": "Upcoming Activities"
   },
+  "relatedActivities": {
+    "title": "Related Activities"
+  },
   "spendPoints": {
     "title": "Spend Points"
   },
   "myCommunity": {
-    "title": "My Community"
+    "title": "My Community",
+    "impactPartners": "Impact Partners"
   },
   "checkIn": {
     "title": "Check In",
@@ -2576,5 +2585,7 @@
   "signedUp": "Signed Up",
   "completed": "Completed",
   "point": "Points",
-  "stampTitle": "{{stamp}} Stamp"
+  "stampTitle": "{{stamp}} Stamp",
+  "acceptsGuilder": "Accepts KGuilder",
+  "providesGuilder": "Provides KGuilder"
 }

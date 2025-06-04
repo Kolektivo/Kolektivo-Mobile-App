@@ -4,10 +4,16 @@ import Donate from 'src/kolektivo/icons/Donate'
 import Groceries from 'src/kolektivo/icons/Groceries'
 import More from 'src/kolektivo/icons/More'
 import Restaurants from 'src/kolektivo/icons/Restaurant'
+import { MapCategory } from 'src/kolektivo/map/constants'
 import variables from 'src/kolektivo/styles/variables'
+import { navigate } from 'src/navigator/NavigationService'
+import { Screens } from 'src/navigator/Screens'
+import { useDispatch } from 'src/redux/hooks'
 import { typeScale } from 'src/styles/fonts'
 
 const SpendPoints = () => {
+  const dispatch = useDispatch()
+
   return (
     <View style={styles.container}>
       {/* Title */}
@@ -22,21 +28,45 @@ const SpendPoints = () => {
           <Text style={styles.blockText}>Donate</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.block}>
+        <TouchableOpacity
+          style={styles.block}
+          onPress={() => {
+            navigate(Screens.MapScreen, {
+              screen: Screens.MapScreen,
+              mapCategory: MapCategory.Restaurant,
+            })
+          }}
+        >
           <View style={styles.icon}>
             <Restaurants color="#1E7672" />
           </View>
           <Text style={styles.blockText}>Restaurant</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.block}>
+        <TouchableOpacity
+          style={styles.block}
+          onPress={() => {
+            navigate(Screens.MapScreen, {
+              screen: Screens.MapScreen,
+              mapCategory: MapCategory.Groceries,
+            })
+          }}
+        >
           <View style={styles.icon}>
             <Groceries color="#1E7672" />
           </View>
           <Text style={styles.blockText}>Groceries</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.block}>
+        <TouchableOpacity
+          style={styles.block}
+          onPress={() => {
+            navigate(Screens.MapScreen, {
+              screen: Screens.MapScreen,
+              mapCategory: MapCategory.All,
+            })
+          }}
+        >
           <View style={styles.icon}>
             <More color="#1E7672" />
           </View>

@@ -1,21 +1,20 @@
 import MaskedView from '@react-native-masked-view/masked-view'
 import React from 'react'
 import { LayoutChangeEvent, StyleSheet, Text, View } from 'react-native'
-import Animated from 'react-native-reanimated'
+import Animated, { Extrapolation, interpolate, interpolateColor } from 'react-native-reanimated'
 import Touchable from 'src/components/Touchable'
 import colors from 'src/styles/colors'
-import fontStyles from 'src/styles/fonts'
+import { typeScale } from 'src/styles/fonts'
 
 const HEIGHT = 24
 
 interface Props {
   values: string[]
   selectedIndex?: number
-  position: Animated.Node<number>
   onChange?: (value: string, selectedIndex: number) => void
 }
 
-export default function SegmentedControl({ position, values, selectedIndex = 0, onChange }: Props) {
+export default function SegmentedControl({ values, selectedIndex = 0, onChange }: Props) {
   const [segmentWidth, setSegmentWidth] = React.useState(0)
 
   const handleChange = (index: number) => {
@@ -23,26 +22,23 @@ export default function SegmentedControl({ position, values, selectedIndex = 0, 
   }
 
   const inputRange = values.map((_, i) => i)
-  const translateX = Animated.interpolateNode(position, {
+  const translateX = interpolate(
+    selectedIndex,
     inputRange,
-    outputRange: inputRange.map((i) => i * segmentWidth),
-  })
+    inputRange.map((i) => i * segmentWidth),
+    Extrapolation.CLAMP
+  )
 
-  // TODO: color should be dependant on the style for the value
-  // here it's assuming value at index 0 is green and index 1 (or above) is white
-  // TODO: remove 'as any' when this is released:
-  // https://github.com/software-mansion/react-native-reanimated/issues/1354
-  const color = Animated.interpolateColors(position, {
-    inputRange: [0.5, 1],
-    outputColorRange: [colors.primary, colors.white],
-  }) as any
-
-  // TODO: remove 'as any' when this is released:
-  // https://github.com/software-mansion/react-native-reanimated/issues/1354
-  const colorInverted = Animated.interpolateColors(position, {
-    inputRange: [0.5, 1],
-    outputColorRange: [colors.white, colors.black],
-  }) as any
+  const color = interpolateColor(
+    selectedIndex,
+    [0.5, 1],
+    [colors.qrTabBarPrimary, colors.qrTabBarSecondary]
+  )
+  const colorInverted = interpolateColor(
+    selectedIndex,
+    [0.5, 1],
+    [colors.qrTabBarSecondary, colors.qrTabBarPrimary]
+  )
 
   const onLayout = ({
     nativeEvent: {
@@ -130,7 +126,6 @@ const styles = StyleSheet.create({
     height: HEIGHT,
     borderRadius: HEIGHT / 2,
     borderWidth: 1,
-    borderColor: colors.primary,
     overflow: 'hidden',
     marginHorizontal: 30,
   },
@@ -140,7 +135,6 @@ const styles = StyleSheet.create({
     bottom: 0,
     right: 0,
     left: 0,
-    backgroundColor: colors.primary,
   },
   maskedContainer: {
     // Transparent background because mask is based off alpha channel.
@@ -156,8 +150,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   text: {
-    ...fontStyles.small600,
-    fontSize: 12,
-    color: colors.primary,
+    ...typeScale.labelSemiBoldXSmall,
+    color: colors.accent,
   },
 })

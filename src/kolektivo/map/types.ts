@@ -6,6 +6,8 @@ export type FoodForest = Vendor & {
   ingress?: LatLng
   start?: number
   area?: string
+  phoneNumber?: string
+  acceptsGuilder?: boolean
 }
 
 export type FoodForests = {

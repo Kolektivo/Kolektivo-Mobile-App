@@ -9,7 +9,7 @@ export async function initiatePhoneCall(phonenumber: string) {
 }
 
 export type LinkingDirectionsOptions = {
-  title: string
+  name: string
   coordinate: LatLng
   building_number?: string
   street?: string
@@ -36,7 +36,7 @@ export type LinkingShareOptions = {
 }
 
 export function initiateDirection({
-  title,
+  name,
   coordinate,
   building_number,
   street,
@@ -46,8 +46,8 @@ export function initiateDirection({
     const scheme = Platform.select({ ios: 'maps:0,0?q=', android: 'geo:0,0?q=' })
     const latLng = `${coordinate.latitude},${coordinate.longitude}`
     const url = Platform.select({
-      ios: `${scheme}${title}@${latLng}`,
-      android: `${scheme}${latLng}(${title})`,
+      ios: `${scheme}${name}@${latLng}`,
+      android: `${scheme}${latLng}(${name})`,
     }) as string
 
     Linking.openURL(url).catch((e) =>
@@ -92,7 +92,7 @@ export function filterVendors(search: string, vendors: Vendors): (Vendor | Vendo
 
   const filteredVendors = vendorsList.filter(
     (vendor) =>
-      vendor.title.toLowerCase().includes(search.toLowerCase()) ||
+      vendor.name.toLowerCase().includes(search.toLowerCase()) ||
       some(vendor.tags, (tag) => tag.toLowerCase().includes(search.toLowerCase()))
   )
   return filteredVendors

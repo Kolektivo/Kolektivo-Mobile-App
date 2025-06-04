@@ -7,6 +7,8 @@ export const BASE_TAG = 'MapScreen'
 
 export enum MapCategory {
   All = 'All',
+  Restaurant = 'Restaurant',
+  Groceries = 'Groceries',
   Vendor = 'Vendor',
   FoodForest = 'Food Forest',
 }
@@ -16,7 +18,7 @@ export const LocationLocales: { [key: string]: LatLng } = {
   Trinidad: { latitude: 10.6918, longitude: -61.2225 },
 }
 
-export const defaultLocation = LocationLocales['Trinidad']
+export const defaultLocation = LocationLocales['Curacao']
 
 export const LOCALE_OFFSET: Omit<Region, 'longitude' | 'latitude'> = {
   latitudeDelta: 0.25,

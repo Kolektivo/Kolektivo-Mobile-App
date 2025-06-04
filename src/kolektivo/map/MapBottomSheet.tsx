@@ -1,8 +1,7 @@
 import BottomSheet, { BottomSheetBackgroundProps, BottomSheetFlatList } from '@gorhom/bottom-sheet'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
-import { ListRenderItemInfo, StyleSheet, View } from 'react-native'
+import { ListRenderItemInfo, StyleSheet, Text, View } from 'react-native'
 import MapView from 'react-native-maps'
-import { useDispatch, useSelector } from 'react-redux'
 import FoodForestDetails from 'src/kolektivo/map/FoodForestDetails'
 import MapSheetHandle from 'src/kolektivo/map/MapSheetHandle'
 import { setFoodForest } from 'src/kolektivo/map/actions'
@@ -21,6 +20,7 @@ import { Vendor, VendorWithLocation } from 'src/kolektivo/vendors/types'
 import { useInteractiveBottomSheet } from 'src/kolektivo/vendors/utils'
 import { navigate } from 'src/navigator/NavigationService'
 import { Screens } from 'src/navigator/Screens'
+import { useDispatch, useSelector } from 'src/redux/hooks'
 import Colors from 'src/styles/colors'
 
 type Props = {
@@ -37,19 +37,26 @@ const MapBottomSheet = ({ mapRef }: Props) => {
   const currentForest = useSelector(currentForestSelector)
 
   const bottomSheetRef = useRef<BottomSheet>(null)
-  const [snapPoints] = useInteractiveBottomSheet(bottomSheetRef)
-  const [listMode, setListMode] = useState<boolean>(false)
+  const [snapPoints, setSnapPoints] = useInteractiveBottomSheet(bottomSheetRef)
+  const [listMode, setListMode] = useState<boolean>(true)
 
   useEffect(() => {
     setListMode(listMode || !!searchQuery.length)
   }, [searchQuery])
+
+  useEffect(() => {
+    if (searchQuery.length > 0 && filteredVendors.length > 0 && !currentVendor && !currentForest) {
+      setListMode(true)
+      setSnapPoints(3, listMode)
+    }
+  }, [filteredVendors])
 
   const renderVendorItem = ({ item }: ListRenderItemInfo<Vendor | VendorWithLocation>) => {
     return (
       <VendorListItem
         listMode={listMode}
         vendor={item}
-        id={item.title}
+        id={item.name}
         onPress={() => dispatch(setCurrentVendor(item))}
       />
     )
@@ -85,14 +92,23 @@ const MapBottomSheet = ({ mapRef }: Props) => {
       backgroundComponent={SheetBackground}
     >
       {!currentVendor && !currentForest && (
-        <BottomSheetFlatList
-          key={!listMode ? 'VendorList/Icons' : 'VendorList/List'}
-          numColumns={!listMode ? 4 : 1}
-          data={searchQuery.length > 0 ? filteredVendors : vendors}
-          keyExtractor={(vendor: Vendor) => vendor.title}
-          renderItem={renderVendorItem}
-          contentContainerStyle={!listMode ? styles.innerContainer : null}
-        />
+        <>
+          {searchQuery.length > 0 && filteredVendors.length === 0 ? (
+            <View style={styles.noResultsContainer}>
+              <Text style={styles.noResultsText}>No results for '{searchQuery}'</Text>
+            </View>
+          ) : (
+            <BottomSheetFlatList
+              key={!listMode ? 'VendorList/Icons' : 'VendorList/List'}
+              numColumns={!listMode ? undefined : 1}
+              data={searchQuery.length > 0 ? filteredVendors : vendors}
+              keyExtractor={(vendor: Vendor) => vendor.name}
+              renderItem={renderVendorItem}
+              horizontal={!listMode}
+              contentContainerStyle={!listMode ? styles.innerContainer : null}
+            />
+          )}
+        </>
       )}
       {currentVendor && (
         <VendorDetails
@@ -136,6 +152,17 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.white,
     borderTopEndRadius: variables.borderRadius,
     borderTopStartRadius: variables.borderRadius,
+  },
+  noResultsContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  noResultsText: {
+    fontSize: 16,
+    color: Colors.gray5,
+    textAlign: 'center',
   },
 })
 

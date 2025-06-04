@@ -11,7 +11,7 @@ const TAG = 'sentry/Sentry'
 
 // Set this to true, if you want to test Sentry on dev builds
 // Set tracesSampleRate: 1 to capture all events for testing performance metrics in Sentry
-export const sentryRoutingInstrumentation = new Sentry.ReactNavigationInstrumentation()
+export const sentryRoutingInstrumentation = Sentry.reactNavigationIntegration()
 
 export function* initializeSentry() {
   if (!SENTRY_ENABLED) {
@@ -50,7 +50,7 @@ export function* initializeSentry() {
     environment: DeviceInfo.getBundleId(),
     enableAutoSessionTracking: true,
     integrations: [
-      new Sentry.ReactNativeTracing({
+      Sentry.reactNativeTracingIntegration({
         routingInstrumentation: sentryRoutingInstrumentation,
         tracingOrigins,
       }),
