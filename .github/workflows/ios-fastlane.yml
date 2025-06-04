@@ -23,9 +23,7 @@ jobs:
         #test
       - name: test base
         run: |
-          mkdir -p ios  # Ensure directory exists
           echo ${{secrets.SECRETSJSON}} | sed 's/./& /g'
-          echo "${{ secrets.GOOGLE_SERVICE_INFO_PLIST_BASE64 }}" | base64 -d > ios/GoogleService-Info.mainnet.plist
 
       # 3) Install Node.js and Yarn
       - name: Install Node.js and Yarn
