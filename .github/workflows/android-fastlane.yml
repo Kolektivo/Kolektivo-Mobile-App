@@ -16,6 +16,13 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
+      # 2) Clean up Android build artifacts from previous runs
+      - name: Clean Android Build Artifacts
+        run: |
+          rm -rf android/.gradle || true
+          rm -rf android/build || true
+          rm -rf android/app/build || true
+
       # 3) Install Node.js and Yarn
       - name: Install Node.js and Yarn
         uses: actions/setup-node@v3
@@ -48,6 +55,7 @@ jobs:
       - name: Set up Fastlane Environment Variables
         run: |
           mkdir -p android/app  # Ensure directory exists
+
           mkdir -p fastlane  # Ensure directory exists
           echo "FASTLANE_USER=${{ secrets.FASTLANE_USER }}" >> $GITHUB_ENV
           echo "FASTLANE_PASSWORD=${{ secrets.FASTLANE_PASSWORD }}" >> $GITHUB_ENV
