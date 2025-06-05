@@ -71,14 +71,6 @@ jobs:
       - name: Debug SSH Access
         run: ssh -T git@github.com || echo "SSH authentication failed"
 
-      # 15) Run Fastlane for TestFlight Upload
-      - name: Run Fastlane for TestFlight Upload 🚀
+      # 15) Run Fastlane for Upload
+      - name: Run Fastlane for Upload 🚀
         run: fastlane android mainnet
-
-      # Cache node_modules (Yarn Dependencies)
-      - name: Cache Yarn Dependencies
-        uses: actions/cache/save@v4
-        if: always()
-        with:
-          path: node_modules
-          key: yarn-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
