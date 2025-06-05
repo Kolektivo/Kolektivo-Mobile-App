@@ -30,17 +30,8 @@ jobs:
           node-version: '20'
           cache: 'yarn' # This only caches Yarn's global cache, not node_modules
 
-      # 4) Cache node_modules (Yarn Dependencies)
-      - name: Restore Yarn Dependencies Cache
-        uses: actions/cache/restore@v4
-        id: cache-yarn
-        with:
-          path: node_modules
-          key: yarn-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
-
       # 5) Install Project Dependencies (now can use the restored node_modules)
-      - if: steps.cache-yarn.outputs.cache-hit != 'true'
-        name: Install Project Dependencies
+      - name: Install Project Dependencies
         run: yarn install --frozen-lockfile
 
       # 6) Run Yarn Postinsall
