@@ -1,0 +1,81 @@
+name: Android Fastlane Release 🚀
+
+on:
+  push:
+    tags:
+      - 'v*' # Run only on version tags like v1.0.0, v2.3.4
+  workflow_dispatch: # Allows manual triggering
+
+jobs:
+  release:
+    name: Build & Deploy Android App
+    runs-on: macos-14 # Sonoma image with Xcode 16.2 pre-installed
+
+    steps:
+      # 1) Checkout
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # 3) Install Node.js and Yarn
+      - name: Install Node.js and Yarn
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+          cache: 'yarn' # This only caches Yarn's global cache, not node_modules
+
+      # 4) Cache node_modules (Yarn Dependencies)
+      - name: Restore Yarn Dependencies Cache
+        uses: actions/cache/restore@v4
+        id: cache-yarn
+        with:
+          path: node_modules
+          key: yarn-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+
+      # 5) Install Project Dependencies (now can use the restored node_modules)
+      - if: steps.cache-yarn.outputs.cache-hit != 'true'
+        name: Install Project Dependencies
+        run: yarn install --frozen-lockfile
+
+      # 6) Run Yarn Postinsall
+      - name: Run Yarn Postinstall
+        run: yarn postinstall
+
+      # 10) Start Development Server
+      - name: Start Development Server
+        run: yarn dev:android & # runs in background
+
+      # 11) Set up Fastlane Environment Variables
+      - name: Set up Fastlane Environment Variables
+        run: |
+          mkdir -p android/app  # Ensure directory exists
+          echo "FASTLANE_USER=${{ secrets.FASTLANE_USER }}" >> $GITHUB_ENV
+          echo "FASTLANE_PASSWORD=${{ secrets.FASTLANE_PASSWORD }}" >> $GITHUB_ENV
+          echo "MATCH_PASSWORD=${{ secrets.MATCH_PASSWORD }}" >> $GITHUB_ENV
+          echo "MATCH_GIT_BASIC_AUTHORIZATION=${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}" >> $GITHUB_ENV
+          echo "${{ secrets.ANDROID_GOOGLE_SERVICES }}" | base64 --decode > android/app/google-services.json
+          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > android/app/celo-release-key.keystore
+
+      - name: Export SECRETSJSON to File
+        run: echo '${{ secrets.SECRETSJSON }}' > secrets.json
+
+      - name: Setup SSH for Repo Access
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.DEPLOY_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan github.com >> ~/.ssh/known_hosts
+
+      - name: Debug SSH Access
+        run: ssh -T git@github.com || echo "SSH authentication failed"
+
+      # 15) Run Fastlane for TestFlight Upload
+      - name: Run Fastlane for TestFlight Upload 🚀
+        run: fastlane android mainnet
+
+      # Cache node_modules (Yarn Dependencies)
+      - name: Cache Yarn Dependencies
+        uses: actions/cache/save@v4
+        if: always()
+        with:
+          path: node_modules
+          key: yarn-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
